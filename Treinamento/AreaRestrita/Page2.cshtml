@@ -1,0 +1,71 @@
+﻿@{
+    Page.Title = "Página 2";
+    Layout = "~/AreaRestrita/_Layout.cshtml";
+}
+
+<body>
+    <a href="/">Início</a>
+
+    <h1>Funções, classes e lista</h1>
+    <p>Esse exemplo mostra 3 formas diferentes de como instanciar um objeto, atribuir os valores de suas propriedades e adicioná-lo numa lista.</p>
+
+    @functions{
+        private class Exemplo
+        {
+            public int Id { get; set; }
+            public string Descricao { get; set; }
+        }
+
+        // Declarando lista de exemplos
+        List<Exemplo> exemplos = new List<Exemplo>();
+
+        private void CarregarExemplo1()
+        {
+            // Criar objeto de exemplo
+            Exemplo ex = new Exemplo();
+            ex.Id = 1;
+            ex.Descricao = "Exemplo número 1: Instancia o objeto, atribui os valores individualmente e depois adiciona-o na lista";
+
+            // Adicionar objeto na lista
+            exemplos.Add(ex);
+        }
+
+        private void CarregarExemplo2()
+        {
+            // Criar objeto de exemplo
+            Exemplo ex = new Exemplo()
+            {
+                Id = 2,
+                Descricao = "Exemplo número 2: Instancia o objeto já atribuindo os valores, depois adiciona-o na lista"
+            };
+
+            // Adicionar objeto na lista
+            exemplos.Add(ex);
+        }
+
+        private void CarregarExemplo3()
+        {
+            exemplos.Add(new Exemplo()
+            {
+                Id = 3,
+                Descricao = "Exemplo número 3: Instancia o objeto já atrinbuindo os valores e adicionando na lista"
+            });
+        }
+    }
+
+    @{
+        CarregarExemplo1();
+        CarregarExemplo2();
+        CarregarExemplo3();
+    }
+
+    @if (exemplos != null)
+    {
+        <ul>
+            @foreach (var item in exemplos)
+            {
+                <li>@item.Id - @item.Descricao </li>
+            }
+        </ul>
+    }
+</body>

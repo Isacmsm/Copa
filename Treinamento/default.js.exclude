@@ -1,0 +1,1276 @@
+(function () {
+    function remove(scope, selector) {
+        let els = scope.querySelectorAll(selector);
+        if (els != null) {
+            els.forEach((el) => el.parentNode.removeChild(el));
+        }
+    }
+
+    function removeClass(scope, selector, classToRemove) {
+        classToRemove.split(" ").forEach(function(c){
+            let els = scope.querySelectorAll(selector);
+            if (els != null) {
+                els.forEach((item) => item.classList.remove(c));
+            }
+        });
+    }
+
+    function addClass(scope, selector, classToAdd) {
+        let els = scope.querySelectorAll(selector);
+        if (els != null) {
+            els.forEach((item) => item.classList.add(classToAdd));
+        }
+    }
+
+    function replaceClass(scope, selector, classToRemove, classToAdd){
+        let els = scope.querySelectorAll(selector);
+        if (els != null) {
+            els.forEach(function(item) {
+                classToRemove.split(" ").forEach((c) => item.classList.remove(c));
+                classToAdd.split(" ").forEach((c) => item.classList.add(c));
+            });
+        }
+    }
+
+    /**
+    Objetivo: Esconde um objeto da pagina
+    Sintaxe: hide('objetos')
+    */
+    function hide (nodes) {
+        if (nodes != null) {
+            if (nodes == '[object NodeList]') {
+                nodes.forEach((item) => item.style.display = "none");
+            } else {
+                nodes.style.display = "none";
+            }
+        }
+    }
+
+    /**
+    Objetivo: Exibe um objeto da pagina
+    Sintaxe: show('objetos')
+    */
+    function show (nodes) {
+        if (nodes != null) {
+            if (nodes == '[object NodeList]') {
+                nodes.forEach((item) => item.style.display = "");
+            } else {
+                nodes.style.display = "";
+            }
+        }
+    }
+
+    function BuscarPagina(NomePagina) {
+        window.event.cancelBubble = true;
+
+        let boxResultado = document.querySelector("#busca-pagina-resultado-box");
+
+        if (NomePagina.length < 3) {
+            boxResultado.innerHTML = "";
+            return;
+        }
+
+        let params = {
+            method: 'POST',
+            headers: new Headers({
+                "Content-Type": "application/x-www-form-urlencoded"
+            }),
+            mode: 'cors',
+            cache: 'default',
+            body: serialize({
+                Acao: "BuscarPagina",
+                NomePagina: NomePagina
+            })
+        }
+
+        fetch("/arearestrita/auxTelaInicial.cshtml", params)
+            .then(status)
+            .then(res => res.json())
+            .then(trataErro)
+            .then(adicionaItens)
+            .then(hideDropDown)
+            .catch(handleErrors);
+
+        function status(response) {
+            if (response.status == 200) {
+                return Promise.resolve(response)
+            } else {
+                return Promise.reject(new Error(response.statusText))
+            }
+        }
+
+        function trataErro (response) {
+            if (response.DeuErro == "N") {
+                return Promise.resolve(response);
+            } else {
+                return Promise.reject(new Error(response.MsgErro));
+            }
+        }
+
+        function hideDropDown() {
+            document.querySelector('#dropdown-tela-inicial').style.display = "none";
+        }
+
+        function adicionaItens(response) {
+            if (response.ListaPagina != null){
+                boxResultado.innerHTML = "";
+                let itens = Array.from(response.ListaPagina);
+                itens.forEach(createItem);
+            } else {
+                return Promise.reject(new Error("Nenhum registro encontrado"));
+            }
+
+            function createItem(item) {
+                let obj = itemToObj(item);
+                boxResultado.appendChild(obj);
+            }
+
+            function itemToObj (item) {
+                return new DOMParser().parseFromString(`<a href="#" id="pagina${item.idPagina}" class="${item.CorTelaInicial} ${item.TamanhoTelaInicial} box opentab FixarTelaInicial-0" data-url="${item.CodigoSistema}/${item.CodigoModulo}/${item.CodigoPagina}.cshtml" data-caption="${item.CaptionPagina}" data-idPagina="${item.idPagina}" data-CorTelaInicial="${item.CorTelaInicial}" data-TamanhoTelaInicial="${item.TamanhoTelaInicial}" data-FixarTelaInicial="0" data-PodeRemoverTelaInicial="${item.PodeRemoverTelaInicial}"><span class="icone-pagina ${item.CodigoSistema}-${item.CodigoModulo}-${item.CodigoPagina}" style="display:;"></span><div class="caption"><div class="caption-modulo">${item.CaptionModulo.toUpperCase()}</div><div class="caption-pagina">${item.CaptionPagina}</div></div></a>`, "text/html").firstChild;
+            }
+        }
+        
+        function handleErrors(err) {
+            if (err.message.indexOf('/login.cshtml') > 0) {
+                window.location.replace('/controleacesso/expirou.cshtml')
+            } else {
+                boxResultado.innerHTML = err.message;
+            }
+        }
+    }
+
+    function AtivarContextMenu () {
+        document.querySelectorAll('.box').forEach(function(item){
+            item.addEventListener('contextmenu', function(e){
+                e.preventDefault();
+                e.stopPropagation();
+
+                const idPagina = this.getAttribute("data-idPagina");
+                const podeRemoverTelaInicial = this.getAttribute("data-PodeRemoverTelaInicial");
+                const fixarTelaInicial = this.getAttribute("data-FixarTelaInicial");
+                const tamanhoTelaInicial = this.getAttribute("data-TamanhoTelaInicial");
+                const corTelaInicial = this.getAttribute("data-CorTelaInicial");
+
+                document.form1.idPagina.value = idPagina;
+
+                if (podeRemoverTelaInicial == "1") {
+                    if (fixarTelaInicial == "1") {
+                        hide(document.querySelectorAll("#dropdown-FixarTelaInicial-1"));
+                        show(document.querySelectorAll("#dropdown-FixarTelaInicial-0"));
+                    } else {
+                        hide(document.querySelectorAll("#dropdown-FixarTelaInicial-0"));
+                        show(document.querySelectorAll("#dropdown-FixarTelaInicial-1"));
+                    }
+                } else {
+                    hide(document.querySelectorAll("#dropdown-FixarTelaInicial-0"));
+                    hide(document.querySelectorAll("#dropdown-FixarTelaInicial-1"));
+                }
+
+                removeClass(document, ".dropdown-cor-checked.checked", "checked");
+                removeClass(document, ".dropdown-tamanho-checked.checked", "checked");
+
+                addClass(document, `#dropdown-tamanho-${tamanhoTelaInicial}`, "checked");
+                addClass(document, `#dropdown-cor-${corTelaInicial}`, "checked");
+
+                let dropdown = document.querySelector("#dropdown-tela-inicial");
+                dropdown.style.display = "";
+                dropdown.style.top = `${e.clientY - 100}px`;
+                dropdown.style.left = `${e.clientX}px`;
+            });
+        });
+
+        document.querySelector('body').addEventListener("click", function(){
+            hide(document.querySelector('#dropdown-tela-inicial'));
+        });
+    }
+
+    function AlterarFixarTelaInicial (FixarTelaInicial) {
+        window.event.cancelBubble = true;
+
+        let idPagina = document.form1.idPagina.value;
+
+        let params = {
+            method: 'POST',
+            headers: new Headers({
+                "Content-Type": "application/x-www-form-urlencoded"
+            }),
+            mode: 'cors',
+            cache: 'default',
+            body: serialize({
+                Acao: "AlterarFixarTelaInicial",
+                idPagina: idPagina,
+                FixarTelaInicial: FixarTelaInicial
+            })
+        }
+
+        let loading = function () {
+            let area = document.querySelector(`#icone-status-fixar-${FixarTelaInicial}`);
+            
+            let spinner = new loadSpinner();
+
+            function start() {
+                area.appendChild(spinner);
+            }
+
+            function stop() {
+                area.removeChild(spinner);
+            }
+
+            return {
+                start: start,
+                stop: stop
+            }
+        }();
+
+        loading.start();
+
+        fetch('/arearestrita/auxTelaInicial.cshtml', params)
+            .then(status)
+            .then(response => response.json())
+            .then(erro)
+            .then(alteraPagina)
+            .then(hideDropDown)
+            .then(stopLoading)
+            .catch(handleErrors)
+
+        function status (response) {
+            if (response.status == 200) {
+                return Promise.resolve(response)
+            } else {
+                return Promise.reject(new Error(response.statusText))
+            }
+        }
+
+        function erro (response) {
+            if (response.DeuErro == "N") {
+                return Promise.resolve(response)
+            } else {
+                return Promise.reject(new Error(response.MsgErro))
+            }
+        }
+
+        function alteraPagina() {
+            let el = document.querySelector(`#pagina${idPagina}`);
+
+            if (FixarTelaInicial == '0') {
+                el.parentNode.removeChild( el );
+                el.setAttribute("data-FixarTelaInicial",FixarTelaInicial);
+            } else {
+                el.className = el.className.replace("FixarTelaInicial-0", "");
+                el.className += " FixarTelaInicial-1";
+                el.setAttribute("data-FixarTelaInicial", FixarTelaInicial);
+                el.style.display = "none";
+            }
+        }
+        
+        function hideDropDown() {
+            hide(document.querySelector('#dropdown-tela-inicial'));
+        }
+
+        function stopLoading () {
+            loading.stop();
+        }
+
+        function handleErrors(err) {
+            if (err.message.indexOf('/login.cshtml') > 0) {
+                window.location.replace('/controleacesso/expirou.cshtml');
+            } else {
+                document.querySelector("#start").innerHTML += `<div class="msgErro">AlterarFixarTelaInicial. Pedido falhou. Retorno do status de ${err.message}</div>`;
+            }
+        }
+    }
+
+    function AlterarTamanhoTelaInicial (TamanhoTelaInicial) {
+        window.event.cancelBubble = true;
+
+        let idPagina = document.form1.idPagina.value;
+
+        let loading = function () {
+            let area = document.querySelector(`#icone-status-tamanho-${TamanhoTelaInicial}`);
+            let spinner = new loadSpinner();
+
+            function start() {
+                area.appendChild(spinner);
+            }
+
+            function stop() {
+                area.removeChild(spinner);
+            }
+
+            return {
+                start: start,
+                stop: stop
+            }
+        }();
+
+        let params = {
+            method: 'POST',
+            headers: new Headers({
+                "Content-Type": "application/x-www-form-urlencoded"
+            }),
+            mode: 'cors',
+            cache: 'default',
+            body: serialize({
+                Acao: "AlterarTamanhoTelaInicial",
+                idPagina: idPagina,
+                TamanhoTelaInicial: TamanhoTelaInicial
+            })
+        }
+
+        loading.start();
+
+        fetch('/arearestrita/auxTelaInicial.cshtml', params)
+            .then(status)
+            .then(res => res.json())
+            .then(erro)
+            .then(alteraTamanho)
+            .then(hideDropDown)
+            .then(stopLoading)
+            .catch(handleErrors)
+
+        function status (response) {
+            if (response.status == 200) {
+                return Promise.resolve(response)
+            } else {
+                return Promise.reject(new Error(response.statusText))
+            }
+        }
+
+        function erro (response) {
+            if (response.DeuErro == "N") {
+                return Promise.resolve(response)
+            } else {
+                return Promise.reject(new Error(response.MsgErro))
+            }
+        }
+
+        function alteraTamanho() {
+            replaceClass(document, `#pagina${idPagina}`, "pequeno medio largo grande", TamanhoTelaInicial);
+            document.querySelector(`#pagina${idPagina}`).setAttribute("data-TamanhoTelaInicial", TamanhoTelaInicial);
+        }
+
+        function hideDropDown() {
+            hide(document.querySelector('#dropdown-tela-inicial'));
+        }
+
+        function stopLoading () {
+            loading.stop();
+        }
+
+        function handleErrors(err) {
+            if (err.message.indexOf('/login.cshtml') > 0) {
+                window.location.replace('/controleacesso/expirou.cshtml');
+            } else {
+                document.querySelector("#start").innerHTML += `<div class="msgErro">AlterarFixarTelaInicial. Pedido falhou. Retorno do status de ${err.message}</div>`;
+            }
+        }
+    }
+
+    function AlterarCorTelaInicial (CorTelaInicial) {
+        window.event.cancelBubble = true;
+
+        const idPagina = document.form1.idPagina.value;
+
+        let loading = function () {
+            let area = document.querySelector(`#icone-status-cor-${CorTelaInicial}`);
+            let spinner = new loadSpinner();
+
+            function start() {
+                area.appendChild(spinner);
+            }
+
+            function stop() {
+                area.removeChild(spinner);
+            }
+
+            return {
+                start: start,
+                stop: stop
+            }
+        }();
+
+        let params = {
+            method: 'POST',
+            headers: new Headers({
+                "Content-Type": "application/x-www-form-urlencoded"
+            }),
+            mode: 'cors',
+            cache: 'default',
+            body: serialize({
+                Acao: "AlterarCorTelaInicial",
+                idPagina: idPagina,
+                CorTelaInicial: CorTelaInicial
+            })
+        }
+
+        loading.start();
+
+        fetch('/arearestrita/auxTelaInicial.cshtml', params)
+            .then(status)
+            .then(res => res.json())
+            .then(erro)
+            .then(alteraCor)
+            .then(hideDropDown)
+            .then(stopLoading)
+            .catch(handleErrors)
+
+        function status (response) {
+            if (response.status == 200) {
+                return Promise.resolve(response)
+            } else {
+                return Promise.reject(new Error(response.statusText))
+            }
+        }
+
+        function erro (response) {
+            if (response.DeuErro == "N") {
+                return Promise.resolve(response)
+            } else {
+                return Promise.reject(new Error(response.MsgErro))
+            }
+        }
+
+        function alteraCor() {
+            replaceClass(document, `#pagina${idPagina}`, "cor1 cor2 cor3 cor4 cor5 cor6 cor7 cor8 cor9 cor10 cor11 cor12", CorTelaInicial);
+            document.querySelector("#pagina"+idPagina).setAttribute("data-CorTelaInicial",CorTelaInicial);
+        }
+
+        function hideDropDown() {
+            hide(document.querySelector('#dropdown-tela-inicial'));
+        }
+
+        function stopLoading () {
+            loading.stop();
+        }
+
+        function handleErrors(err) {
+            if (err.message.indexOf('/login.cshtml') > 0) {
+                window.location.replace('/controleacesso/expirou.cshtml');
+            } else {
+                document.querySelector("#start").innerHTML += `<div class="msgErro">AlterarFixarTelaInicial. Pedido falhou. Retorno do status de ${err.message}</div>`;
+            }
+        }
+    }
+
+    function AlterarOrdemTelaInicial (ListaIdPaginaTelaInicial, ListaColunaTelaInicial, ListaOrdemTelaInicial) {
+        window.event.cancelBubble = true;
+
+        let params = {
+            method: 'POST',
+            headers: new Headers({
+                "Content-Type": "application/x-www-form-urlencoded"
+            }),
+            mode: 'cors',
+            cache: 'default',
+            body: serialize({
+                Acao: "AlterarOrdemTelaInicial",
+                ListaIdPaginaTelaInicial: ListaIdPaginaTelaInicial,
+                ListaColunaTelaInicial: ListaColunaTelaInicial,
+                ListaOrdemTelaInicial: ListaOrdemTelaInicial,
+            })
+        }
+
+        fetch('/arearestrita/auxTelaInicial.cshtml', params)
+            .then(status)
+            .catch(err => {
+                if (err.message.indexOf('/login.cshtml') > 0) {
+                    window.location.replace('/controleacesso/expirou.cshtml');
+                } else {
+                    document.querySelector("#start").innerHTML += `<div class="msgErro">AlterarOrdemTelaInicial. Pedido falhou. Retorno do status de ${err.message}</div>`;
+                }
+            })
+
+        function status (response) {
+            if (response.status == 200) {
+                return Promise.resolve(response)
+            } else {
+                return Promise.reject(new Error(response.statusText))
+            }
+        }
+    }
+
+    function MostrarBusca () {
+        hide(document.querySelectorAll(".FixarTelaInicial-1"));
+        hide(document.querySelectorAll('.adicionar-pagina'));
+        show(document.querySelector('#container-busca-pagina'));
+
+        let el = document.querySelector('#BuscarPagina');
+        if (el != null)
+        {
+            el.value = "";
+            el.focus();
+        }
+    }
+
+    function FecharBusca () {
+        show(document.querySelectorAll('.icon'));
+        show(document.querySelectorAll('.adicionar-pagina'));
+        hide(document.querySelector('#dropdown-tela-inicial'));
+        hide(document.querySelector('#container-busca-pagina'));
+        show(document.querySelectorAll(".FixarTelaInicial-1"));
+        remove(document, ".FixarTelaInicial-0");
+        let els = document.querySelectorAll("#busca-pagina-resultado-box .box");
+        if (els != null) {
+            let destino = document.querySelector("#sortable1");
+            els.forEach((el) => destino.append(el));
+        }
+        document.querySelector("#busca-pagina-resultado-box").innerHTML = "";
+    }
+
+    function MostraInicio() {
+        hide(document.querySelectorAll('.ui-tabs-panel'));
+        show(document.querySelector('#start'));
+        document.querySelectorAll('.ui-tabs-active').classList.remove('ui-tabs-active ui-state-active');
+    }
+
+    function MostraHeader() {
+        let menu = document.querySelector('.menu');
+        if (menu.classList.contains("d-none")) {
+            menu.classList.remove("d-none");
+        } else {
+            menu.classList.add("d-none");
+        }
+    }
+
+    function ContagemRegressivaTempoSessao() {
+        let contoleTempoSessao = function () {
+            // pega a string da timeout
+            let timeout = document.getElementById("timeout").innerHTML;
+
+            // inicializa o tempo
+            let tempo = 0;
+
+            // se a sessão não tiver expirado
+            if (timeout != "Sua sessão expirou!") {
+                // converte o tempo para inteiro
+                tempo = parseInt(timeout.substring(0, 2) * 60) + parseInt(timeout.substring(3, 5));
+
+                // diminui o tempo
+                tempo--;
+            }
+            
+            // Se o tempo não for zerado
+            if((tempo - 1) >= 0){
+                // Pega a parte inteira dos minutos
+                let min = parseInt(tempo/60);
+
+                // Calcula os segundos restantes
+                let seg = tempo%60;
+
+                // Formata o nÃºmero menor que dez, ex: 08, 07,
+                if(min < 10){
+                    min = "0"+min;
+                    min = min.substr(0, 2);
+                }
+
+                // Formata os segundos menor que dez, ex: 08, 07,
+                if(seg <= 9){
+                    seg = "0"+seg;
+                }
+
+                // Cria a variável para formatar no estilo hora/cronômetro
+                horaImprimivel = min + ':' + seg;
+
+                //JQuery pra setar o valor
+                $("#timeout").html(horaImprimivel);
+            // Quando o contador chegar a zero faz esta ação
+            } else {
+                $("#timeout").html('Sua sessão expirou!');
+                clearInterval(contoleTempoSessao);
+            }
+        }
+
+        // Define que a função será executada novamente em 1000ms = 1 segundo
+        setInterval(contoleTempoSessao, 1000);
+    }
+    
+    function MostraListaNotificacoes() {
+        if (document.getElementById("listaNotificacoes").style.display != 'none'
+        || document.getElementById("TextoNotificacao").style.display != 'none') {
+            document.getElementById("listaNotificacoes").style.display = 'none';
+            document.getElementById('TextoNotificacao').style.display = 'none';
+            document.getElementById("MenuNotificacoes").style.background = '';
+        } else {
+            document.getElementById("listaNotificacoes").style.display = 'block';
+            document.getElementById("MenuNotificacoes").style.background = '#2a3235';
+            document.getElementById('TextoNotificacao').style.display = 'none';
+        }
+    }
+
+    function ProcuraNotificacoes() {
+        const ContadorNotificacao = parseInt(document.getElementById('ContadorNotificacao').value);
+
+        let params = {
+            method: 'POST',
+            headers: new Headers({
+                "Content-Type": "application/x-www-form-urlencoded"
+            }),
+            mode: 'cors',
+            cache: 'default',
+            body: serialize({
+                Acao: "C_PROCURA_NOTIFICACAO"
+            })
+        }
+
+        fetch('/arearestrita/auxTelaInicial.cshtml', params)
+            .then(status)
+            .then(res => res.json())
+            .then(createNotificacao)
+            .then(searchNotificacao)
+            .catch(err => console.log(err.message))
+
+        function createNotificacao(response) {
+            if (response.length == 1) {
+                const quantNaoLidas = response[0].QuantNaoLidas;
+
+                if(quantNaoLidas > ContadorNotificacao) {
+                    document.getElementById('ContadorNotificacao').value = quantNaoLidas;
+                    MontaListaNotificacoes();
+                }
+
+                if(quantNaoLidas > 0) {
+                    document.querySelector('#QuantNaoLidas').innerHTML = (' ' + quantNaoLidas + ' ');
+                    show(document.querySelector('#QuantNaoLidas'));
+                    show(document.querySelector('#AlertaHeader'));
+                }
+            }
+        }
+
+        function searchNotificacao() {
+            // procurar notificações a cada 25 minutos
+            setTimeout(ProcuraNotificacoes, 25*60*1000);
+        }
+
+        function status (response) {
+            if (response.status == 200) {
+                return Promise.resolve(response)
+            } else {
+                return Promise.reject(new Error(response.statusText))
+            }
+        }
+    }
+
+    function MontaListaNotificacoes () {
+        let params = {
+            method: 'POST',
+            headers: new Headers({
+                "Content-Type": "application/x-www-form-urlencoded"
+            }),
+            mode: 'cors',
+            cache: 'default',
+            body: serialize({
+                Acao: "C_NOTIFICACOES"
+            })
+        }
+
+        fetch('/arearestrita/auxTelaInicial.cshtml', params)
+            .then(status)
+            .then(res => res.json())
+            .then(hasItens)
+            .then(createItens)
+            .then(setQuantidadeNaoLidas)
+            .then(todasLidas)
+            .catch(handleErrors)
+
+        function status (response) {
+            if (response.status == 200) {
+                return Promise.resolve(response)
+            } else {
+                return Promise.reject(new Error(response.statusText))
+            }
+        }
+
+        function hasItens (response) {
+            if (response.length > 0) {
+                return Promise.resolve(response);
+            } else {
+                return Promise.reject(new Error("Não há notificações para o operador"));
+            }
+        }
+
+        function handleErrors(err) {
+            var li = document.createElement("li");
+            li.innerHTML = `<span class="nivel"><a href="#">${err.message}</a></span>`;
+            document.querySelector('#listaNotificacoes').append(li);
+        }
+
+        function createItens (response) {
+            response.foreach(createItem);
+        }
+
+        function setQuantidadeNaoLidas (response)
+        {
+            document.querySelector('#QuantNaoLidas').innerHTML = response.QuantNaoLidas;
+        }
+
+        function todasLidas(response) {
+            if (response.QuantNaoLidas == 0){
+                hide(document.querySelector('#QuantNaoLidas'));
+                hide(document.querySelector('#AlertaHeader'));
+            }
+        }
+
+        function createItem(item) {
+            let listaNotificacoes = document.getElementById("listaNotificacoes");
+            const id = item.TipoNotificacao + item.IdNotificacao;
+            let notificacao = listaNotificacoes.querySelector(`#${id}`);
+
+            if (notificacao == null) {
+                let li = document.createElement("li");
+
+                li.id = item.TipoNotificacao + item.IdNotificacao;
+
+                li.addEventListener("click", function() {
+                    ExibeNotificacao(item.IdNotificacao, item.TipoNotificacao);
+                })
+
+                li.innerHTML = `<span class="nivel"> <a href="#">${item.Titulo}<img src="~/assets/img/visualizado2.png" id="${id}Visualizado" style="display: none;"/></a></span>`;
+
+                listaNotificacoes.appendChild(li);
+
+                if (item.Visualizado) {
+                    hide(document.querySelectorAll(`${id}Visualizado`));
+                }
+            }
+        }
+    }
+
+    function ExibeNotificacao (IdNotificacao, TipoNotificacao) {
+        let params = {
+            method: 'POST',
+            headers: new Headers({
+                "Content-Type": "application/x-www-form-urlencoded"
+            }),
+            mode: 'cors',
+            cache: 'default',
+            body: serialize({
+                Acao: "C_NOTIFICACAO",
+                IdNotificacao: IdNotificacao,
+                TipoNotificacao: TipoNotificacao
+            })
+        }
+
+        limparNotificacao();
+
+        fetch('/arearestrita/auxTelaInicial.cshtml', params)
+            .then(status)
+            .then(res => res.json())
+            .then(criaNotificacao)
+            .catch(err => console.log(err))
+
+        function status (response) {
+            if (response.status == 200) {
+                return Promise.resolve(response)
+            } else {
+                return Promise.reject(new Error(response.statusText))
+            }
+        }
+
+        if(IdNotificacao != ""){
+            document.getElementById('listaNotificacoes').style.display = 'none';
+            document.getElementById('TextoNotificacao').style.display = 'block';
+        }
+
+        function limparNotificacao() {
+            document.querySelector('#PublicadoEm').innerHTML = '';
+            document.querySelector('#Mensagem').innerHTML = '';
+            document.querySelector('#LinkNotificacao').innerHTML = '';
+        }
+
+        function criaNotificacao (data) {
+            if (data.length == 0) {
+                document.querySelector('#PublicadoEm').innerHTML = '';
+                document.querySelector('#Mensagem').innerHTML = '[ERRO] NOTIFICAÇÃO NÃO ENCONTRADA';
+                document.querySelector('#LinkNotificacao').innerHTML = '';
+            }
+            else if (data.length == 1) {
+                document.querySelector('#Mensagem').innerHTML = data[0].Mensagem;
+                document.querySelector('#PublicadoEm').innerHTML = `Publicado em: ${data[0].PublicadoEm}`;
+                document.querySelector('#QuantNaoLidas').innerHTML = ` ${data[0].QuantNaoLidas} `;
+
+                if(data[0].LinkNotificacao != "") {
+                    document.querySelector("#LinkNotificacao").appendChild(data[0].LinkNotificacao);
+                }
+
+                if(data[0].QuantNaoLidas == 0) {
+                    hide(document.querySelector('#QuantNaoLidas'));
+                    hide(document.querySelector('#AlertaHeader'));
+                }
+
+                if (data[0].Visualizado = 1){
+                    const id = data[0].TipoNotificacao + data[0].IdNotificacao + 'Visualizado';
+                    hide(document.getElementById(id));
+                }
+            }
+        }
+    }
+    
+    function SortableColumns() {
+        $(".col").sortable({
+            forcePlaceholderSize: true,
+            connectWith: ".connectedSortable",
+            placeholder: "box ui-state-highlight",
+            start: function(){
+                let cols = document.querySelectorAll('.col');
+                cols.forEach(addHighlight)
+
+                function addHighlight(col) {
+                    if (col.children.length == 0) {
+                        col.classList.add('ui-state-highlight');
+                    }
+                }
+            },
+            stop: function(){
+                removeClass(document, '.col', 'ui-state-highlight');
+
+                let Ordem = 1;
+                let ColunaTelaInicial = 1;
+                let virgula = "";
+                let ListaOrdemTelaInicial = "";
+                let ListaColunaTelaInicialTelaInicial = "";
+                let ListaIdPaginaTelaInicial = "";
+                let ColunaTelaInicialAnt = 0;
+
+                let boxes = document.querySelectorAll('.box');
+                Array.from(boxes).forEach(eachBox);
+
+                function eachBox(item) {
+                    ColunaTelaInicial = parseInt(item.parentNode.getAttribute("data-ColunaTelaInicial"));
+
+                    if (ColunaTelaInicial == ColunaTelaInicialAnt) {
+                        Ordem = Ordem + 1
+                    } else {
+                        Ordem = 1
+                    }
+
+                    ListaColunaTelaInicialTelaInicial = ListaColunaTelaInicialTelaInicial + virgula + ColunaTelaInicial;
+                    ListaIdPaginaTelaInicial = ListaIdPaginaTelaInicial + virgula + item.getAttribute("data-idPagina");
+                    ListaOrdemTelaInicial = ListaOrdemTelaInicial + virgula + Ordem;
+                    virgula = ",";
+                    ColunaTelaInicialAnt = ColunaTelaInicial;
+                }
+
+                AlterarOrdemTelaInicial (ListaIdPaginaTelaInicial, ListaColunaTelaInicialTelaInicial, ListaOrdemTelaInicial);
+            }
+        }).disableSelection();
+    }
+
+    function ConfiguraCiretran() {
+        var ciretranselecionada = $("#idCiretran option:selected").val();
+
+        $("#idCiretran").click(function(){
+            ciretranselecionada = $("#idCiretran option:selected").val();
+        }).change(function(e) {
+            var idCiretran = $( this ).val();
+            var NomeCiretran = '';
+            $( "#idCiretran option:selected" ).each(function() {
+                NomeCiretran = $( this ).text();
+            });
+
+            NomeCiretran = HTMLEncode(NomeCiretran);
+
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/arearestrita/frameMudaCiretran.cshtml', true);
+            xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+            xhr.responseType = 'text';
+            xhr.onload = function() {
+                if (xhr.status != 200) {
+                    alert(xhr.responseText);
+                }
+            }
+
+            let params = encodeURI(`idCiretran=${idCiretran}&NomeCiretran=${NomeCiretran}`);
+            xhr.send(params);
+        });
+    }
+
+    function ConfiguraEstabelecimento() {
+        $(".js-SetaEstabelecimento").change(function () {
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/arearestrita/SetaEstabelecimento.cshtml', true);
+            xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+            xhr.responseType = 'text';
+            xhr.onload = function() {
+                if (xhr.status != 200) {
+                    alert(xhr.responseText);
+                }
+            }
+
+            const idOperador = this.options[this.selectedIndex].getAttribute("data-idOperador");
+            const idEstabelecimento = this.options[this.selectedIndex].getAttribute("data-idEstabelecimento");
+            const idOperadorEstabelecimento = this.options[this.selectedIndex].getAttribute("data-idOperadorEstabelecimento");
+            const NomeEstabelecimento = this.options[this.selectedIndex].getAttribute("data-NomeEstabelecimento");
+
+            let params = encodeURI(`idOperador=${idOperador}&idEstabelecimento=${idEstabelecimento}&idOperadorEstabelecimento=${idOperadorEstabelecimento}&NomeEstabelecimento=${NomeEstabelecimento}`);
+            xhr.send(params);
+        });
+    }
+
+    function SetTempoSessao () {
+        parent.document.querySelector("#timeout").innerHTML = parent.document.querySelector("#TempoSessao").value + ":00";
+    }
+
+    function adicionaEventos() {
+        Array.from(document.querySelectorAll('.js-MostraHeader')).forEach(function (item) {
+            item.addEventListener("click", MostraHeader);
+        });
+        
+        Array.from(document.querySelectorAll('.js-MostraInicio')).forEach(function (item) {
+            item.addEventListener("click", MostraInicio);
+        });
+
+        Array.from(document.querySelectorAll('.js-MostrarBusca')).forEach(function (item) {
+            item.addEventListener("click", MostrarBusca);
+        });
+
+        Array.from(document.querySelectorAll('.js-FecharBusca')).forEach(function (item) {
+            item.addEventListener("click", FecharBusca);
+        });
+
+        Array.from(document.querySelectorAll('.js-MostraListaNotificacoes')).forEach(function (item) {
+            item.addEventListener("click", MostraListaNotificacoes);
+        });
+
+        Array.from(document.querySelectorAll('.js-BuscarPagina')).forEach(function(item){
+            item.addEventListener("keyup", function () {
+                BuscarPagina(
+                    this.value
+                )
+            });
+        });
+
+        Array.from(document.querySelectorAll('.js-AtivarContextMenu')).forEach(function(item){
+            item.addEventListener("blur", AtivarContextMenu);
+        });
+
+        Array.from(document.querySelectorAll('.js-AlterarCorTelaInicial')).forEach(function (item) {
+            item.addEventListener("click", function(){
+                AlterarCorTelaInicial(
+                    this.getAttribute("data-CorTelaInicial")
+                )
+            });
+        });
+
+        Array.from(document.querySelectorAll('.js-AlterarTamanhoTelaInicial')).forEach(function (item) {
+            item.addEventListener("click", function(){
+                AlterarTamanhoTelaInicial(
+                    this.getAttribute("data-TamanhoTelaInicial")
+                )
+            });
+        });
+
+        Array.from(document.querySelectorAll('.js-AlterarFixarTelaInicial')).forEach(function (item) {
+            item.addEventListener("click", function(){
+                AlterarFixarTelaInicial(
+                    this.getAttribute("data-FixarTelaInicial")
+                )
+            });
+        });
+
+        Array.from(document.form1.querySelectorAll('.js-ExecutaAcao')).forEach(function (item) {
+            item.addEventListener("click", function () {
+                ExecutaAcao(
+                    this.getAttribute("data-Acao"),
+                    this.getAttribute("data-Mensagem")
+                );
+            });
+        });
+
+        Array.from(document.form1.querySelectorAll('.js-Filtro')).forEach(function (item) {
+            item.addEventListener("click", Filtro);
+        });
+    }
+
+    function opentab() {
+        var tab_max = 20;
+        var tab_counter = 0;
+
+        var tabs = $("#tabs").tabs();
+
+        $("body").delegate('.opentab', 'click', function(){
+            var TemErro = false;
+            var AbaEstaAberta = false;
+            $('.menu li:hover > ul').hide();
+
+            //Limita a quantidade de abas abertas
+            if(tabs.find('li').length >= tab_max){
+                alert('A capacidade máxima do sistema são ' + tab_max  + ' abas.');
+                return;
+            }
+
+            var obj = $(this);
+            var idPagina = $(obj).attr("data-idPagina");
+            var Parametro = "";
+            if (idPagina == "extrato") {
+                var Parametro = $("#InputConsultaExtrato").val().replace(/\s/g,'');
+            }
+            var title = $(obj).attr("data-titulo") + Parametro;
+            var caption = $(obj).attr("data-caption") + Parametro;
+
+            // Verifica se a aba ja esta aberta
+            if(tabs.find("#pagina-" + idPagina).length > 0){
+                if (idPagina == 'extrato') {
+                    var aux = 0;
+                    $('.ui-tabs-nav li').each(function (i, val) {
+                        var titulo = $(this).children('a').attr('data-title');
+                        if (titulo == caption) {
+                            $("#tabs").tabs({
+                                active: i,
+                                load: i
+                            });
+                            AbaEstaAberta = true;
+                            aux++;
+                        }
+                    });
+                } else {
+                    $('#start').hide();
+                    $('.ui-tabs-panel').hide();
+                    $("#pagina-" + idPagina).addClass('ui-tabs-active ui-state-active');
+                    var IndicePagina = tabs.find("#pagina-" + idPagina).index();
+                    $("#tabs").tabs({
+                        active: IndicePagina
+                    });
+                    $("#tabs-"+IndicePagina).show();
+                    AbaEstaAberta = true;
+                }
+            }
+
+            if (AbaEstaAberta) {
+                $('#InputConsultaExtrato').val('');
+            } else {
+                if (idPagina == 'extrato'){
+                    $.ajax({
+                        type : "POST",
+                        url : "/arearestrita/Extrato/Extrato/ValidacaoParametro.asp",
+                        dataType : "html",
+                        async: false,
+                        data : {
+                            Parametro: Parametro
+                        },
+                        success : function(Retorno) {
+                            if (Retorno == "VEICULO") {
+                                $(obj).attr('data-url','Extrato/Extrato/ConsultaVeiculo.asp');	
+                            } else if (Retorno == "PESSOA") {
+                                $(obj).attr('data-url',"Extrato/Extrato/ConsultaPessoa.asp");
+                            } else {
+                                alert(Retorno);
+                                TemErro = true
+                            }
+                        },
+                        error: function (xhr, ajaxOptions, thrownError) {
+                            alert("Erro interno da aplicação:\nAvise à equipe de suporte\nParametro = " + Parametro);
+                            TemErro = true
+                        }
+                    })
+                }
+
+                if (!TemErro) {
+                    $('#start').hide();
+                    $('#tabs').show();
+                    $('#inicio').show();
+                    $('#InputConsultaExtrato').val('');
+
+                    let destino = "tabs-" + tab_counter;
+
+                    let tabTemplate = "<li id='#{idPagina}'><span class='ui-icon-close icon-close'></span><a href='#{href}' title='#{title}'>#{caption}</a></li>";
+
+                    let li = tabTemplate.replace( /#\{href\}/g, "#" + destino ).replace( /#\{title\}/g, caption ).replace( /#\{caption\}/g, caption ).replace( /#\{idPagina\}/g, "pagina-" + idPagina );
+
+                    let parametros = ""
+                    if (Parametro!="") {
+                        if ($(obj).attr("data-url").indexOf("?") > 0) {
+                            parametros = "&"
+                        } else {
+                            parametros = "?"
+                        }
+                        parametros += "Parametro=" + Parametro
+                    }
+                    let url = $(obj).attr("data-url") + parametros;
+
+                    var tabContentHtml = `<div id="${destino}"><iframe src="${url}" name='Corpo' width='100%' id='Corpo' marginwidth='0' marginheight='0' frameborder='0' hspace='0' vspace='0' height='100%'></iframe></div>`;
+
+                    tabs.find( ".ui-tabs-nav" ).append( li );
+                    tabs.append(tabContentHtml);
+                    tabs.tabs( "refresh" );
+
+                    $( "#tabs" ).tabs({
+                        active: tabs.find('li').length - 1
+                    });
+
+
+                    tab_counter++;
+                }
+            }
+        });
+
+        $('.menu ul ul').mouseout(function(){
+            $('.menu ul:hidden').css('display','');
+        })
+
+        // close icon: removing the tab on click
+        tabs.delegate(".ui-icon-close", "click", function() {
+            var panelId = $( this ).closest( "li" ).remove().attr( "aria-controls" );
+            $( "#" + panelId ).remove();
+            tabs.tabs( "refresh" );
+
+            if (tabs.find('li').length == 0) {
+                $('#inicio').hide();
+                $('#tabs').hide();
+                $('#start').show();
+            }
+        });
+        
+        tabs.delegate( ".ui-tabs-nav li", "click", function() {
+            if (tabs.find('li').length > 0) {
+                $('#start').hide();
+            }
+            $('#'+$(this).attr('aria-controls')).show();
+            $(this).addClass('ui-tabs-active ui-state-active')
+        });
+        
+        tabs.bind( "keyup", function( event ) {
+            if ( event.altKey && event.keyCode === $.ui.keyCode.BACKSPACE ) {
+                var panelId = tabs.find( ".ui-tabs-active" ).remove().attr( "aria-controls" );
+                $( "#" + panelId ).remove();
+                tabs.tabs( "refresh" );
+                
+                if (tabs.find('li').length == 0) {
+                    $('#tabs').hide();
+                    $('#start').show();
+                }
+            }
+        });
+        
+        $('#InputConsultaExtrato').keypress(function(e){
+            var key = e.keyCode || e.charCode;
+            
+            if(key == 13){ //enter
+                $('#ImagemConsultaExtrato').click();
+                return
+            }
+            
+            var Caracter = String.fromCharCode(key)
+            var ListaCaracteresPermitidos = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/ "
+            
+            if (ListaCaracteresPermitidos.indexOf(Caracter)<0) {
+                return false;
+            }
+        }).on('paste', function() {
+            var $this = $(this);
+
+            setTimeout(function(){
+                var Texto = $this.val();
+                var Parametro
+                if (Texto.indexOf("/") < Texto.indexOf("-")) {
+                    Parametro = Texto.replace(/[^abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789]/g,'')
+                } else {
+                    Parametro = Texto.replace(/[^abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/]/g,'')
+                }
+                $('#InputConsultaExtrato').val(Parametro)
+            },0);
+        });
+        
+        $(".maiusculo").on('keyup', function(e) {
+            var key = e.keyCode || e.charCode;
+            if (key >= 65 && key <= 90) {
+                var textBox = e.target;
+                var start = textBox.selectionStart;
+                var end = textBox.selectionEnd;
+                textBox.value = textBox.value.toUpperCase();
+                textBox.setSelectionRange(start, end);
+            }
+        });
+
+        /**
+        Objetivo: Codifica String para resolver problema de CHARSET
+        Sintaxe: codificaString(valor);
+        */
+        function HTMLEncode(string){
+            arguments = string.split();
+            
+            var strRetorno="";
+            for(var i=0;i<arguments[0].length ;i++){
+                if (arguments[0].charCodeAt(i)<128){
+                    strRetorno += arguments[0].charAt(i);
+                }else{
+                    strRetorno += "&#"+arguments[0].charCodeAt(i)+";";
+                };
+            };
+            return strRetorno;
+        }
+    }
+
+    function init() {
+        adicionaEventos();
+
+        opentab();
+
+        ConfiguraCiretran();
+
+        ConfiguraEstabelecimento();
+
+        SortableColumns();
+
+        AtivarContextMenu();
+
+        SetTempoSessao();
+
+        ContagemRegressivaTempoSessao();
+
+        $("#idOperadorEstabelecimento").select2();
+
+        //showSelectLabels();
+
+        //ProcuraNotificacoes();
+
+        $(".nav-tabs").on("click", "a", function (e) {
+            e.preventDefault();
+            $(this).tab('show');
+        });
+
+        $(".nav-tabs").on("click", "span", function () {
+            var anchor = $(this).siblings('a');
+            $(anchor.attr('href')).remove();
+            $(this).parent().remove();
+            $(".nav-tabs li").children('a').first().click();
+        });
+    }
+
+    function Filtro() {
+        $("#filtro").keyup(function () {
+
+            // Retrieve the input field text and reset the count to zero
+            var filtro = $(this).val(),
+                count = 0;
+
+            // Loop through the comment list
+            $('#select-label label').each(function () {
+                // If the list item does not contain the text phrase fade it out
+                if ($(this).text().search(new RegExp(filtro, "i")) < 0) {
+                    $(this).hide();  // MY CHANGE
+
+                    // Show the list item if the phrase matches and increase the count by 1
+                } else {
+                    $(this).show(); // MY CHANGE
+                    count++;
+                }
+            });
+        });
+    }
+
+    function showSelectLabels() {
+        const selectLabel = document.getElementById("select-label");
+        const expanded = selectLabel.classList.contains("select2-container--open");
+
+        if (!expanded) {
+            selectLabel.style.display = "block";
+        }
+        else {
+            selectLabel.style.display = "none";
+        }
+    }
+
+    return {
+        init: init
+    };
+})().init();

@@ -1,0 +1,45 @@
+﻿@{
+    Page.Title = "Página 1";
+    Layout = "~/AreaRestrita/_Layout.cshtml";
+}
+
+<body>
+    <a href="/">Início</a>
+
+    <h1>Operadores matemáticos</h1>
+
+    <div>1 + 2 = @(1 + 2)</div>
+    <div>5 - 3 = @(5 - 3)</div>
+    <div>18 / 6 = @(18 / 6)</div>
+    <div>4 * 3 = @(4 * 3)</div>
+
+    <h1>Operadores lógicos</h1>
+
+    <div>Cinco é maior que dois? R. @(5 > 2)</div>
+    <div>Dez é menor ou igual a 6? R. @(10 <= 6)</div>
+    <div>7 é maior que 5 e menor que 9? R. @(7 > 5 && 7 < 9)</div>
+    <div>5 é par?  R. @(5 % 2 == 0)</div>
+    <div>9 é ímpar?  R. @(9 % 2 == 1)</div>
+    <div>21 divido por 3 é 6?  R. @(21 / 3 == 6), é @(21/3)</div>
+
+    <h1>Iteradores: for</h1>
+
+    <div>
+        <span>i: </span>
+        @for (int i = 0; i < 10; i++)
+        {
+            <span>@i</span>
+        }
+    </div>
+
+    <div><small>Note que o <b><i>for</i></b> é <i>zero based</i></small></div>
+
+    <h1>Iteradores: while</h1>
+
+    @{ int j = 2; }
+    @while (j <= 7)
+    {
+        <div>@j x @j: @(j * j)</div>
+        j++;
+    }
+</body>

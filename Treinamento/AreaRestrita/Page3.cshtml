@@ -1,0 +1,76 @@
+﻿@{
+    Page.Title = "Página 3";
+    Layout = "~/AreaRestrita/_Layout.cshtml";
+}
+
+@functions {
+    string acao = null;
+    string cpf = null;
+    string nome = null;
+
+    private void AlimentaVariaveis()
+    {
+        acao = Request.Form["acao"];
+        cpf = Request.Form["cpf"];
+        nome = Request.Form["nome"];
+    }
+}
+
+@{
+    AlimentaVariaveis();
+}
+
+@section head {
+    <link href="~/Scripts/Style.css" rel="stylesheet">
+}
+
+<body>
+    <form name="form1" method="post">
+        <input type="hidden" name="acao" id="acao" />
+
+        <div class="container">
+            <a href="/">Início</a>
+
+            <h1>Formulário</h1>
+
+            <div>
+                <label for="cpf">Cpf: </label>
+                <input type="text" name="cpf" id="cpf" value="@cpf" />
+            </div>
+
+            <div>
+                <label for="nome">Nome: </label>
+                <input type="text" name="nome" id="nome" value="@nome" />
+            </div>
+
+            <button type="button" onclick="enviar()">Enviar</button>
+
+            @if (acao == "I")
+            {
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Cpf</th>
+                            <th>Nome</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>@cpf</td>
+                            <td>@nome</td>
+                        </tr>
+                    </tbody>
+                </table>
+            }
+        </div>
+    </form>
+
+    <script>
+        function enviar() {
+            document.form1.acao.value = "I";
+            document.form1.submit();
+        }
+    </script>
+</body>
+
+

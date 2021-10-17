@@ -1,0 +1,30 @@
+﻿@{
+    Page.Title = "Seja bem vindo";
+    Layout = "~/AreaRestrita/_Layout.cshtml";
+}
+
+<body>
+    <a href="/">Início</a>
+    <a href="~/AreaRestrita/Page1.cshtml">Page 1</a>
+    <a href="~/AreaRestrita/Page2.cshtml">Page 2</a>
+    <a href="~/AreaRestrita/Page3.cshtml">Page 3</a>
+
+    <h1>Olá Mundo</h1>
+
+    <h3>Seja bem vindo ao treinamento</h3>
+
+    @if (DateTime.Now.Hour < 12)
+    {
+        <p>Tenha um bom dia!</p>
+    }
+    else if (DateTime.Now.Hour < 18)
+    {
+        <p>Tenha uma boa tarde!</p>
+    }
+    else
+    {
+        <p>Tenha uma boa noite!</p>
+    }
+
+    <div>@DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")</div>
+</body>
