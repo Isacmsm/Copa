@@ -1,0 +1,76 @@
+﻿@{
+    Page.Title = "Artilharia";
+    Layout = "~/AreaRestrita/_Layout.cshtml";
+}
+
+@functions {
+
+    private class Artilharia
+    {
+        public string NomeTime { get; set; }
+        public string Artilheiro { get; set; }
+        public string GolsMarcados { get; set; }
+    }
+
+    string nomeTime = null;
+    string artilheiro = null;
+    string golsMarcados = null;
+
+    List<Artilharia> artilharia = new List<Artilharia>();
+
+    private void AlimentaVariaveis()
+    {
+        nomeTime = Request.Form["nomeTime"];
+        artilheiro = Request.Form["artilheiro"];
+        golsMarcados = Request.Form["golsMarcados"];
+    }
+    private void Consultar()
+    {
+        Dao dao = new Dao();
+        artilharia = dao.ExecutarProcedureList<Artilharia>("stp_Das_Artilharia_Sel", null);
+    }
+}
+
+@{
+
+    AlimentaVariaveis();
+    Consultar();
+}
+
+@section head {
+    <link href="~/Scripts/Style.css" rel="stylesheet">
+}
+
+<body>
+    <form name="form1" method="post">
+
+        <div class="container">
+
+            <a href="/">Início</a>
+            <h1>Artilharia</h1>
+
+            @if (artilharia != null)
+            {
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Nome Time</th>
+                            <th>Artilheiro</th>
+                            <th>Gols Marcados</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (Artilharia item in artilharia)
+                        {
+                            <tr>
+                                <td>@item.NomeTime</td>
+                                <td>@item.Artilheiro</td>
+                                <td>@item.GolsMarcados</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </form>
+</body>
