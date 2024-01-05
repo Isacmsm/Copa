@@ -1,5 +1,5 @@
 ﻿@{
-    Page.Title = "Jogador";
+    Page.Title = "Jogadores";
     Layout = "~/AreaRestrita/_Layout.cshtml";
 }
 
@@ -11,12 +11,13 @@
         public string NomeJogador { get; set; }
         public string IdTime { get; set; }
         public string NomeTime { get; set; }
+
     }
 
     private class Time
     {
         public string IdTime { get; set; }
-        public string Nome { get; set; }
+        public string NomeTime { get; set; }
     }
 
     string acao = null;
@@ -29,11 +30,19 @@
 
     private void AlimentaVariaveis()
     {
-        acao = Request.Form["acao"];
-        idJogador = Request.Form["idJogador"];
-        nomeJogador = Request.Form["nomeJogador"];
-        idTime = Request.Form["times"];
+        acao = Util.ChecarNulo(Request.Form["acao"]);
+        idJogador = Util.ChecarNulo(Request.Form["idJogador"]);
+        nomeJogador = Util.ChecarNulo(Request.Form["nomeJogador"]);
+        idTime = Util.ChecarNulo(Request.Form["times"]);
     }
+    private void LimpaVariaveis()
+    {
+        acao = null;
+        idJogador = null;
+        nomeJogador = null;
+        idTime = null;
+    }
+
     private void Consultar()
     {
         string procedure = GetNomeProcedure("C");
@@ -43,22 +52,22 @@
     }
     private void ConsultarTimes()
     {
-        string procedure = GetNomeProcedure("CT");
+        string procedure = GetNomeProcedure("C");
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@TipoConsulta", "1");
 
         Dao dao = new Dao();
-        times = dao.ExecutarProcedureList<Time>(procedure, null);
+        times = dao.ExecutarProcedureList<Time>(procedure, parametros);
     }
 
     private string GetNomeProcedure(string acao)
     {
         switch (acao)
         {
-
             case "C": return "stp_Das_Jogador_Sel";
             case "I": return "stp_Das_Jogador_Ins";
             case "A": return "stp_Das_Jogador_Upd";
             case "E": return "stp_Das_Jogador_Del";
-            case "CT": return "stp_Das_Time_Sel";
             default: return null;
         }
     }
@@ -78,12 +87,21 @@
 }
 
 @{
-    
+
     AlimentaVariaveis();
 
     if (acao == "I" || acao == "A" || acao == "E")
     {
-        Manutencao();
+        try
+        {
+            Manutencao();
+            LimpaVariaveis();
+        }
+        catch (Exception ex)
+        {
+            ModelState.AddError("alert-danger", ex.Message);
+        }
+
     }
 
     ConsultarTimes();
@@ -92,40 +110,43 @@
 
 @section head {
     <link href="~/Scripts/Style.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 }
 
 <body>
     <form name="form1" method="post">
         <input type="hidden" name="acao" id="acao" />
-        <input type="hidden" name="idJogador" id="idJogador" value="@idJogador"/>
+        <input type="hidden" name="idJogador" id="idJogador" value="@idJogador" />
 
         <div class="container">
-            <a href="/">Início</a>
+            @RenderPage("~/AreaRestrita/Menu.cshtml")
 
-            <h1>Jogador</h1>
+            <h1>Jogadores</h1>
+
+            @PageHelper.MakeAlert()
 
             <div>
                 <label for="jogador">Jogador: </label>
                 <input type="text" name="nomeJogador" id="nomeJogador" value="@nomeJogador" />
-
-                <label for="times">Time: </label>                
+            </div>
+            <div>
+                <label for="times">Time: </label>
                 <select id="times" name="times">
-                    <option value="0"></option>
+                    <option value=""></option>
                     @if (times != null)
                     {
                         foreach (Time item in times)
                         {
-                            <option value="@item.IdTime">@item.Nome</option>
+                            <option value="@item.IdTime" @(item.IdTime == idTime ? "selected" : "")>@item.NomeTime</option>
                         }
                     }
                 </select>
-
             </div>
 
-            <button type="button" onclick="executarAcao('I')">Incluir</button>
-            <button type="button" onclick="executarAcao('E')">Excluir</button>
-            <button type="button" onclick="executarAcao('A')">Alterar</button>
-            <button type="button" onclick="limparForm()">Limpar</button>
+            <button type="submit" onclick="estadoInicial()">Limpar</button>
+            <button type="button" onclick="executaAcao('I')">Incluir</button>
+            <button type="button" onclick="executaAcao('E')">Excluir</button>
+            <button type="button" onclick="executaAcao('A')">Alterar</button>
 
             @if (jogador != null)
             {
@@ -155,25 +176,12 @@
             }
         </div>
     </form>
-
+    <script src="~/Scripts/Scripts.js"></script>
     <script>
-        function executarAcao(acao) {
-            document.form1.acao.value = acao;
-            document.form1.submit();
-        }
-
         function editar(idJogador, nomeJogador, idTime) {
             document.form1.idJogador.value = idJogador;
             document.form1.nomeJogador.value = nomeJogador;
             document.form1.times.value = idTime;
         }
-
-        function limparForm() {
-            document.form1.idJogador.value = null;
-            document.form1.nomeJogador.value = null;
-            document.form1.times.value = null;
-        }
     </script>
 </body>
-
-

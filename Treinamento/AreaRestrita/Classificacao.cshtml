@@ -13,20 +13,8 @@
         public string GolsMarcados { get; set; }
     }
 
-    string time = null;
-    string pontuacao = null;
-    string saldoGols = null;
-    string golsMarcados = null;
-
     List<Classificacao> classificacao = new List<Classificacao>();
 
-    private void AlimentaVariaveis()
-    {
-        time = Request.Form["time"];
-        pontuacao = Request.Form["pontuacao"];
-        saldoGols = Request.Form["saldoGols"];
-        golsMarcados = Request.Form["golsMarcados"];
-    }
     private void Consultar()
     {
         Dao dao = new Dao();
@@ -35,8 +23,6 @@
 }
 
 @{
-
-    AlimentaVariaveis();
     Consultar();
 }
 
@@ -48,10 +34,9 @@
     <form name="form1" method="post">
 
         <div class="container">
-
-            <a href="/">Início</a>
+            @RenderPage("~/AreaRestrita/Menu.cshtml")
             <h1>Classificação</h1>
-
+            <button type="submit" onclick="estadoInicial()">Limpar</button>
             @if (classificacao != null)
             {
                 <table class="table">
@@ -78,4 +63,6 @@
             }
         </div>
     </form>
+    <script src="~/Scripts/Scripts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>

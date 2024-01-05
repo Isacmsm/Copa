@@ -5,6 +5,19 @@
 
 @functions {
 
+    private class TimesJogo
+    {
+        public string IdJogo { get; set; }
+        public string Jogo { get; set; }
+        public string Resultado { get; set; }
+        public string IdTime1 { get; set; }
+        public string IdTime2 { get; set; }
+    }
+    private class ResultadoJogo
+    {
+        public string Resultado { get; set; }
+    }
+
     private class Participacao
     {
         public string IdParticipacao { get; set; }
@@ -12,78 +25,66 @@
         public string Jogo { get; set; }
         public string IdJogador { get; set; }
         public string NomeJogador { get; set; }
+        public string NomeTime { get; set; }
         public string GolsMarcados { get; set; }
     }
 
-    private class TimesJogo
-    {
-        public string IdJogo { get; set; }
-        public string Jogo { get; set; }
-        public string IdTime1 { get; set; }
-        public string IdTime2 { get; set; }
-
-    }
-
-    private class Jogadores
-    {
-        public string IdJogador { get; set; }
-        public string NomeJogador { get; set; }
-    }
 
     string acao = null;
     string idParticipacao = null;
     string idJogo = null;
-    string jogo = null;
     string idJogador = null;
-    string nomeJogador = null;
-    string golsMarcados = null;
 
     List<Participacao> participacao = new List<Participacao>();
     List<TimesJogo> timesJogo = new List<TimesJogo>();
-    List<Jogadores> jogadores = new List<Jogadores>();
+    ResultadoJogo resultadoJogos = new ResultadoJogo();
 
     private void AlimentaVariaveis()
     {
-        acao = Request.Form["acao"];
-        idParticipacao = Request.Form["idParticipacao"];
-        idJogo = Request.Form["idJogo"];
-        idJogador = Request.Form["idJogador"];
-        golsMarcados = Request.Form["golsMarcados"];
+        acao = Util.ChecarNulo(Request.Form["acao"]);
+        idParticipacao = Util.ChecarNulo(Request.Form["idParticipacao"]);
+        idJogo = Util.ChecarNulo(Request.Form["idJogo"]);
+        idJogador = Util.ChecarNulo(Request.Form["idJogador"]);
     }
-    private void Consultar()
+    private void ConsultarJogos()
     {
         string procedure = GetNomeProcedure("C");
 
         Dao dao = new Dao();
-        participacao = dao.ExecutarProcedureList<Participacao>(procedure, null);
+        timesJogo = dao.ExecutarProcedureList<TimesJogo>(procedure, null);
+
     }
-    private void ConsultarJogos()
+    private void ConsultarResultado()
     {
-        string procedure = GetNomeProcedure("CJ");
+        string procedure = GetNomeProcedure("C");
+
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@TipoConsulta", "1");
+        parametros.Add("@IdJogo", idJogo);
 
         Dao dao = new Dao();
-        timesJogo = dao.ExecutarProcedureList<TimesJogo>(procedure, null);
+        resultadoJogos = dao.ExecutarProcedure<ResultadoJogo>(procedure, parametros);
     }
 
-    private void ConsultarJogadores()
+    private void ConsultarParticipacao()
     {
-        string procedure = GetNomeProcedure("CJo");
+        string procedure = GetNomeProcedure("C");
+
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@TipoConsulta", "2");
+        parametros.Add("@IdJogo", idJogo);
 
         Dao dao = new Dao();
-        timesJogo = dao.ExecutarProcedureList<TimesJogo>(procedure, null);
+        participacao = dao.ExecutarProcedureList<Participacao>(procedure, parametros);
     }
+
 
     private string GetNomeProcedure(string acao)
     {
         switch (acao)
         {
-
             case "C": return "stp_Das_Participacao_Sel";
-            case "I": return "stp_Das_Participacao_Ins";
             case "A": return "stp_Das_Participacao_Upd";
-            case "E": return "stp_Das_Participacao_Del";
-            case "CJ": return "stp_Das_ConsultarJogos_Sel";
-            case "CJo": return "stp_Das_ConsultarJogadores_Sel";
             default: return null;
         }
     }
@@ -93,7 +94,6 @@
         parametros.Add("@IdParticipacao", idParticipacao);
         parametros.Add("@IdJogo", idJogo);
         parametros.Add("@IdJogador", idJogador);
-        parametros.Add("@GolsMarcados", golsMarcados);
 
         string procedure = GetNomeProcedure(acao);
 
@@ -102,34 +102,33 @@
 
     }
 
-    private void LimparForm()
-    {
-        acao = null;
-        //idJogo = null;
-        //idTime1 = null;
-        //idTime2 = null;
-        //placar1 = null;
-        //placar2 = null;
-
-    }
 }
 
 @{
 
     AlimentaVariaveis();
 
-    if (acao == "I" || acao == "A" || acao == "E")
+    if (acao == "A")
     {
-        Manutencao();
-        LimparForm();
+        try
+        {
+            Manutencao();
+        }
+        catch (Exception ex)
+        {
+            ModelState.AddError("alert-danger", ex.Message);
+        }
+
     }
 
     ConsultarJogos();
-    if (acao == "CJo")
+
+    if (idJogo != null)
     {
-        ConsultarJogadores();
+        ConsultarResultado();
+        ConsultarParticipacao();
     }
-    Consultar();
+
 }
 
 @section head {
@@ -140,59 +139,44 @@
     <form name="form1" method="post">
         <input type="hidden" name="acao" id="acao" />
         <input type="hidden" name="idParticipacao" id="idParticipacao" value="@idParticipacao" />
-        <input type="hidden" name="idJogo" id="idJogo" value="@idJogo"/>
+        <input type="hidden" name="idJogador" id="idJogador" value="@idJogador" />
 
         <div class="container">
-            <a href="/">Início</a>
+            @RenderPage("~/AreaRestrita/Menu.cshtml")
 
             <h1>Participação</h1>
 
+            @PageHelper.MakeAlert()
+
+            <button type="submit" onclick="estadoInicial()">Limpar</button>
             <div>
-                <label for="jogos">Jogos: </label>
-                <select id="jogos" name="jogos">
-                    <option value="0"></option>
+                <label for="idjogo">Jogos: </label>
+                <select id="idjogo" name="idjogo" onchange="listarResultado()">
+                    <option value=""></option>
                     @if (timesJogo != null)
                     {
                         foreach (TimesJogo item in timesJogo)
                         {
-                            <option value="@item.IdJogo" onchange="listarJogadores('@item.IdJogo')">@item.Jogo</option>
+                            <option value="@item.IdJogo" @(@item.IdJogo == @idJogo ? "selected" : "")>@item.Jogo</option>
                         }
                     }
                 </select>
-
-                <label for="jogadores">Jogador: </label>
-                <select id="jogadores" name="jogadores">
-                    <option value="0"></option>
-                    @if (jogadores != null)
-                    {
-                        foreach (Jogadores item in jogadores)
-                        {
-                            <option value="@item.IdJogador">@item.NomeJogador</option>
-                        }
-                    }
-                </select>
-
-                <label for="golsMarcados">Gols Marcados:</label>
-                <input type="text" name="golsMarcados" id="golsMarcados" value="@golsMarcados" />
 
             </div>
 
-            <button type="button" onclick="executarAcao('I')">Incluir</button>
-            <button type="button" onclick="executarAcao('E')">Excluir</button>
-            <button type="button" onclick="executarAcao('A')">Alterar</button>
-            <button type="button" onclick="limparForm()">Limpar</button>
-
-            @if (participacao != null)
+            @if (idJogo != null)
             {
+
+                <label><strong>Resultado</strong></label>
+                <br>
+                <label>@resultadoJogos.Resultado</label>
+
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>IdParticipação</th>
-                            <th>IdJogo</th>
-                            <th>Jogo</th>
-                            <th>IdJogador</th>
                             <th>Nome Jogador</th>
-                            <th>GolsMarcados</th>
+                            <th>Time</th>
+                            <th>Gols Marcados</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -200,13 +184,10 @@
                         @foreach (Participacao item in participacao)
                         {
                             <tr>
-                                <td>@item.IdParticipacao</td>
-                                <td>@item.IdJogo</td>
-                                <td>@item.Jogo</td>
-                                <td>@item.IdJogador</td>
                                 <td>@item.NomeJogador</td>
+                                <td>@item.NomeTime</td>
                                 <td>@item.GolsMarcados</td>
-                                <td><button type="button" onclick="editar('@item.IdParticipacao','@item.IdJogo', '@item.IdJogador','@item.GolsMarcados')">Editar</button></td>
+                                <td><button type="button" onclick="maisUmGol('@item.IdParticipacao','@item.IdJogo', '@item.IdJogador')">+ 1 Gols</button></td>
                             </tr>
                         }
                     </tbody>
@@ -215,32 +196,21 @@
         </div>
     </form>
 
+    <script src="~/Scripts/Scripts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        function executarAcao(acao) {
-            document.form1.acao.value = acao;
+
+        function listarResultado() {
             document.form1.submit();
         }
 
-        function editar(idParticipacao, idJogo, IdJogador, golsMarcados) {
+        function maisUmGol(idParticipacao, idJogo, idJogador) {
+            document.form1.acao.value = 'A';
             document.form1.idParticipacao.value = idParticipacao;
-            document.form1.jogos.value = idJogo;
-            document.form1.jogadores.value = IdJogador;
-            document.form1.golsMarcados.value = golsMarcados;
-        }
-
-        function limparForm() {
-            document.form1.idParticipacao.value = null;
-            document.form1.jogos.value = null;
-            document.form1.jogadores.value = null;
-            document.form1.golsMarcados.value = null;
-        }
-
-        function listarJogadores(idJogo) {
-            alert(idJogo);
-            document.form1.acao.value = 'CJo';
-            document.form1.idJogo.value = idJogo;
+            document.form1.idJogador.value = idJogador;
             document.form1.submit();
         }
+
     </script>
 </body>
 

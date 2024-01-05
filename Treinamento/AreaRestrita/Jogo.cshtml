@@ -1,15 +1,9 @@
 ﻿@{
-    Page.Title = "Jogo";
+    Page.Title = "Jogos";
     Layout = "~/AreaRestrita/_Layout.cshtml";
 }
 
 @functions {
-
-    //@IdJogo INT = NULL,
-    //@IdTime1 INT = NULL,
-    //@IdTime2 INT = NULL,
-    //@Placar1 INT = NULL,
-    //@Placar2 INT = NULL
 
     private class Jogo
     {
@@ -31,23 +25,24 @@
     string acao = null;
     string idJogo = null;
     string idTime1 = null;
-    string time1 = null;
     string idTime2 = null;
-    string time2 = null;
-    string placar1 = null;
-    string placar2 = null;
 
     List<Jogo> jogo = new List<Jogo>();
     List<Time> times = new List<Time>();
 
     private void AlimentaVariaveis()
     {
-        acao = Request.Form["acao"];
-        idJogo = Request.Form["idJogo"];
-        idTime1 = Request.Form["times1"];
-        idTime2 = Request.Form["times2"];
-        placar1 = Request.Form["placar1"];
-        placar2 = Request.Form["placar2"];
+        acao = Util.ChecarNulo(Request.Form["acao"]);
+        idJogo = Util.ChecarNulo(Request.Form["idJogo"]);
+        idTime1 = Util.ChecarNulo(Request.Form["times1"]);
+        idTime2 = Util.ChecarNulo(Request.Form["times2"]);
+    }
+    private void LimpaVariaveis()
+    {
+        acao = null;
+        idJogo = null;
+        idTime1 = null;
+        idTime2 = null;
     }
     private void Consultar()
     {
@@ -58,22 +53,22 @@
     }
     private void ConsultarTimes()
     {
-        string procedure = GetNomeProcedure("CT");
+        string procedure = GetNomeProcedure("C");
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@TipoConsulta", "1");
 
         Dao dao = new Dao();
-        times = dao.ExecutarProcedureList<Time>(procedure, null);
+        times = dao.ExecutarProcedureList<Time>(procedure, parametros);
     }
 
     private string GetNomeProcedure(string acao)
     {
         switch (acao)
         {
-
             case "C": return "stp_Das_Jogo_Sel";
             case "I": return "stp_Das_Jogo_Ins";
             case "A": return "stp_Das_Jogo_Upd";
             case "E": return "stp_Das_Jogo_Del";
-            case "CT": return "stp_Das_Time_Sel";
             default: return null;
         }
     }
@@ -83,8 +78,6 @@
         parametros.Add("@IdJogo", idJogo);
         parametros.Add("@IdTime1", idTime1);
         parametros.Add("@IdTime2", idTime2);
-        parametros.Add("@Placar1", placar1);
-        parametros.Add("@Placar2", placar2);
 
         string procedure = GetNomeProcedure(acao);
 
@@ -93,16 +86,6 @@
 
     }
 
-    private void LimparForm()
-    {
-        acao = null;
-        idJogo = null;
-        idTime1 = null;
-        idTime2 = null;
-        placar1 = null;
-        placar2 = null;
-
-    }
 }
 
 @{
@@ -111,8 +94,16 @@
 
     if (acao == "I" || acao == "A" || acao == "E")
     {
-        Manutencao();
-        LimparForm();
+        try
+        {
+            Manutencao();
+            LimpaVariaveis();
+        }
+        catch (Exception ex)
+        {
+            ModelState.AddError("alert-danger", ex.Message);
+        }
+
     }
 
     ConsultarTimes();
@@ -126,49 +117,48 @@
 <body>
     <form name="form1" method="post">
         <input type="hidden" name="acao" id="acao" />
-        <input type="hidden" name="idJogo" id="idJogador" value="@idJogo" />
+        <input type="hidden" name="idJogo" id="idJogo" value="@idJogo" />
 
         <div class="container">
-            <a href="/">Início</a>
+            @RenderPage("~/AreaRestrita/Menu.cshtml")
 
             <h1>Jogos</h1>
 
+            @PageHelper.MakeAlert()
+
             <div>
-                <label for="times1">Time: </label>
+                <label for="times1">Time 1: </label>
                 <select id="times1" name="times1">
-                    <option value="0"></option>
+                    <option value=""></option>
                     @if (times != null)
                     {
                         foreach (Time item in times)
                         {
-                            <option value="@item.IdTime">@item.Nome</option>
+                            <option value="@item.IdTime" @(item.IdTime == idTime1 ? "selected" : "") >@item.Nome</option>
                         }
                     }
                 </select>
-
-                <label for="times2">Time: </label>
-                <select id="times2" name="times2">
-                    <option value="0"></option>
-                    @if (times != null)
-                    {
-                        foreach (Time item in times)
-                        {
-                            <option value="@item.IdTime">@item.Nome</option>
-                        }
-                    }
-                </select>
-
-                <label for="placar1">Placar 1:</label>
-                <input type="text" name="placar1" id="placar1" value="@placar1" />
-                <label for="placar2">Placar 2:</label>
-                <input type="text" name="placar2" id="placar2" value="@placar2" />
-
             </div>
-
-            <button type="button" onclick="executarAcao('I')">Incluir</button>
-            <button type="button" onclick="executarAcao('E')">Excluir</button>
-            <button type="button" onclick="executarAcao('A')">Alterar</button>
-            <button type="button" onclick="limparForm()">Limpar</button>
+            <br>
+            <div>
+                <label for="times2">Time 2: </label>
+                <select id="times2" name="times2">
+                    <option value=""></option>
+                    @if (times != null)
+                    {
+                        foreach (Time item in times)
+                        {
+                            <option value="@item.IdTime" @(item.IdTime == idTime2 ? "selected" : "" ) >@item.Nome</option>
+                        }
+                    }
+                </select>
+            </div>
+            <br>
+            <button type="submit" onclick="estadoInicial()">Limpar</button>
+            <button type="button" onclick="executaAcao('I')">Incluir</button>
+            <button type="button" onclick="executaAcao('E')">Excluir</button>
+            <button type="button" onclick="executaAcao('A')">Alterar</button>
+            <br>
 
             @if (jogo != null)
             {
@@ -196,7 +186,7 @@
                                 <td>@item.Time2</td>
                                 <td>@item.Placar1</td>
                                 <td>@item.Placar2</td>
-                                <td><button type="button" onclick="editar('@item.IdJogo','@item.IdTime1', '@item.IdTime2','@item.Placar1','@item.Placar2')">Editar</button></td>
+                                <td><button type="button" onclick="editar('@item.IdJogo','@item.IdTime1', '@item.IdTime2')">Editar</button></td>
                             </tr>
                         }
                     </tbody>
@@ -204,27 +194,14 @@
             }
         </div>
     </form>
-
+    <script src="~/Scripts/Scripts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        function executarAcao(acao) {
-            document.form1.acao.value = acao;
-            document.form1.submit();
-        }
 
-        function editar(idJogo, idTime1, idTime2, placar1, placar2) {
+        function editar(idJogo, idTime1, idTime2) {
             document.form1.idJogo.value = idJogo;
             document.form1.times1.value = idTime1;
             document.form1.times2.value = idTime2;
-            document.form1.placar1.value = placar1;
-            document.form1.placar2.value = placar2;
-        }
-
-        function limparForm() {
-            document.form1.idJogo.value = null;
-            document.form1.times1.value = null;
-            document.form1.times2.value = null;
-            document.form1.placar1.value = null;
-            document.form1.placar2.value = null;
         }
     </script>
 </body>

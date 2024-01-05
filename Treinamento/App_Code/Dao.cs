@@ -10,6 +10,8 @@ public class Dao
 
     public void ExecutarProcedure(string procedure, Dictionary<string, object> parametros)
     {
+        //as mensagens geradas no SQL são gerenciadas na aplicação por essa SqlError
+        List<SqlError> erros = null;
 
         SqlConnection conn = new SqlConnection(stringConexao);
 
@@ -19,7 +21,34 @@ public class Dao
 
         AdicionarParametros(cmmd, parametros);
 
+        //set a configuração para disparar um, quando acontecer um erro nde baixa relevância na procedure
+        conn.FireInfoMessageEventOnUserErrors = true;
+
+        //função lambda para tratar cada erro dispado pela procedure
+        conn.InfoMessage += new SqlInfoMessageEventHandler((object sender, SqlInfoMessageEventArgs e) => {
+            
+            //se alista não estiver instanciada
+            if (erros == null)
+            {
+                //instancia uma nova lista
+                erros = new List<SqlError>();
+            }
+
+            foreach (SqlError erro in e.Errors)
+            {
+                //adiciona os erros na lista
+                erros.Add(erro);
+            }
+        });
+
         cmmd.ExecuteNonQuery();
+
+        //verifica se aconteceu algum erro
+        if (erros != null)
+        {
+            throw new ErroExecucaoException (erros);
+        }
+
 
         cmmd.Dispose();
 
@@ -38,6 +67,9 @@ public class Dao
 
     public List<T> ExecutarProcedureList<T>(string procedure, Dictionary<string, object> parametros)
     {
+        //as mensagens geradas no SQL são gerenciadas na aplicação por essa SqlError
+        List<SqlError> erros = null;
+
         SqlConnection conn = new SqlConnection(stringConexao);
 
         conn.Open();
@@ -46,7 +78,33 @@ public class Dao
 
         AdicionarParametros(cmmd, parametros);
 
+        //set a configuração para disparar um, quando acontecer um erro nde baixa relevância na procedure
+        conn.FireInfoMessageEventOnUserErrors = true;
+
+        //função lambda para tratar cada erro dispado pela procedure
+        conn.InfoMessage += new SqlInfoMessageEventHandler((object sender, SqlInfoMessageEventArgs e) => {
+
+            //se alista não estiver instanciada
+            if (erros == null)
+            {
+                //instancia uma nova lista
+                erros = new List<SqlError>();
+            }
+
+            foreach (SqlError erro in e.Errors)
+            {
+                //adiciona os erros na lista
+                erros.Add(erro);
+            }
+        });
+
         SqlDataReader dr = cmmd.ExecuteReader();
+
+        //verifica se aconteceu algum erro
+        if (erros != null)
+        {
+            throw new ErroExecucaoException(erros);
+        }
 
         List<T> list = CriaLista<T>(dr);
         cmmd.Dispose();
