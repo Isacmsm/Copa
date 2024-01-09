@@ -22,7 +22,13 @@
 }
 
 @{
-    Consultar();
+
+    Util.ExceptionHandler(() =>
+    {
+        Consultar();
+
+    }, this.ModelState);
+
 }
 
 @section head {

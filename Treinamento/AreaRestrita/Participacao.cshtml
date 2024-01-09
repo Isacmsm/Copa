@@ -102,6 +102,10 @@
 
     }
 
+    private string IsInvalid(string key)
+    {
+        return (!ModelState.IsValidField(key) ? "is-invalid" : "");
+    }
 }
 
 @{
@@ -110,24 +114,29 @@
 
     if (acao == "A")
     {
-        try
+        Util.ExceptionHandler(() =>
         {
             Manutencao();
-        }
-        catch (Exception ex)
-        {
-            ModelState.AddError("alert-danger", ex.Message);
-        }
+
+            ModelState.AddError("alert-success", "Operação realizada com sucesso");
+
+        }, this.ModelState);
 
     }
 
-    ConsultarJogos();
-
-    if (idJogo != null)
+    Util.ExceptionHandler(() =>
     {
-        ConsultarResultado();
-        ConsultarParticipacao();
-    }
+        ConsultarJogos();
+
+        if (idJogo != null)
+        {
+            ConsultarResultado();
+            ConsultarParticipacao();
+        }
+
+    }, this.ModelState);
+
+
 
 }
 
@@ -148,10 +157,10 @@
 
             @PageHelper.MakeAlert()
 
-            <button type="submit" onclick="estadoInicial()">Limpar</button>
-            <div>
-                <label for="idjogo">Jogos: </label>
-                <select id="idjogo" name="idjogo" onchange="listarResultado()">
+            <button class="mb-3" type="submit" onclick="estadoInicial()">Limpar</button>
+            <div class="mb-3">
+                <label class="form-label" for="idjogo">Jogos: </label>
+                <select class="form-control" id="idjogo" name="idjogo" onchange="listarResultado()">
                     <option value=""></option>
                     @if (timesJogo != null)
                     {
@@ -167,9 +176,9 @@
             @if (idJogo != null)
             {
 
-                <label><strong>Resultado</strong></label>
+                <label class="form-label"><strong>Resultado</strong></label>
                 <br>
-                <label>@resultadoJogos.Resultado</label>
+                <label class="form-label">@resultadoJogos.Resultado</label>
 
                 <table class="table">
                     <thead>

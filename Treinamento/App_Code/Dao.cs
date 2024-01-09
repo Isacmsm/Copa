@@ -25,8 +25,9 @@ public class Dao
         conn.FireInfoMessageEventOnUserErrors = true;
 
         //função lambda para tratar cada erro dispado pela procedure
-        conn.InfoMessage += new SqlInfoMessageEventHandler((object sender, SqlInfoMessageEventArgs e) => {
-            
+        conn.InfoMessage += new SqlInfoMessageEventHandler((object sender, SqlInfoMessageEventArgs e) =>
+        {
+
             //se alista não estiver instanciada
             if (erros == null)
             {
@@ -46,7 +47,7 @@ public class Dao
         //verifica se aconteceu algum erro
         if (erros != null)
         {
-            throw new ErroExecucaoException (erros);
+            throw new ErroExecucaoException(erros);
         }
 
 
@@ -82,7 +83,8 @@ public class Dao
         conn.FireInfoMessageEventOnUserErrors = true;
 
         //função lambda para tratar cada erro dispado pela procedure
-        conn.InfoMessage += new SqlInfoMessageEventHandler((object sender, SqlInfoMessageEventArgs e) => {
+        conn.InfoMessage += new SqlInfoMessageEventHandler((object sender, SqlInfoMessageEventArgs e) =>
+        {
 
             //se alista não estiver instanciada
             if (erros == null)
@@ -122,7 +124,7 @@ public class Dao
         return ExecutarProcedureList<T>(procedure, parametros).FirstOrDefault();
     }
 
-private void AdicionarParametros(SqlCommand cmmd, Dictionary<string, object> parametros)
+    private void AdicionarParametros(SqlCommand cmmd, Dictionary<string, object> parametros)
     {
         if (parametros != null)
         {
@@ -183,7 +185,7 @@ private void AdicionarParametros(SqlCommand cmmd, Dictionary<string, object> par
 
         return list;
     }
-   
+
     private int GetColumnOrdinal(SqlDataReader dr, string columnName)
     {
         int ordinal = -1;

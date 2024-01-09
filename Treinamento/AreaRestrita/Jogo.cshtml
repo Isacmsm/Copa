@@ -86,6 +86,11 @@
 
     }
 
+    private string IsInvalid(string key)
+    {
+        return (!ModelState.IsValidField(key) ? "is-invalid" : "");
+    }
+
 }
 
 @{
@@ -94,20 +99,21 @@
 
     if (acao == "I" || acao == "A" || acao == "E")
     {
-        try
+        Util.ExceptionHandler(() =>
         {
             Manutencao();
             LimpaVariaveis();
-        }
-        catch (Exception ex)
-        {
-            ModelState.AddError("alert-danger", ex.Message);
-        }
+
+        }, this.ModelState);
 
     }
 
-    ConsultarTimes();
-    Consultar();
+    Util.ExceptionHandler(() =>
+    {
+        ConsultarTimes();
+        Consultar();
+
+    }, this.ModelState);
 }
 
 @section head {
@@ -127,31 +133,33 @@
             @PageHelper.MakeAlert()
 
             <div>
-                <label for="times1">Time 1: </label>
-                <select id="times1" name="times1">
+                <label class="form-label" for="times1">Time 1: </label>
+                <select class="form-control @IsInvalid("times1")" id="times1" name="times1">
                     <option value=""></option>
                     @if (times != null)
                     {
                         foreach (Time item in times)
                         {
-                            <option value="@item.IdTime" @(item.IdTime == idTime1 ? "selected" : "") >@item.Nome</option>
+                            <option value="@item.IdTime" @(item.IdTime == idTime1 ? "selected" : "")>@item.Nome</option>
                         }
                     }
                 </select>
+                @PageHelper.MakeFeedBack("times1")
             </div>
             <br>
             <div>
-                <label for="times2">Time 2: </label>
-                <select id="times2" name="times2">
+                <label class="form-label" for="times2">Time 2: </label>
+                <select class="form-control @IsInvalid("times2")" id="times2" name="times2">
                     <option value=""></option>
                     @if (times != null)
                     {
                         foreach (Time item in times)
                         {
-                            <option value="@item.IdTime" @(item.IdTime == idTime2 ? "selected" : "" ) >@item.Nome</option>
+                            <option value="@item.IdTime" @(item.IdTime == idTime2 ? "selected" : "" )>@item.Nome</option>
                         }
                     }
                 </select>
+                @PageHelper.MakeFeedBack("times2")
             </div>
             <br>
             <button type="submit" onclick="estadoInicial()">Limpar</button>

@@ -4,7 +4,12 @@
 }
 
 @functions {
-
+    private enum View
+    {
+        Index,
+        New,
+        Edit
+    }
     private class Time
     {
         public string IdTime { get; set; }
@@ -15,6 +20,7 @@
     string acao = null;
     string idTime = null;
     string nome = null;
+    View view = View.Index;
 
     List<Time> times = new List<Time>();
 
@@ -24,6 +30,11 @@
         acao = Util.ChecarNulo(Request.Form["acao"]);
         idTime = Util.ChecarNulo(Request.Form["idTime"]);
         nome = Util.ChecarNulo(Request.Form["nome"]);
+
+        if (!string.IsNullOrWhiteSpace(Request.Form["view"]))
+        {
+            view = (View)Enum.Parse(typeof(View), Request.Form["view"]);
+        }
     }
     private void LimpaVariaveis()
     {
@@ -34,11 +45,13 @@
 
     private void Consultar()
     {
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@IdTime", idTime);
 
         string procedure = GetNomeProcedure("C");
 
         Dao dao = new Dao();
-        times = dao.ExecutarProcedureList<Time>(procedure, null);
+        times = dao.ExecutarProcedureList<Time>(procedure, parametros);
 
     }
 
@@ -71,6 +84,16 @@
     {
         return (!ModelState.IsValidField(key) ? "is-invalid" : "");
     }
+
+    private void CarregarDados()
+    {
+        if (view == View.Edit && acao == "C" && times != null && times.Count == 1)
+        {
+            Time time = times.FirstOrDefault();
+            idTime = time.IdTime;
+            nome = time.Nome;
+        }
+    }
 }
 
 @{
@@ -82,6 +105,7 @@
         Util.ExceptionHandler(() =>
         {
             Manutencao();
+            view = View.Index;
             LimpaVariaveis();
 
             ModelState.AddError("alert-success", "Operação realizada com sucesso");
@@ -90,7 +114,13 @@
 
     }
 
-    Util.ExceptionHandler(Consultar, this.ModelState);
+    Util.ExceptionHandler(() =>
+    {
+        Consultar();
+
+        CarregarDados();
+
+    }, this.ModelState);
 
 }
 
@@ -102,6 +132,7 @@
     <form name="form1" method="post">
         <input type="hidden" name="acao" id="acao" />
         <input type="hidden" name="idTime" id="idTime" value="@idTime" />
+        <input type="hidden" name="view" id="view" value="@((int)view)" />
 
         <div class="container">
             @RenderPage("~/AreaRestrita/Menu.cshtml")
@@ -110,51 +141,78 @@
 
             @PageHelper.MakeAlert()
 
-            <div class="mb-3">
-                <label class="form-label" for="time">Time: </label>
-                <input class="form-control @IsInvalid("nome")" type="text" name="nome" id="nome" value="@nome" />
-                @PageHelper.MakeFeedBack("nome")
-
-            </div>
-
-            <button type="submit" onclick="estadoInicial()">Limpar</button>
-            <button type="button" onclick="executaAcao('I')">Incluir</button>
-            <button type="button" onclick="executaAcao('E')">Excluir</button>
-            <button type="button" onclick="executaAcao('A')">Alterar</button>
-
-            @if (times != null)
+            <button class="btn btn-secondary" type="submit" onclick="estadoInicial()">Limpar</button>
+            @if (view == View.Index)
             {
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>IdTime</th>
-                            <th>Nome</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (Time item in times)
-                        {
-                            <tr>
-                                <td>@item.IdTime</td>
-                                <td>@item.Nome</td>
-                                <td><button type="button" onclick="editar('@item.IdTime','@item.Nome')">Editar</button></td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+                <button class="btn btn-secondary" type="button" onclick="novo()">Novo</button>
             }
+
+            @if (view == View.New)
+            {
+                <button class="btn btn-secondary" type="button" onclick="executaAcao('I')">Incluir</button>
+            }
+
+            @if (view == View.Edit)
+            {
+                <button class="btn btn-secondary" type="button" onclick="executaAcao('A')">Alterar</button>
+                <button class="btn btn-secondary" type="button" onclick="executaAcao('E')">Excluir</button>
+            }
+
+            @if (view == View.New || view == View.Edit)
+            {
+                <div class="mb-3">
+                    <label class="form-label" for="time">Time: </label>
+                    <input class="form-control @IsInvalid("nome")" type="text" name="nome" id="nome" value="@nome" />
+                    @PageHelper.MakeFeedBack("nome")
+
+                </div>
+            }
+
+            @if (view == View.Index)
+            {
+                if (times != null)
+                {
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>IdTime</th>
+                                <th>Nome</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (Time item in times)
+                            {
+                                <tr>
+                                    <td>@item.IdTime</td>
+                                    <td>@item.Nome</td>
+                                    <td><button type="button" onclick="editar('@item.IdTime','@item.Nome')">Editar</button></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            }
+
         </div>
     </form>
     <script src="~/Scripts/Scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        function editar(idTime, nome) {
+        function editar(idTime) {
+            document.form1.view.value = "@((int)View.Edit)";
             document.form1.idTime.value = idTime;
-            document.form1.nome.value = nome;
+            executaAcao('C');
         }
+
+        function novo() {
+            document.form1.view.value = "@((int)View.New)";
+            executaAcao('');
+        }
+
     </script>
 </body>
+
 
 
