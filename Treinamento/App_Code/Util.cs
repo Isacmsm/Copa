@@ -10,7 +10,7 @@ public static class Util
             return null;
         }
         else
-        {
+        { 
             return str.Trim();
         }
     }
@@ -34,4 +34,12 @@ public static class Util
             model.AddError("alert-danger", ex.Message);
         }
     }
+
+    public static string IsInvalid(ModelStateDictionary model, string key)
+    {
+        return (!model.IsValidField(key) ? "is-invalid" : "");
+    }
+
+
+
 }

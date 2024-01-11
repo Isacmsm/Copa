@@ -157,7 +157,7 @@
 
             @PageHelper.MakeAlert()
 
-            <button class="mb-3" type="submit" onclick="estadoInicial()">Limpar</button>
+            <button class="btn btn-secondary mb-3" type="submit" onclick="estadoInicial()">Limpar</button>
             <div class="mb-3">
                 <label class="form-label" for="idjogo">Jogos: </label>
                 <select class="form-control" id="idjogo" name="idjogo" onchange="listarResultado()">
@@ -176,8 +176,7 @@
             @if (idJogo != null)
             {
 
-                <label class="form-label"><strong>Resultado</strong></label>
-                <br>
+                <label class="form-label mb-3"><strong>Resultado: </strong></label>
                 <label class="form-label">@resultadoJogos.Resultado</label>
 
                 <table class="table">
@@ -196,7 +195,7 @@
                                 <td>@item.NomeJogador</td>
                                 <td>@item.NomeTime</td>
                                 <td>@item.GolsMarcados</td>
-                                <td><button type="button" onclick="maisUmGol('@item.IdParticipacao','@item.IdJogo', '@item.IdJogador')">+ 1 Gols</button></td>
+                                <td><button class="btn btn-secondary" type="button" onclick="maisUmGol('@item.IdParticipacao','@item.IdJogo', '@item.IdJogador')">+ 1 Gols</button></td>
                             </tr>
                         }
                     </tbody>

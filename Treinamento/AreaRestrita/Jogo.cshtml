@@ -5,6 +5,12 @@
 
 @functions {
 
+    private enum View
+    {
+        Index,
+        New,
+        Edit
+    }
     private class Jogo
     {
         public string IdJogo { get; set; }
@@ -26,8 +32,9 @@
     string idJogo = null;
     string idTime1 = null;
     string idTime2 = null;
+    View view = View.Index;
 
-    List<Jogo> jogo = new List<Jogo>();
+    List<Jogo> jogos = new List<Jogo>();
     List<Time> times = new List<Time>();
 
     private void AlimentaVariaveis()
@@ -36,6 +43,12 @@
         idJogo = Util.ChecarNulo(Request.Form["idJogo"]);
         idTime1 = Util.ChecarNulo(Request.Form["times1"]);
         idTime2 = Util.ChecarNulo(Request.Form["times2"]);
+
+        if (!string.IsNullOrWhiteSpace(Request.Form["view"]))
+        {
+            view = (View)Enum.Parse(typeof(View), Request.Form["view"]);
+        }
+
     }
     private void LimpaVariaveis()
     {
@@ -46,10 +59,13 @@
     }
     private void Consultar()
     {
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@IdJogo", idJogo);
+
         string procedure = GetNomeProcedure("C");
 
         Dao dao = new Dao();
-        jogo = dao.ExecutarProcedureList<Jogo>(procedure, null);
+        jogos = dao.ExecutarProcedureList<Jogo>(procedure, parametros);
     }
     private void ConsultarTimes()
     {
@@ -91,6 +107,17 @@
         return (!ModelState.IsValidField(key) ? "is-invalid" : "");
     }
 
+    private void CarregarDados()
+    {
+        if (view == View.Edit && acao == "C" && jogos != null && jogos.Count == 1)
+        {
+            Jogo jogo = jogos.FirstOrDefault();
+            idJogo = jogo.IdJogo;
+            idTime1 = jogo.IdTime1;
+            idTime2 = jogo.IdTime2;
+        }
+    }
+
 }
 
 @{
@@ -102,6 +129,9 @@
         Util.ExceptionHandler(() =>
         {
             Manutencao();
+
+            view = View.Index;
+
             LimpaVariaveis();
 
         }, this.ModelState);
@@ -112,6 +142,8 @@
     {
         ConsultarTimes();
         Consultar();
+
+        CarregarDados();
 
     }, this.ModelState);
 }
@@ -124,6 +156,7 @@
     <form name="form1" method="post">
         <input type="hidden" name="acao" id="acao" />
         <input type="hidden" name="idJogo" id="idJogo" value="@idJogo" />
+        <input type="hidden" name="view" id="view" value="@((int)view)" />
 
         <div class="container">
             @RenderPage("~/AreaRestrita/Menu.cshtml")
@@ -132,84 +165,100 @@
 
             @PageHelper.MakeAlert()
 
-            <div>
-                <label class="form-label" for="times1">Time 1: </label>
-                <select class="form-control @IsInvalid("times1")" id="times1" name="times1">
-                    <option value=""></option>
-                    @if (times != null)
-                    {
-                        foreach (Time item in times)
-                        {
-                            <option value="@item.IdTime" @(item.IdTime == idTime1 ? "selected" : "")>@item.Nome</option>
-                        }
-                    }
-                </select>
-                @PageHelper.MakeFeedBack("times1")
-            </div>
-            <br>
-            <div>
-                <label class="form-label" for="times2">Time 2: </label>
-                <select class="form-control @IsInvalid("times2")" id="times2" name="times2">
-                    <option value=""></option>
-                    @if (times != null)
-                    {
-                        foreach (Time item in times)
-                        {
-                            <option value="@item.IdTime" @(item.IdTime == idTime2 ? "selected" : "" )>@item.Nome</option>
-                        }
-                    }
-                </select>
-                @PageHelper.MakeFeedBack("times2")
-            </div>
-            <br>
-            <button type="submit" onclick="estadoInicial()">Limpar</button>
-            <button type="button" onclick="executaAcao('I')">Incluir</button>
-            <button type="button" onclick="executaAcao('E')">Excluir</button>
-            <button type="button" onclick="executaAcao('A')">Alterar</button>
-            <br>
+            <button class="btn btn-secondary" type="submit" onclick="estadoInicial()">Limpar</button>
 
-            @if (jogo != null)
+            @if (view == View.Index)
             {
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>IdJogo</th>
-                            <th>IdTime1</th>
-                            <th>Time 1</th>
-                            <th>IdTime2</th>
-                            <th>Time 2</th>
-                            <th>Placar 1</th>
-                            <th>Placar 2</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (Jogo item in jogo)
-                        {
-                            <tr>
-                                <td>@item.IdJogo</td>
-                                <td>@item.IdTime1</td>
-                                <td>@item.Time1</td>
-                                <td>@item.IdTime2</td>
-                                <td>@item.Time2</td>
-                                <td>@item.Placar1</td>
-                                <td>@item.Placar2</td>
-                                <td><button type="button" onclick="editar('@item.IdJogo','@item.IdTime1', '@item.IdTime2')">Editar</button></td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+                <button class="btn btn-secondary" type="button" onclick="novo()">Novo</button>
             }
+
+            @if (view == View.New)
+            {
+                <button class="btn btn-secondary" type="button" onclick="executaAcao('I')">Incluir</button>
+            }
+
+            @if (view == View.Edit)
+            {
+                <button class="btn btn-secondary" type="button" onclick="executaAcao('E')">Excluir</button>
+                <button class="btn btn-secondary" type="button" onclick="executaAcao('A')">Alterar</button>
+            }
+
+            @if (view == View.New || view == View.Edit)
+            {
+                <div class="mb-3">
+                    <label class="form-label" for="times1">Time 1: </label>
+                    <select class="form-control @IsInvalid("times1")" id="times1" name="times1">
+                        <option value=""></option>
+                        @if (times != null)
+                        {
+                            foreach (Time item in times)
+                            {
+                                <option value="@item.IdTime" @(item.IdTime == idTime1 ? "selected" : "")>@item.Nome</option>
+                            }
+                        }
+                    </select>
+                    @PageHelper.MakeFeedBack("times1")
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="times2">Time 2: </label>
+                    <select class="form-control @IsInvalid("times2")" id="times2" name="times2">
+                        <option value=""></option>
+                        @if (times != null)
+                        {
+                            foreach (Time item in times)
+                            {
+                                <option value="@item.IdTime" @(item.IdTime == idTime2 ? "selected" : "" )>@item.Nome</option>
+                            }
+                        }
+                    </select>
+                    @PageHelper.MakeFeedBack("times2")
+                </div>
+            }
+
+            @if (view == View.Index)
+            {
+                if (jogos != null)
+                {
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Time 1</th>
+                                <th>Time 2</th>
+                                <th>Placar 1</th>
+                                <th>Placar 2</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (Jogo item in jogos)
+                            {
+                                <tr>
+                                    <td>@item.Time1</td>
+                                    <td>@item.Time2</td>
+                                    <td>@item.Placar1</td>
+                                    <td>@item.Placar2</td>
+                                    <td><button class="btn btn-secondary" type="button" onclick="editar('@item.IdJogo')">Editar</button></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            }
+
         </div>
     </form>
     <script src="~/Scripts/Scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-
-        function editar(idJogo, idTime1, idTime2) {
+        function editar(idJogo) {
+            document.form1.view.value = "@((int)View.Edit)";
             document.form1.idJogo.value = idJogo;
-            document.form1.times1.value = idTime1;
-            document.form1.times2.value = idTime2;
+            executaAcao('C');
+        }
+        function novo() {
+            document.form1.view.value = "@((int)View.New)";
+            executaAcao('');
         }
     </script>
 </body>
