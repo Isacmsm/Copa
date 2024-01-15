@@ -8,6 +8,11 @@ public class Dao
 
     private readonly string stringConexao = "Server=LOG-DAILTON\\SQLEXPRESS01; DataBase=dbTreinamento; User Id=dailton; Password=Log@123;";
 
+    private class Autorizacao
+    {
+        public string NomeProcedure {  get; set; }
+    }
+
     public void ExecutarProcedure(string procedure, Dictionary<string, object> parametros)
     {
         //as mensagens geradas no SQL são gerenciadas na aplicação por essa SqlError
@@ -65,7 +70,37 @@ public class Dao
             CommandTimeout = 60
         };
     }
+    public List<T> ExecutarAcaoList<T>(string acao, Dictionary<string, object> parametros)
+    {
+        string procedure = GetNomeProcedure(acao);
+        return ExecutarProcedureList<T>(procedure, parametros);
+    }
 
+    public void ExecutarAcao(string acao, Dictionary<string, object> parametros)
+    {
+        string procedure = GetNomeProcedure(acao);
+        ExecutarProcedure(procedure, parametros);
+    }
+    private string GetNomeProcedure(string acao)
+    {
+        Identificacao identificacao = new Identificacao();
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@TipoConsulta", "C_Acao");
+        parametros.Add("@IdOperador", identificacao.IdOperador);
+        parametros.Add("@CodigoSistema", identificacao.Sistema);
+        parametros.Add("@CodigoModulo", identificacao.Modulo);
+        parametros.Add("@CodigoPagina", identificacao.Pagina);
+        parametros.Add("@CodigoAcao", acao);
+
+        List<Autorizacao> autorizacoes = ExecutarProcedureList<Autorizacao>("stp_Das_MontaMenu", parametros);
+
+        if (autorizacoes != null)
+        {
+            throw new InvalidOperationException("Operador não autorizado para executar essa ação");
+        }
+
+        return autorizacoes.FirstOrDefault().NomeProcedure;
+    }
     public List<T> ExecutarProcedureList<T>(string procedure, Dictionary<string, object> parametros)
     {
         //as mensagens geradas no SQL são gerenciadas na aplicação por essa SqlError

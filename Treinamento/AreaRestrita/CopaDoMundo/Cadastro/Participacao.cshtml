@@ -29,15 +29,14 @@
         public string GolsMarcados { get; set; }
     }
 
-
     string acao = null;
     string idParticipacao = null;
     string idJogo = null;
     string idJogador = null;
 
-    List<Participacao> participacao = new List<Participacao>();
-    List<TimesJogo> timesJogo = new List<TimesJogo>();
-    ResultadoJogo resultadoJogos = new ResultadoJogo();
+    List<Participacao> participacao = null;
+    List<TimesJogo> timesJogo = null;
+    ResultadoJogo resultadoJogos = null;
 
     private void AlimentaVariaveis()
     {

@@ -1,15 +1,40 @@
-﻿@*<a href="/">Início</a>
-<a href="~/AreaRestrita/Page1.cshtml">Page 1</a>
-<a href="~/AreaRestrita/Page2.cshtml">Page 2</a>
-<a href="~/AreaRestrita/Page3.cshtml">Page 3</a>*@
-<a href="~/AreaRestrita/Time.cshtml">Times</a>
-<a href="~/AreaRestrita/Jogo.cshtml">Jogos</a>
-<a href="~/AreaRestrita/Jogador.cshtml">Jogadores</a>
-<a href="~/AreaRestrita/Classificacao.cshtml">Classificação</a>
-<a href="~/AreaRestrita/Artilharia.cshtml">Artilheiros</a>
-<a href="~/AreaRestrita/Participacao.cshtml">Participação</a>
-<a href="~/AreaRestrita/Sistema.cshtml">Sistema</a>
-<a href="~/AreaRestrita/Modulo.cshtml">Módulo</a>
-<a href="~/AreaRestrita/Pagina.cshtml">Página</a>
-<a href="~/AreaRestrita/Acao.cshtml">Ação</a>
-<a href="~/AreaRestrita/Operador.cshtml">Operador</a>
+﻿@functions{
+
+    private class Pagina
+    {
+        public string CodigoSistema { get; set; }
+        public string CaptionSistema { get; set; }
+        public string CodigoModulo { get; set; }
+        public string CaptionModulo { get; set; }
+
+        public string CodigoPagina { get; set; }
+        public string CaptionPagina { get; set; }
+    }
+
+    List<Pagina> paginas = null;
+
+    private void Consultar()
+    {
+
+        Identificacao identificacao = new Identificacao();
+
+
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@TipoConsulta", "C_Menu");
+        parametros.Add("@IdOperador", identificacao.IdOperador);
+
+
+        paginas = new Dao().ExecutarProcedureList<Pagina>("stp_Das_MontaMenu", parametros);
+
+    }
+
+}
+
+<a href="/">Início</a>
+@if (paginas != null)
+{
+    foreach (Pagina item in paginas)
+    {
+        <a href="~/AreaRestrita/@item.CodigoSistema/@item.CodigoModulo/@(item.CodigoPagina).cshtml">@item.CaptionPagina/@item.CaptionModulo/@item.CaptionSistema</a>
+    }
+}

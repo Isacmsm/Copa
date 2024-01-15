@@ -1,33 +1,34 @@
 ﻿@{
-    Page.Title = "Classificação";
+    Page.Title = "Artilheiros";
     Layout = "~/AreaRestrita/_Layout.cshtml";
 }
 
 @functions {
 
-    private class Classificacao
+    private class Artilharia
     {
-        public string Time { get; set; }
-        public string Pontuacao { get; set; }
-        public string SaldoGols { get; set; }
+        public string NomeTime { get; set; }
+        public string Artilheiro { get; set; }
         public string GolsMarcados { get; set; }
     }
 
-    List<Classificacao> classificacao = new List<Classificacao>();
+    List<Artilharia> artilharia = null;
 
     private void Consultar()
     {
         Dao dao = new Dao();
-        classificacao = dao.ExecutarProcedureList<Classificacao>("stp_Das_Classificacao_Sel", null);
+        artilharia = dao.ExecutarProcedureList<Artilharia>("stp_Das_Artilharia_Sel", null);
     }
 }
 
 @{
+
     Util.ExceptionHandler(() =>
     {
         Consultar();
 
     }, this.ModelState);
+
 }
 
 @section head {
@@ -38,27 +39,29 @@
     <form name="form1" method="post">
 
         <div class="container">
+
             @RenderPage("~/AreaRestrita/Menu.cshtml")
-            <h1>Classificação</h1>
+
+            <h1>Artilheiros</h1>
+
             <button class="btn btn-secondary" type="submit" onclick="estadoInicial()">Limpar</button>
-            @if (classificacao != null)
+
+            @if (artilharia != null)
             {
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>Time</th>
-                            <th>Pontuação</th>
-                            <th>Saldo de Gols</th>
+                            <th>Nome Time</th>
+                            <th>Artilheiro</th>
                             <th>Gols Marcados</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (Classificacao item in classificacao)
+                        @foreach (Artilharia item in artilharia)
                         {
                             <tr>
-                                <td>@item.Time</td>
-                                <td>@item.Pontuacao</td>
-                                <td>@item.SaldoGols</td>
+                                <td>@item.NomeTime</td>
+                                <td>@item.Artilheiro</td>
                                 <td>@item.GolsMarcados</td>
                             </tr>
                         }

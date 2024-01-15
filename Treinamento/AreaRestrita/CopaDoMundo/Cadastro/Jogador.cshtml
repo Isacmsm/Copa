@@ -32,8 +32,8 @@
 
     View view = View.Index;
 
-    List<Jogador> jogadores = new List<Jogador>();
-    List<Time> times = new List<Time>();
+    List<Jogador> jogadores = null;
+    List<Time> times = null;
 
     private void AlimentaVariaveis()
     {
@@ -61,32 +61,16 @@
         Dictionary<string, object> parametros = new Dictionary<string, object>();
         parametros.Add("@IdJogador", idJogador);
 
-        string procedure = GetNomeProcedure("C");
-
-        Dao dao = new Dao();
-        jogadores = dao.ExecutarProcedureList<Jogador>(procedure, parametros);
+        jogadores = new Dao().ExecutarAcaoList<Jogador>("C", parametros);
     }
     private void ConsultarTimes()
     {
-        string procedure = GetNomeProcedure("C");
         Dictionary<string, object> parametros = new Dictionary<string, object>();
         parametros.Add("@TipoConsulta", "1");
 
-        Dao dao = new Dao();
-        times = dao.ExecutarProcedureList<Time>(procedure, parametros);
+        times = new Dao().ExecutarAcaoList<Time>("C", parametros);
     }
 
-    private string GetNomeProcedure(string acao)
-    {
-        switch (acao)
-        {
-            case "C": return "stp_Das_Jogador_Sel";
-            case "I": return "stp_Das_Jogador_Ins";
-            case "A": return "stp_Das_Jogador_Upd";
-            case "E": return "stp_Das_Jogador_Del";
-            default: return null;
-        }
-    }
     private void Manutencao()
     {
         Dictionary<string, object> parametros = new Dictionary<string, object>();
@@ -94,10 +78,7 @@
         parametros.Add("@Nome", nomeJogador);
         parametros.Add("@IdTime", idTime);
 
-        string procedure = GetNomeProcedure(acao);
-
-        Dao dao = new Dao();
-        dao.ExecutarProcedure(procedure, parametros);
+        new Dao().ExecutarProcedure(acao, parametros);
 
     }
 

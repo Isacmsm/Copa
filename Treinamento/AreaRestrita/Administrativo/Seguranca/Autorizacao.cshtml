@@ -1,0 +1,213 @@
+﻿@{
+    Page.Title = "Autorização";
+    Layout = "~/AreaRestrita/_Layout.cshtml";
+}
+
+@functions {
+
+    private enum View
+    {
+        Index,
+        New,
+        Edit
+    }
+    private class Operador
+    {
+        public string IdOperador { get; set; }
+        public string NomeOperador { get; set; }
+    }
+
+    private class Acao
+    {
+        public string Sistema { get; set; }
+        public string Modulo { get; set; }
+        public string Pagina { get; set; }
+        public string IdAcao { get; set; }
+        public string NomeAcao { get; set; }
+        public string IdOperador { get; set; }
+    }
+
+    string acao = null;
+    string idOperador = null;
+    string nomeOperador = null;
+    string idAcoes = null;
+
+    View view = View.Index;
+
+    List<Operador> operadores = null;
+    List<Acao> acoes = null;
+
+    private void AlimentaVariaveis()
+    {
+        acao = Util.ChecarNulo(Request.Form["acao"]);
+        idOperador = Util.ChecarNulo(Request.Form["idOperador"]);
+        idAcoes = Util.ChecarNulo(Request.Form["idAcao"]);
+
+        if (!string.IsNullOrWhiteSpace(Request.Form["view"]))
+        {
+            view = (View)Enum.Parse(typeof(View), Request.Form["view"]);
+        }
+    }
+    private void LimpaVariaveis()
+    {
+        acao = null;
+        idOperador = null;
+        nomeOperador = null;
+        idAcoes = null;
+        view = View.Index;
+    }
+    private void ConsultarOperadores()
+    {
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@TipoConsulta", "1");
+
+        string procedure = GetNomeProcedure("C");
+
+        Dao dao = new Dao();
+        operadores = dao.ExecutarProcedureList<Operador>(procedure, parametros);
+    }
+    private void ConsultarAcoes()
+    {
+        string procedure = GetNomeProcedure("C");
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@TipoConsulta", "2");
+        parametros.Add("@IdOperador", idOperador);
+
+        Dao dao = new Dao();
+        acoes = dao.ExecutarProcedureList<Acao>(procedure, parametros);
+    }
+
+    private string GetNomeProcedure(string acao)
+    {
+        switch (acao)
+        {
+            case "C": return "stp_Das_Autorizacao_Sel";
+            case "A": return "stp_Das_Autorizacao_Upd";
+            default: return null;
+        }
+    }
+    private void Manutencao()
+    {
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@IdOperador", idOperador);
+        parametros.Add("@IdAcoes", idAcoes);
+
+        string procedure = GetNomeProcedure(acao);
+
+        Dao dao = new Dao();
+        dao.ExecutarProcedure(procedure, parametros);
+
+    }
+
+}
+
+@{
+
+    AlimentaVariaveis();
+
+    if (acao == "A")
+    {
+        Util.ExceptionHandler(() =>
+        {
+            Manutencao();
+            ModelState.AddError("alert-success", "Operação realizada com sucesso");
+
+            LimpaVariaveis();
+
+        }, this.ModelState);
+    }
+
+    Util.ExceptionHandler(() =>
+    {
+        ConsultarOperadores();
+
+        if (idOperador != null)
+        {
+            ConsultarAcoes();
+        }
+
+    }, this.ModelState);
+}
+
+@section head {
+    <link href="~/Scripts/Style.css" rel="stylesheet">
+}
+
+<body>
+    <form name="form1" method="post">
+        <input type="hidden" name="acao" id="acao" />
+        <input type="hidden" name="view" id="view" value="@((int)view)" />
+
+        <div class="container">
+            @RenderPage("~/AreaRestrita/Menu.cshtml")
+
+            <h1>Autorizações</h1>
+
+            @PageHelper.MakeAlert()
+
+            <button class="btn btn-secondary mb-3" type="submit" onclick="estadoInicial()">Limpar</button>
+
+            @if (view == View.Edit)
+            {
+                <button class="btn btn-secondary mb-3" type="button" onclick="executaAcao('A')">Salvar</button>
+            }
+
+            @if (view == View.Index || view == View.Edit)
+            {
+                <div class="mb-3">
+                    <label class="form-label" for="idOperador">Operador</label>
+                    <select class="form-control" id="idOperador" name="idOperador" onchange="editar('@idOperador')">
+                        <option value=""></option>
+                        @if (operadores != null)
+                        {
+                            foreach (Operador item in operadores)
+                            {
+                                <option value="@item.IdOperador" @(item.IdOperador == idOperador ? "selected" : "")>@item.NomeOperador</option>
+                            }
+                        }
+                    </select>
+                </div>
+            }
+            @if (view == View.Edit)
+            {
+                if (acoes != null)
+                {
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Sistema</th>
+                                <th>Módulo</th>
+                                <th>Página</th>
+                                <th>Ação</th>
+                                <th>Permitir</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (Acao item in acoes)
+                            {
+                                <tr>
+                                    <td>@item.Sistema</td>
+                                    <td>@item.Modulo</td>
+                                    <td>@item.Pagina</td>
+                                    <td>@item.NomeAcao</td>
+                                    <td><input type="checkbox" name="idAcao" value="@item.IdAcao" @(item.IdOperador == idOperador ? "checked" : "")></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            }
+
+        </div>
+    </form>
+    <script src="~/Scripts/Scripts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function editar(idOperador) {
+            document.form1.view.value = "@((int)View.Edit)";
+            executaAcao('C');
+        }
+    </script>
+</body>
+
+

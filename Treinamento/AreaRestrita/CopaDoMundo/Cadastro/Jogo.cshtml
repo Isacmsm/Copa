@@ -34,8 +34,8 @@
     string idTime2 = null;
     View view = View.Index;
 
-    List<Jogo> jogos = new List<Jogo>();
-    List<Time> times = new List<Time>();
+    List<Jogo> jogos = null;
+    List<Time> times = null;
 
     private void AlimentaVariaveis()
     {
@@ -62,19 +62,14 @@
         Dictionary<string, object> parametros = new Dictionary<string, object>();
         parametros.Add("@IdJogo", idJogo);
 
-        string procedure = GetNomeProcedure("C");
-
-        Dao dao = new Dao();
-        jogos = dao.ExecutarProcedureList<Jogo>(procedure, parametros);
+        jogos = new Dao().ExecutarAcaoList<Jogo>("C", parametros);
     }
     private void ConsultarTimes()
     {
-        string procedure = GetNomeProcedure("C");
         Dictionary<string, object> parametros = new Dictionary<string, object>();
         parametros.Add("@TipoConsulta", "1");
 
-        Dao dao = new Dao();
-        times = dao.ExecutarProcedureList<Time>(procedure, parametros);
+        times = new Dao().ExecutarProcedureList<Time>("C", parametros);
     }
 
     private string GetNomeProcedure(string acao)
