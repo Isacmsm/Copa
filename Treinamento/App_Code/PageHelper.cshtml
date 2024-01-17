@@ -21,3 +21,16 @@
         }
     }
 }
+
+@helper MakeBotao(List<Botao> botoes, string acao)
+{
+    if (botoes.Any(x => x.Codigo == acao))
+    {
+        Botao botao = botoes.Find(x => x.Codigo == acao);
+        if (botao != null)
+        {
+            <button class="btn btn-secondary" type="button" onclick="executaAcao('@botao.Codigo')">@botao.Caption</button>
+        }
+
+    }
+}

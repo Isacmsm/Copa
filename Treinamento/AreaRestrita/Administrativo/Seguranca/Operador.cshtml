@@ -1,4 +1,5 @@
-﻿@{
+﻿@RenderPage("~/AreaRestrita/Seguranca.cshtml")
+@{
     Page.Title = "Operador";
     Layout = "~/AreaRestrita/_Layout.cshtml";
 }
@@ -30,6 +31,7 @@
     View view = View.Index;
 
     List<Operador> operadores = null;
+    List<Botao> botoes = null;
 
     private void AlimentaVariaveis()
     {
@@ -39,6 +41,8 @@
         nome = Util.ChecarNulo(Request.Form["nome"]);
         senha = Util.ChecarNulo(Request.Form["senha"]);
         confirmacao = Util.ChecarNulo(Request.Form["confirmacao"]);
+
+        botoes = new BotaoDao().GetAll();
 
         if (!string.IsNullOrWhiteSpace(Request.Form["view"]))
         {
@@ -59,25 +63,9 @@
         Dictionary<string, object> parametros = new Dictionary<string, object>();
         parametros.Add("@IdOperador", idOperador);
 
-        string procedure = GetNomeProcedure("C");
-
-        Dao dao = new Dao();
-        operadores = dao.ExecutarProcedureList<Operador>(procedure, parametros);
-
+        operadores = new Dao().ExecutarAcaoList<Operador>("C", parametros);
     }
 
-    private string GetNomeProcedure(string acao)
-    {
-        switch (acao)
-        {
-
-            case "C": return "stp_Das_Operador_Sel";
-            case "I": return "stp_Das_Operador_Ins";
-            case "A": return "stp_Das_Operador_Upd";
-            case "E": return "stp_Das_Operador_Del";
-            default: return null;
-        }
-    }
     private void Manutencao()
     {
         Dictionary<string, object> parametros = new Dictionary<string, object>();
@@ -87,11 +75,7 @@
         parametros.Add("@Senha", senha);
         parametros.Add("@Confirmacao", confirmacao);
 
-        string procedure = GetNomeProcedure(acao);
-
-        Dao dao = new Dao();
-        dao.ExecutarProcedure(procedure, parametros);
-
+        new Dao().ExecutarAcao(acao, parametros);
     }
     private void CarregarDados()
     {
@@ -106,7 +90,6 @@
         }
     }
 }
-
 @{
 
     AlimentaVariaveis();
@@ -152,20 +135,16 @@
             @PageHelper.MakeAlert()
 
             <button class="btn btn-secondary" type="submit" onclick="estadoInicial()">Limpar</button>
-            @if (view == View.Index)
-            {
-                <button class="btn btn-secondary" type="button" onclick="novo()">Novo</button>
-            }
 
             @if (view == View.New)
             {
-                <button class="btn btn-secondary" type="button" onclick="executaAcao('I')">Incluir</button>
+                @PageHelper.MakeBotao(botoes, "I");
             }
 
             @if (view == View.Edit)
             {
-                <button class="btn btn-secondary" type="button" onclick="executaAcao('A')">Alterar</button>
-                <button class="btn btn-secondary" type="button" onclick="executaAcao('E')">Excluir</button>
+                @PageHelper.MakeBotao(botoes, "A");
+                @PageHelper.MakeBotao(botoes, "E");
             }
 
             @if (view == View.New || view == View.Edit)
@@ -192,6 +171,11 @@
 
             @if (view == View.Index)
             {
+                if (botoes.Any(x => x.Codigo == "I"))
+                {
+                    <button class="btn btn-secondary" type="button" onclick="adicionarNovo()">Novo</button>
+                }
+
                 if (operadores != null)
                 {
                     <table class="table mt-3">
@@ -208,7 +192,12 @@
                                 <tr>
                                     <td>@item.CPF</td>
                                     <td>@item.Nome</td>
-                                    <td><button class="btn btn-secondary" type="button" onclick="editar('@item.IdOperador')">Editar</button></td>
+                                    <td>
+                                        @if (botoes.Any(x => x.Codigo == "A"))
+                                        {
+                                            <button class="btn btn-secondary" type="button" onclick="editar('@item.IdOperador')">Editar</button>
+                                        }
+                                    </td>
                                 </tr>
                             }
                         </tbody>
@@ -227,7 +216,7 @@
             document.form1.idOperador.value = idOperador;
             executaAcao('C');
         }
-        function novo() {
+        function adicionarNovo() {
             document.form1.view.value = "@((int)View.New)";
             executaAcao('');
         }

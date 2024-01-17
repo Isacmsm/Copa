@@ -1,4 +1,5 @@
-﻿@{
+﻿@RenderPage("~/AreaRestrita/Seguranca.cshtml")
+@{
     Page.Title = "Páginas";
     Layout = "~/AreaRestrita/_Layout.cshtml";
 }
@@ -36,7 +37,8 @@
 
     List<Pagina> paginas = null;
     List<Modulo> modulos = null;
-    
+    List<Botao> botoes = null;
+
     private void AlimentaVariaveis()
     {
         acao = Util.ChecarNulo(Request.Form["acao"]);
@@ -44,6 +46,8 @@
         idModulo = Util.ChecarNulo(Request.Form["idModulo"]);
         codigo = Util.ChecarNulo(Request.Form["codigo"]);
         caption = Util.ChecarNulo(Request.Form["caption"]);
+
+        botoes = new BotaoDao().GetAll();
 
         if (!string.IsNullOrWhiteSpace(Request.Form["view"]))
         {
@@ -62,38 +66,21 @@
 
     private void ConsultarPaginas()
     {
-        string procedure = GetNomeProcedure("C");
         Dictionary<string, object> parametros = new Dictionary<string, object>();
         parametros.Add("@IdPagina", idPagina);
 
-        Dao dao = new Dao();
-        paginas = dao.ExecutarProcedureList<Pagina>(procedure, parametros);
-        
+        paginas = new Dao().ExecutarAcaoList<Pagina>("C", parametros);
+
     }
 
     private void ConsultarModulos()
     {
         Dictionary<string, object> parametros = new Dictionary<string, object>();
-
         parametros.Add("@TipoConsulta", "1");
 
-        string procedure = GetNomeProcedure("C");
-
-        Dao dao = new Dao();
-        modulos = dao.ExecutarProcedureList<Modulo>(procedure, parametros);
+        modulos = new Dao().ExecutarAcaoList<Modulo>("C", parametros);
     }
 
-    private string GetNomeProcedure(string acao)
-    {
-        switch (acao)
-        {
-            case "C": return "stp_Das_Pagina_Sel";
-            case "I": return "stp_Das_Pagina_Ins";
-            case "A": return "stp_Das_Pagina_Upd";
-            case "E": return "stp_Das_Pagina_Del";
-            default: return null;
-        }
-    }
     private void Manutencao()
     {
         Dictionary<string, object> parametros = new Dictionary<string, object>();
@@ -102,10 +89,7 @@
         parametros.Add("@Codigo", codigo);
         parametros.Add("@Caption", caption);
 
-        string procedure = GetNomeProcedure(acao);
-
-        Dao dao = new Dao();
-        dao.ExecutarProcedure(procedure, parametros);
+        new Dao().ExecutarAcao(acao, parametros);
     }
 
     private void CarregarDados()
@@ -165,20 +149,16 @@
             @PageHelper.MakeAlert()
 
             <button class="btn btn-secondary" type="submit" onclick="estadoInicial()">Limpar</button>
-            @if (view == View.Index)
-            {
-                <button class="btn btn-secondary" type="button" onclick="novo()">Novo</button>
-            }
 
             @if (view == View.New)
             {
-                <button class="btn btn-secondary" type="button" onclick="executaAcao('I')">Incluir</button>
+                @PageHelper.MakeBotao(botoes, "I");
             }
 
             @if (view == View.Edit)
             {
-                <button class="btn btn-secondary" type="button" onclick="executaAcao('A')">Alterar</button>
-                <button class="btn btn-secondary" type="button" onclick="executaAcao('E')">Excluir</button>
+                @PageHelper.MakeBotao(botoes, "A");
+                @PageHelper.MakeBotao(botoes, "E");
             }
 
             @if (view == View.New || view == View.Edit)
@@ -193,7 +173,6 @@
                     @PageHelper.MakeFeedBack("codigo")
 
                 </div>
-
                 <div class="mt-3 mb-3">
                     <label class="form-label" for="idModulo">Sistema / Módulo</label>
                     <select class="form-control @Util.IsInvalid(ModelState,"idModulo")" id="idModulo" name="idModulo">
@@ -213,6 +192,11 @@
 
             @if (view == View.Index)
             {
+                if (botoes.Any(x => x.Codigo == "I"))
+                {
+                    <button class="btn btn-secondary" type="button" onclick="adicionarNovo()">Novo</button>
+                }
+
                 if (paginas != null)
                 {
                     <table class="table mt-3">
@@ -231,14 +215,18 @@
                                     <td>@item.Caption</td>
                                     <td>@item.Codigo</td>
                                     <td>@item.Modulo</td>
-                                    <td><button class="btn btn-secondary" type="button" onclick="editar('@item.IdPagina')">Editar</button></td>
+                                    <td>
+                                        @if (botoes.Any(x => x.Codigo == "A"))
+                                        {
+                                            <button class="btn btn-secondary" type="button" onclick="editar('@item.IdPagina')">Editar</button>
+                                        }
+                                    </td>
                                 </tr>
                             }
                         </tbody>
                     </table>
                 }
             }
-
         </div>
     </form>
 
@@ -249,7 +237,7 @@
             document.form1.idPagina.value = idPagina;
             executaAcao('C');
         }
-        function novo() {
+        function adicionarNovo() {
             document.form1.view.value = "@((int)View.New)";
             executaAcao('');
         }

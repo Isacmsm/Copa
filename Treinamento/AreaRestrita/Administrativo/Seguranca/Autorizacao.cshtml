@@ -1,4 +1,5 @@
-﻿@{
+﻿@RenderPage("~/AreaRestrita/Seguranca.cshtml")
+@{
     Page.Title = "Autorização";
     Layout = "~/AreaRestrita/_Layout.cshtml";
 }
@@ -36,12 +37,15 @@
 
     List<Operador> operadores = null;
     List<Acao> acoes = null;
+    List<Botao> botoes = null;
 
     private void AlimentaVariaveis()
     {
         acao = Util.ChecarNulo(Request.Form["acao"]);
         idOperador = Util.ChecarNulo(Request.Form["idOperador"]);
         idAcoes = Util.ChecarNulo(Request.Form["idAcao"]);
+
+        botoes = new BotaoDao().GetAll();
 
         if (!string.IsNullOrWhiteSpace(Request.Form["view"]))
         {
@@ -61,41 +65,24 @@
         Dictionary<string, object> parametros = new Dictionary<string, object>();
         parametros.Add("@TipoConsulta", "1");
 
-        string procedure = GetNomeProcedure("C");
-
-        Dao dao = new Dao();
-        operadores = dao.ExecutarProcedureList<Operador>(procedure, parametros);
+        operadores = new Dao().ExecutarAcaoList<Operador>("C", parametros);
     }
     private void ConsultarAcoes()
     {
-        string procedure = GetNomeProcedure("C");
         Dictionary<string, object> parametros = new Dictionary<string, object>();
         parametros.Add("@TipoConsulta", "2");
         parametros.Add("@IdOperador", idOperador);
 
-        Dao dao = new Dao();
-        acoes = dao.ExecutarProcedureList<Acao>(procedure, parametros);
+        acoes = new Dao().ExecutarProcedureList<Acao>("C", parametros);
     }
 
-    private string GetNomeProcedure(string acao)
-    {
-        switch (acao)
-        {
-            case "C": return "stp_Das_Autorizacao_Sel";
-            case "A": return "stp_Das_Autorizacao_Upd";
-            default: return null;
-        }
-    }
     private void Manutencao()
     {
         Dictionary<string, object> parametros = new Dictionary<string, object>();
         parametros.Add("@IdOperador", idOperador);
         parametros.Add("@IdAcoes", idAcoes);
 
-        string procedure = GetNomeProcedure(acao);
-
-        Dao dao = new Dao();
-        dao.ExecutarProcedure(procedure, parametros);
+        new Dao().ExecutarAcao(acao, parametros);
 
     }
 
@@ -149,7 +136,10 @@
 
             @if (view == View.Edit)
             {
-                <button class="btn btn-secondary mb-3" type="button" onclick="executaAcao('A')">Salvar</button>
+                if (botoes.Any(x => x.Codigo == "A"))
+                {
+                    <button class="btn btn-secondary mb-3" type="button" onclick="executaAcao('A')">Salvar</button>
+                }
             }
 
             @if (view == View.Index || view == View.Edit)

@@ -12,7 +12,6 @@ public class Dao
     {
         public string NomeProcedure {  get; set; }
     }
-
     public void ExecutarProcedure(string procedure, Dictionary<string, object> parametros)
     {
         //as mensagens geradas no SQL são gerenciadas na aplicação por essa SqlError
@@ -61,7 +60,6 @@ public class Dao
         conn.Close();
         conn.Dispose();
     }
-
     private SqlCommand NomeCmmd(string procedure, SqlConnection conn)
     {
         return new SqlCommand(procedure, conn)
@@ -69,17 +67,6 @@ public class Dao
             CommandType = System.Data.CommandType.StoredProcedure,
             CommandTimeout = 60
         };
-    }
-    public List<T> ExecutarAcaoList<T>(string acao, Dictionary<string, object> parametros)
-    {
-        string procedure = GetNomeProcedure(acao);
-        return ExecutarProcedureList<T>(procedure, parametros);
-    }
-
-    public void ExecutarAcao(string acao, Dictionary<string, object> parametros)
-    {
-        string procedure = GetNomeProcedure(acao);
-        ExecutarProcedure(procedure, parametros);
     }
     private string GetNomeProcedure(string acao)
     {
@@ -94,7 +81,7 @@ public class Dao
 
         List<Autorizacao> autorizacoes = ExecutarProcedureList<Autorizacao>("stp_Das_MontaMenu", parametros);
 
-        if (autorizacoes != null)
+        if (autorizacoes == null)
         {
             throw new InvalidOperationException("Operador não autorizado para executar essa ação");
         }
@@ -153,12 +140,25 @@ public class Dao
         return list;
 
     }
-
     public T ExecutarProcedure<T>(string procedure, Dictionary<string, object> parametros)
     {
         return ExecutarProcedureList<T>(procedure, parametros).FirstOrDefault();
     }
-
+    public T ExecutarAcao<T>(string acao, Dictionary<string, object> parametros)
+    {
+        string procedure = GetNomeProcedure(acao);
+        return ExecutarProcedureList<T>(procedure, parametros).FirstOrDefault();
+    }
+    public void ExecutarAcao(string acao, Dictionary<string, object> parametros)
+    {
+        string procedure = GetNomeProcedure(acao);
+        ExecutarProcedure(procedure, parametros);
+    }
+    public List<T> ExecutarAcaoList<T>(string acao, Dictionary<string, object> parametros)
+    {
+        string procedure = GetNomeProcedure(acao);
+        return ExecutarProcedureList<T>(procedure, parametros);
+    }
     private void AdicionarParametros(SqlCommand cmmd, Dictionary<string, object> parametros)
     {
         if (parametros != null)
@@ -169,7 +169,6 @@ public class Dao
             }
         }
     }
-
     private List<T> CriaLista<T>(SqlDataReader dr)
     {
         List<T> list = null;
@@ -220,7 +219,6 @@ public class Dao
 
         return list;
     }
-
     private int GetColumnOrdinal(SqlDataReader dr, string columnName)
     {
         int ordinal = -1;

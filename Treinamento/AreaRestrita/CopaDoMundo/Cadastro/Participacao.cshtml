@@ -1,4 +1,5 @@
-﻿@{
+﻿@RenderPage("~/AreaRestrita/Seguranca.cshtml")
+@{
     Page.Title = "Participação";
     Layout = "~/AreaRestrita/_Layout.cshtml";
 }
@@ -36,6 +37,7 @@
 
     List<Participacao> participacao = null;
     List<TimesJogo> timesJogo = null;
+    List<Botao> botoes = null;
     ResultadoJogo resultadoJogos = null;
 
     private void AlimentaVariaveis()
@@ -44,48 +46,28 @@
         idParticipacao = Util.ChecarNulo(Request.Form["idParticipacao"]);
         idJogo = Util.ChecarNulo(Request.Form["idJogo"]);
         idJogador = Util.ChecarNulo(Request.Form["idJogador"]);
+
+        botoes = new BotaoDao().GetAll();
     }
     private void ConsultarJogos()
     {
-        string procedure = GetNomeProcedure("C");
-
-        Dao dao = new Dao();
-        timesJogo = dao.ExecutarProcedureList<TimesJogo>(procedure, null);
-
+        timesJogo = new Dao().ExecutarAcaoList<TimesJogo>("C", null);
     }
     private void ConsultarResultado()
     {
-        string procedure = GetNomeProcedure("C");
-
         Dictionary<string, object> parametros = new Dictionary<string, object>();
         parametros.Add("@TipoConsulta", "1");
         parametros.Add("@IdJogo", idJogo);
 
-        Dao dao = new Dao();
-        resultadoJogos = dao.ExecutarProcedure<ResultadoJogo>(procedure, parametros);
+        resultadoJogos = new Dao().ExecutarAcao<ResultadoJogo>("C", parametros);
     }
-
     private void ConsultarParticipacao()
     {
-        string procedure = GetNomeProcedure("C");
-
         Dictionary<string, object> parametros = new Dictionary<string, object>();
         parametros.Add("@TipoConsulta", "2");
         parametros.Add("@IdJogo", idJogo);
 
-        Dao dao = new Dao();
-        participacao = dao.ExecutarProcedureList<Participacao>(procedure, parametros);
-    }
-
-
-    private string GetNomeProcedure(string acao)
-    {
-        switch (acao)
-        {
-            case "C": return "stp_Das_Participacao_Sel";
-            case "A": return "stp_Das_Participacao_Upd";
-            default: return null;
-        }
+        participacao = new Dao().ExecutarAcaoList<Participacao>("C", parametros);
     }
     private void Manutencao()
     {
@@ -94,16 +76,7 @@
         parametros.Add("@IdJogo", idJogo);
         parametros.Add("@IdJogador", idJogador);
 
-        string procedure = GetNomeProcedure(acao);
-
-        Dao dao = new Dao();
-        dao.ExecutarProcedure(procedure, parametros);
-
-    }
-
-    private string IsInvalid(string key)
-    {
-        return (!ModelState.IsValidField(key) ? "is-invalid" : "");
+        new Dao().ExecutarAcao(acao, parametros);
     }
 }
 
@@ -194,7 +167,12 @@
                                 <td>@item.NomeJogador</td>
                                 <td>@item.NomeTime</td>
                                 <td>@item.GolsMarcados</td>
-                                <td><button class="btn btn-secondary" type="button" onclick="maisUmGol('@item.IdParticipacao','@item.IdJogo', '@item.IdJogador')">+ 1 Gols</button></td>
+                                <td>
+                                    @if (botoes.Any(x => x.Codigo == "A"))
+                                    {
+                                        <button class="btn btn-secondary" type="button" onclick="maisUmGol('@item.IdParticipacao','@item.IdJogo','@item.IdJogador')">+ 1 Gols</button>
+                                    }
+                                </td>
                             </tr>
                         }
                     </tbody>

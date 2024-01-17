@@ -17,8 +17,8 @@
 
     private void Consultar()
     {
-        Dao dao = new Dao();
-        classificacao = dao.ExecutarProcedureList<Classificacao>("stp_Das_Classificacao_Sel", null);
+        //classificacao = new Dao().ExecutarProcedureList<Classificacao>("stp_Das_Classificacao_Sel", null);
+        classificacao = new Dao().ExecutarAcaoList<Classificacao>("C", null);
     }
 }
 

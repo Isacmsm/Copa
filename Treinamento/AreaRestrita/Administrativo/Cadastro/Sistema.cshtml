@@ -1,4 +1,5 @@
-﻿@{
+﻿@RenderPage("~/AreaRestrita/Seguranca.cshtml")
+@{
     Page.Title = "Sistema";
     Layout = "~/AreaRestrita/_Layout.cshtml";
 }
@@ -25,6 +26,7 @@
     View view = View.Index;
 
     List<Sistema> sistemas = null;
+    List<Botao> botoes = null;
 
     private void AlimentaVariaveis()
     {
@@ -32,6 +34,8 @@
         idSistema = Util.ChecarNulo(Request.Form["idSistema"]);
         codigo = Util.ChecarNulo(Request.Form["codigo"]);
         caption = Util.ChecarNulo(Request.Form["caption"]);
+
+        botoes = new BotaoDao().GetAll();
 
         if (!string.IsNullOrWhiteSpace(Request.Form["view"]))
         {
@@ -51,25 +55,10 @@
         Dictionary<string, object> parametros = new Dictionary<string, object>();
         parametros.Add("@IdSistema", idSistema);
 
-        string procedure = GetNomeProcedure("C");
-
-        Dao dao = new Dao();
-        sistemas = dao.ExecutarProcedureList<Sistema>(procedure, parametros);
+        sistemas = new Dao().ExecutarAcaoList<Sistema>("C", parametros);
 
     }
 
-    private string GetNomeProcedure(string acao)
-    {
-        switch (acao)
-        {
-
-            case "C": return "stp_Das_Sistema_Sel";
-            case "I": return "stp_Das_Sistema_Ins";
-            case "A": return "stp_Das_Sistema_Upd";
-            case "E": return "stp_Das_Sistema_Del";
-            default: return null;
-        }
-    }
     private void Manutencao()
     {
         Dictionary<string, object> parametros = new Dictionary<string, object>();
@@ -77,10 +66,7 @@
         parametros.Add("@Codigo", codigo);
         parametros.Add("@Caption", caption);
 
-        string procedure = GetNomeProcedure(acao);
-
-        Dao dao = new Dao();
-        dao.ExecutarProcedure(procedure, parametros);
+        new Dao().ExecutarAcao(acao, parametros);
 
     }
     private void CarregarDados()
@@ -140,20 +126,16 @@
             @PageHelper.MakeAlert()
 
             <button class="btn btn-secondary" type="submit" onclick="estadoInicial()">Limpar</button>
-            @if (view == View.Index)
-            {
-                <button class="btn btn-secondary" type="button" onclick="novo()">Novo</button>
-            }
 
             @if (view == View.New)
             {
-                <button class="btn btn-secondary" type="button" onclick="executaAcao('I')">Incluir</button>
+                @PageHelper.MakeBotao(botoes, "I");
             }
 
             @if (view == View.Edit)
             {
-                <button class="btn btn-secondary" type="button" onclick="executaAcao('A')">Alterar</button>
-                <button class="btn btn-secondary" type="button" onclick="executaAcao('E')">Excluir</button>
+                @PageHelper.MakeBotao(botoes, "A");
+                @PageHelper.MakeBotao(botoes, "E");
             }
 
             @if (view == View.New || view == View.Edit)
@@ -171,6 +153,11 @@
 
             @if (view == View.Index)
             {
+                if (botoes.Any(x => x.Codigo == "I"))
+                {
+                    <button class="btn btn-secondary" type="button" onclick="adicionarNovo()">Novo</button>
+                }
+
                 if (sistemas != null)
                 {
                     <table class="table mt-3">
@@ -187,7 +174,12 @@
                                 <tr>
                                     <td>@item.Caption</td>
                                     <td>@item.Codigo</td>
-                                    <td><button class="btn btn-secondary" type="button" onclick="editar('@item.IdSistema')">Editar</button></td>
+                                    <td>
+                                        @if (botoes.Any(x => x.Codigo == "A"))
+                                        {
+                                            <button class="btn btn-secondary" type="button" onclick="editar('@item.IdSistema')">Editar</button>
+                                        }
+                                    </td>
                                 </tr>
                             }
                         </tbody>
@@ -206,7 +198,7 @@
             document.form1.idSistema.value = idSistema;
             executaAcao('C');
         }
-        function novo() {
+        function adicionarNovo() {
             document.form1.view.value = "@((int)View.New)";
             executaAcao('');
         }

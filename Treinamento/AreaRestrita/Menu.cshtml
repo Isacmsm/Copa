@@ -1,4 +1,5 @@
-﻿@functions{
+﻿
+@functions{
 
     private class Pagina
     {
@@ -13,11 +14,21 @@
 
     List<Pagina> paginas = null;
 
+    string sistema = null;
+    string modulo = null;
+    string pagina = null;
+    string rota = null;
+    string tagA = null;
+    string href = null;
+    string extensao = ".cshtml";
+
+    bool tagSistemaAberto = false;
+    bool tagModuloAberto = false;
+
     private void Consultar()
     {
 
         Identificacao identificacao = new Identificacao();
-
 
         Dictionary<string, object> parametros = new Dictionary<string, object>();
         parametros.Add("@TipoConsulta", "C_Menu");
@@ -28,13 +39,296 @@
 
     }
 
+    private void inserirSistema(string captionSistema)
+    {
+        if (tagSistemaAberto)
+        {
+            @Html.Raw("<ul>");
+            @Html.Raw("<li>");
+        }
+        else
+        {
+            tagSistemaAberto = true;
+        }
+
+        string tagA = "<a href=#>" + captionSistema + "</a>";
+        @Html.Raw("<li>");
+        @Html.Raw(tagA);
+        @Html.Raw("<ul>");
+    }
+
+    private void inserirModulo(string captionModulo)
+    {
+        if (tagModuloAberto)
+        {
+            @Html.Raw("<ul>");
+            @Html.Raw("<li>");
+        }
+        else
+        {
+            tagModuloAberto = true;
+        }
+
+        string tagA = "<a href=#>" + captionModulo + "</a>";
+        @Html.Raw("<li>");
+        @Html.Raw(tagA);
+        @Html.Raw("<ul>");
+    }
+
+    private void inserirPagina(string captionPagina)
+    {
+        href = "~/AreaRestrita/" + sistema + "/" + modulo + "/" + pagina + ".cshtml";
+        tagA = "<a href=#>" + captionPagina + "</a>";
+
+        @Html.Raw("<li>" + "<a href=\"" + href + "\">" + captionPagina + "</a></li>");
+    }
+
 }
 
-<a href="/">Início</a>
+@{
+    Consultar();
+}
+
 @if (paginas != null)
 {
-    foreach (Pagina item in paginas)
-    {
-        <a href="~/AreaRestrita/@item.CodigoSistema/@item.CodigoModulo/@(item.CodigoPagina).cshtml">@item.CaptionPagina/@item.CaptionModulo/@item.CaptionSistema</a>
+    <ul class="menu">
+        <li class="parent"><a href=#>Início</a></li>
+
+        @foreach (Pagina item in paginas)
+        {
+            pagina = item.CodigoPagina;
+
+            if (item.CodigoSistema != sistema)
+            {
+                sistema = item.CodigoSistema;
+
+                //inserirSistema(item.CaptionSistema);
+
+                //---------------
+                //inserir sistema
+                //---------------
+                if (tagSistemaAberto)
+                {
+                    @:</ul></li></ul></li>
+                    tagSistemaAberto = false;
+                    tagModuloAberto = false;
+                }
+                else
+                {
+                    tagSistemaAberto = true;
+                }
+                tagA = "<a href=#>" + item.CaptionSistema + "</a>";
+                @Html.Raw("<li>" + tagA + "<ul>");
+                
+                if (item.CodigoModulo != modulo)
+                {
+                    modulo = item.CodigoModulo;
+
+                    //inserirModulo(item.CaptionModulo);
+                    //---------------
+                    //inserir modulo
+                    //---------------
+                    if (tagModuloAberto)
+                    {
+                        @:</ul>
+                    }
+                    else
+                    {
+                        tagModuloAberto = true;
+                    }
+
+                    tagA = "<a class=\"child\" href=#>" + item.CaptionModulo + "</a>";
+                    @Html.Raw("<li>" + tagA + "<ul>");
+
+                    //inserirPagina(item.CaptionPagina);
+                    //---------------
+                    //inserir pagina
+                    //---------------
+                    //href = "~/AreaRestrita/" + sistema + "/" + modulo + "/" + pagina + ".cshtml";
+                    //tagA = "<a href="~">" + item.CaptionPagina + "</a>";
+
+                    <li><a href="~/AreaRestrita/@sistema/@modulo/@pagina@extensao">@item.CaptionPagina</a></li>
+
+                }
+                else
+                {
+                    //inserirPagina(item.CaptionPagina);
+                    //---------------
+                    //inserir pagina
+                    //---------------
+                    //href = "~/AreaRestrita/" + sistema + "/" + modulo + "/" + pagina + ".cshtml";
+                    //tagA = "<a href=#>" + item.CaptionPagina + "</a>";
+
+                    <li><a href="~/AreaRestrita/@sistema/@modulo/@pagina@extensao">@item.CaptionPagina</a></li>
+                }
+            }
+            else
+            {
+                if (item.CodigoModulo != modulo)
+                {
+                    modulo = item.CodigoModulo;
+
+                    //inserirModulo(item.CaptionModulo);
+                    //---------------
+                    //inserir modulo
+                    //---------------
+                    if (tagModuloAberto)
+                    {
+                        @:</ul></li>
+                    }
+                    else
+                    {
+                        tagModuloAberto = true;
+                    }
+
+                    tagA = "<a href=#>" + item.CaptionModulo + "</a>";
+                    @Html.Raw("<li>" + tagA + "<ul>");
+
+                    //inserirPagina(item.CaptionPagina);
+                    //---------------
+                    //inserir pagina
+                    //---------------
+                    //href = "~/AreaRestrita/" + sistema + "/" + modulo + "/" + pagina + ".cshtml";
+                    //tagA = "<a href=#>" + item.CaptionPagina + "</a>";
+
+                    <li><a href="~/AreaRestrita/@sistema/@modulo/@pagina@extensao">@item.CaptionPagina</a></li>
+                }
+                else
+                {
+                    //inserirPagina(item.CaptionPagina);
+                    //---------------
+                    //inserir pagina
+                    //---------------
+                    <li><a href="~/AreaRestrita/@sistema/@modulo/@pagina@extensao">@item.CaptionPagina</a></li>
+                }
+            }
+        }
+
+        @Html.Raw("</ul>" + "</li>" + "</ul>" + "</li>")
+        <li><a href="~/ControleAcesso/Sair.cshtml">Sair</a></li></ul>
     }
-}
+
+    @*<head>
+            <meta charset="UTF-8">
+            <meta http - equiv="X-UA-Compatible" content="IE=edge">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title> Document </title>
+            <style>
+                .menu.parent {
+                    display: block;
+                    position: relative;
+                    float: left;
+                    line-height: 30px;
+                    background-color: #4FA0D8;
+                    border-right: #CCC 1px solid;
+                }
+
+                    .menu.parent a {
+                        margin: 10px;
+                        color: #FFFFFF;
+                        text-decoration: none;
+                    }
+
+                    .menu.parent:hover > ul {
+                        display: block;
+                        position: absolute;
+                    }
+
+                .menu.child {
+                    display: none;
+                }
+
+                    .menu.child li {
+                        background-color: #E4EFF7;
+                        line-height: 30px;
+                        border-bottom: #CCC 1px solid;
+                        border-right: #CCC 1px solid;
+                        width: 100%;
+                    }
+
+                        .menu.child li a {
+                            color: #000000;
+                        }
+
+                .menu,
+                .menu ul {
+                    list-style: none;
+                    margin: 0;
+                    padding: 0px;
+                    min-width: 10em;
+                }
+
+                ul.menu ul ul {
+                    left: 100%;
+                    top: 0;
+                    margin-left: 1px;
+                }
+
+                .menu li:hover {
+                    background-color: #95B4CA;
+                }
+
+                .menu.parent li:hover {
+                    background-color: #F0F0F0;
+                }
+
+                .menu.expand {
+                    font-size: 12px;
+                    float: right;
+                    margin-right: 5px;
+                }
+            </style>
+        </head>*@
+
+<@*ul>
+        <li>
+            <a href="#">Início</a>
+        </li>
+
+
+        <li>
+            <a href="#">Copa</a>
+            <ul>
+                <li>
+                    <a href="#">Cadastro »</span></a>
+                    <ul>
+                        <li><a href="#">Time</a></li>
+                        <li><a href="#">Jogador</a></li>
+                        <li><a href="#">Jogo</a></li>
+                        <li><a href="#">Participação</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#">Relatório »</span></a>
+                    <ul>
+                        <li><a href="#">Classificação</a></li>
+                        <li><a href="#">Artilharia</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </li>
+        <li>
+            <a href="#">Genérico</a>
+            <ul>
+                <li>
+                    <a href="#">Cadastro »</span></a>
+                    <ul>
+                        <li><a href="#">Sistema</a></li>
+                        <li><a href="#">Módulo</a></li>
+                        <li><a href="#">Página</a></li>
+                        <li><a href="#">Ação</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#">Segurança »</span></a>
+                    <ul>
+                        <li><a href="#">Operador</a></li>
+                        <li><a href="#">Autorização</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </li>
+        <li>
+            <a href="#">Sair</a>
+        </li>
+    </ul>*@

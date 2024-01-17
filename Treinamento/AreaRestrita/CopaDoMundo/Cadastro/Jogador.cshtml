@@ -1,4 +1,5 @@
-﻿@{
+﻿@RenderPage("~/AreaRestrita/Seguranca.cshtml")
+@{
     Page.Title = "Jogadores";
     Layout = "~/AreaRestrita/_Layout.cshtml";
 }
@@ -34,6 +35,7 @@
 
     List<Jogador> jogadores = null;
     List<Time> times = null;
+    List<Botao> botoes = null;
 
     private void AlimentaVariaveis()
     {
@@ -41,6 +43,8 @@
         idJogador = Util.ChecarNulo(Request.Form["idJogador"]);
         nomeJogador = Util.ChecarNulo(Request.Form["nomeJogador"]);
         idTime = Util.ChecarNulo(Request.Form["times"]);
+
+        botoes = new BotaoDao().GetAll();
 
         if (!string.IsNullOrWhiteSpace(Request.Form["view"]))
         {
@@ -142,20 +146,16 @@
             @PageHelper.MakeAlert()
 
             <button class="btn btn-secondary" type="submit" onclick="estadoInicial()">Limpar</button>
-            @if (view == View.Index)
-            {
-                <button class="btn btn-secondary" type="button" onclick="novo()">Novo</button>
-            }
 
             @if (view == View.New)
             {
-                <button class="btn btn-secondary" type="button" onclick="executaAcao('I')">Incluir</button>
+                @PageHelper.MakeBotao(botoes, "I");
             }
 
             @if (view == View.Edit)
             {
-                <button class="btn btn-secondary" type="button" onclick="executaAcao('A')">Alterar</button>
-                <button class="btn btn-secondary" type="button" onclick="executaAcao('E')">Excluir</button>
+                @PageHelper.MakeBotao(botoes, "A");
+                @PageHelper.MakeBotao(botoes, "E");
             }
 
             @if (view == View.New || view == View.Edit)
@@ -183,6 +183,11 @@
 
             @if (view == View.Index)
             {
+                if (botoes.Any(x => x.Codigo == "I"))
+                {
+                    <button class="btn btn-secondary" type="button" onclick="adicionarNovo()">Novo</button>
+                }
+
                 if (jogadores != null)
                 {
                     <table class="table">
@@ -199,7 +204,12 @@
                                 <tr>
                                     <td>@item.NomeJogador</td>
                                     <td>@item.NomeTime</td>
-                                    <td><button class="btn btn-secondary" type="button" onclick="editar('@item.IdJogador')">Editar</button></td>
+                                    <td>
+                                        @if (botoes.Any(x => x.Codigo == "A"))
+                                        {
+                                            <button class="btn btn-secondary" type="button" onclick="editar('@item.IdJogador')">Editar</button>
+                                        }
+                                    </td>
                                 </tr>
                             }
                         </tbody>
@@ -217,7 +227,7 @@
             document.form1.idJogador.value = idJogador;
             executaAcao('C');
         }
-        function novo() {
+        function adicionarNovo() {
             document.form1.view.value = "@((int)View.New)";
             executaAcao('');
         }

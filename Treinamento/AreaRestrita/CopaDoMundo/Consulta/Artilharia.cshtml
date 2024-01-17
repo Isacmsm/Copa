@@ -16,8 +16,8 @@
 
     private void Consultar()
     {
-        Dao dao = new Dao();
-        artilharia = dao.ExecutarProcedureList<Artilharia>("stp_Das_Artilharia_Sel", null);
+        //artilharia = new Dao().ExecutarProcedureList<Artilharia>("stp_Das_Artilharia_Sel", null);
+        artilharia = new Dao().ExecutarAcaoList<Artilharia>("C", null);
     }
 }
 

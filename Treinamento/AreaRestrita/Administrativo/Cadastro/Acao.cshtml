@@ -1,4 +1,5 @@
-﻿@{
+﻿@RenderPage("~/AreaRestrita/Seguranca.cshtml")
+@{
     Page.Title = "Ações";
     Layout = "~/AreaRestrita/_Layout.cshtml";
 }
@@ -28,7 +29,7 @@
     }
 
     string acao = null;
-    string idAcao= null;
+    string idAcao = null;
     string idPagina = null;
     string codigo = null;
     string caption = null;
@@ -38,6 +39,7 @@
 
     List<Acao> acoes = null;
     List<Pagina> paginas = null;
+    List<Botao> botoes = null;
 
     private void AlimentaVariaveis()
     {
@@ -47,6 +49,8 @@
         caption = Util.ChecarNulo(Request.Form["caption"]);
         procedure = Util.ChecarNulo(Request.Form["procedure"]);
         idPagina = Util.ChecarNulo(Request.Form["idPagina"]);
+
+        botoes = new BotaoDao().GetAll();
 
         if (!string.IsNullOrWhiteSpace(Request.Form["view"]))
         {
@@ -66,38 +70,20 @@
 
     private void ConsultarAcoes()
     {
-        string procedure = GetNomeProcedure("C");
         Dictionary<string, object> parametros = new Dictionary<string, object>();
         parametros.Add("@IdAcao", idAcao);
 
-        Dao dao = new Dao();
-        acoes = dao.ExecutarProcedureList<Acao>(procedure, parametros);
-
+        acoes = new Dao().ExecutarAcaoList<Acao>("C", parametros);
     }
 
     private void ConsultarPaginas()
     {
         Dictionary<string, object> parametros = new Dictionary<string, object>();
-
         parametros.Add("@TipoConsulta", "1");
 
-        string nomeProcedure = GetNomeProcedure("C");
-
-        Dao dao = new Dao();
-        paginas = dao.ExecutarProcedureList<Pagina>(nomeProcedure, parametros);
+        paginas = new Dao().ExecutarAcaoList<Pagina>("C", parametros);
     }
 
-    private string GetNomeProcedure(string acao)
-    {
-        switch (acao)
-        {
-            case "C": return "stp_Das_Acao_Sel";
-            case "I": return "stp_Das_Acao_Ins";
-            case "A": return "stp_Das_Acao_Upd";
-            case "E": return "stp_Das_Acao_Del";
-            default: return null;
-        }
-    }
     private void Manutencao()
     {
         Dictionary<string, object> parametros = new Dictionary<string, object>();
@@ -107,10 +93,7 @@
         parametros.Add("@Procedure", procedure);
         parametros.Add("@IdPagina", idPagina);
 
-        string nomeProcedure = GetNomeProcedure(acao);
-
-        Dao dao = new Dao();
-        dao.ExecutarProcedure(nomeProcedure, parametros);
+        new Dao().ExecutarAcao(acao, parametros);
     }
 
     private void CarregarDados()
@@ -171,20 +154,16 @@
             @PageHelper.MakeAlert()
 
             <button class="btn btn-secondary" type="submit" onclick="estadoInicial()">Limpar</button>
-            @if (view == View.Index)
-            {
-                <button class="btn btn-secondary" type="button" onclick="novo()">Novo</button>
-            }
 
             @if (view == View.New)
             {
-                <button class="btn btn-secondary" type="button" onclick="executaAcao('I')">Incluir</button>
+                @PageHelper.MakeBotao(botoes, "I");
             }
 
             @if (view == View.Edit)
             {
-                <button class="btn btn-secondary" type="button" onclick="executaAcao('A')">Alterar</button>
-                <button class="btn btn-secondary" type="button" onclick="executaAcao('E')">Excluir</button>
+                @PageHelper.MakeBotao(botoes, "A");
+                @PageHelper.MakeBotao(botoes, "E");
             }
 
             @if (view == View.New || view == View.Edit)
@@ -223,6 +202,10 @@
 
             @if (view == View.Index)
             {
+                if (botoes.Any(x => x.Codigo == "I"))
+                {
+                    <button class="btn btn-secondary" type="button" onclick="adicionarNovo()">Novo</button>
+                }
                 if (acoes != null)
                 {
                     <table class="table mt-3">
@@ -243,7 +226,12 @@
                                     <td>@item.Caption</td>
                                     <td>@item.Codigo</td>
                                     <td>@item.Procedure</td>
-                                    <td><button class="btn btn-secondary" type="button" onclick="editar('@item.IdAcao')">Editar</button></td>
+                                    <td>
+                                        @if (botoes.Any(x => x.Codigo == "A"))
+                                        {
+                                            <button class="btn btn-secondary" type="button" onclick="editar('@item.IdAcao')">Editar</button>
+                                        }
+                                    </td>
                                 </tr>
                             }
                         </tbody>
@@ -261,7 +249,7 @@
             document.form1.idAcao.value = idAcao;
             executaAcao('C');
         }
-        function novo() {
+        function adicionarNovo() {
             document.form1.view.value = "@((int)View.New)";
             executaAcao('');
         }

@@ -1,4 +1,5 @@
-﻿@{
+﻿@RenderPage("~/AreaRestrita/Seguranca.cshtml")
+@{
     Page.Title = "Times";
     Layout = "~/AreaRestrita/_Layout.cshtml";
 }
@@ -21,6 +22,7 @@
     string nome = null;
     View view = View.Index;
 
+    List<Botao> botoes = null;
     List<Time> times = null;
 
     private void AlimentaVariaveis()
@@ -28,6 +30,8 @@
         acao = Util.ChecarNulo(Request.Form["acao"]);
         idTime = Util.ChecarNulo(Request.Form["idTime"]);
         nome = Util.ChecarNulo(Request.Form["nome"]);
+
+        botoes = new BotaoDao().GetAll();
 
         if (!string.IsNullOrWhiteSpace(Request.Form["view"]))
         {
@@ -57,10 +61,6 @@
 
         new Dao().ExecutarAcao(acao, parametros);
 
-    }
-    private string IsInvalid(string key)
-    {
-        return (!ModelState.IsValidField(key) ? "is-invalid" : "");
     }
     private void CarregarDados()
     {
@@ -118,27 +118,23 @@
             @PageHelper.MakeAlert()
 
             <button class="btn btn-secondary" type="submit" onclick="estadoInicial()">Limpar</button>
-            @if (view == View.Index)
-            {
-                <button class="btn btn-secondary" type="button" onclick="novo()">Novo</button>
-            }
 
             @if (view == View.New)
             {
-                <button class="btn btn-secondary" type="button" onclick="executaAcao('I')">Incluir</button>
+                @PageHelper.MakeBotao(botoes, "I");
             }
 
             @if (view == View.Edit)
             {
-                <button class="btn btn-secondary" type="button" onclick="executaAcao('A')">Alterar</button>
-                <button class="btn btn-secondary" type="button" onclick="executaAcao('E')">Excluir</button>
+                @PageHelper.MakeBotao(botoes, "A");
+                @PageHelper.MakeBotao(botoes, "E");
             }
 
             @if (view == View.New || view == View.Edit)
             {
                 <div class="mb-3">
                     <label class="form-label" for="time">Time: </label>
-                    <input class="form-control @IsInvalid("nome")" type="text" name="nome" id="nome" value="@nome" />
+                    <input class="form-control @Util.IsInvalid(ModelState,"nome")" type="text" name="nome" id="nome" value="@nome" />
                     @PageHelper.MakeFeedBack("nome")
 
                 </div>
@@ -146,6 +142,11 @@
 
             @if (view == View.Index)
             {
+                if (botoes.Any(x => x.Codigo == "I"))
+                {
+                    <button class="btn btn-secondary" type="button" onclick="adicionarNovo('')">Adicionar Novo</button>
+                }
+
                 if (times != null)
                 {
                     <table class="table">
@@ -160,7 +161,12 @@
                             {
                                 <tr>
                                     <td>@item.Nome</td>
-                                    <td><button class="btn btn-secondary" type="button" onclick="editar('@item.IdTime')">Editar</button></td>
+                                    <td>
+                                        @if (botoes.Any(x => x.Codigo == "A" || x.Codigo == "E"))
+                                        {
+                                            <button class="btn btn-secondary" type="button" onclick="editar('@item.IdTime')">Editar</button>
+                                        }
+                                    </td>
                                 </tr>
                             }
                         </tbody>
@@ -179,7 +185,7 @@
             document.form1.idTime.value = idTime;
             executaAcao('C');
         }
-        function novo() {
+        function adicionarNovo() {
             document.form1.view.value = "@((int)View.New)";
             executaAcao('');
         }
