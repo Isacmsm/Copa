@@ -20,7 +20,13 @@
         public string IdTime2 { get; set; }
         public string Time2 { get; set; }
         public string Placar1 { get; set; }
+        public string DataHoraInicio { get; set; }
+        public string DataHoraFinal { get; set; }
         public string Placar2 { get; set; }
+        public string DataInicio { get; set; }
+        public string HoraInicio { get; set; }
+        public string DataFinal { get; set; }
+        public string HoraFinal { get; set; }
     }
 
     private class Time
@@ -29,11 +35,19 @@
         public string Nome { get; set; }
     }
 
-
     string acao = null;
     string idJogo = null;
     string idTime1 = null;
     string idTime2 = null;
+
+    string dataHoraInicio = null;
+    string dataHoraFinal = null;
+    string dataInicio = null;
+    string horaInicio = null;
+
+    string dataFinal = null;
+    string horaFinal = null;
+
     View view = View.Index;
 
     List<Jogo> jogos = null;
@@ -46,6 +60,13 @@
         idJogo = Util.ChecarNulo(Request.Form["idJogo"]);
         idTime1 = Util.ChecarNulo(Request.Form["times1"]);
         idTime2 = Util.ChecarNulo(Request.Form["times2"]);
+        dataHoraInicio = Util.ChecarNulo(Request.Form["dataHoraInicio"]);
+        dataHoraFinal = Util.ChecarNulo(Request.Form["dataHoraFinal"]);
+
+        dataInicio = Util.ChecarNulo(Request.Form["dataInicio"]);
+        horaInicio = Util.ChecarNulo(Request.Form["horaInicio"]);
+        dataFinal = Util.ChecarNulo(Request.Form["dataFinal"]);
+        horaFinal = Util.ChecarNulo(Request.Form["horaFinal"]);
 
         botoes = new BotaoDao().GetAll();
 
@@ -53,7 +74,6 @@
         {
             view = (View)Enum.Parse(typeof(View), Request.Form["view"]);
         }
-
     }
     private void LimpaVariaveis()
     {
@@ -61,6 +81,10 @@
         idJogo = null;
         idTime1 = null;
         idTime2 = null;
+        dataInicio = null;
+        horaInicio = null;
+        dataFinal = null;
+        horaFinal = null;
     }
     private void Consultar()
     {
@@ -77,23 +101,18 @@
         times = new Dao().ExecutarAcaoList<Time>("C", parametros);
     }
 
-    private string GetNomeProcedure(string acao)
-    {
-        switch (acao)
-        {
-            case "C": return "stp_Das_Jogo_Sel";
-            case "I": return "stp_Das_Jogo_Ins";
-            case "A": return "stp_Das_Jogo_Upd";
-            case "E": return "stp_Das_Jogo_Del";
-            default: return null;
-        }
-    }
     private void Manutencao()
     {
         Dictionary<string, object> parametros = new Dictionary<string, object>();
         parametros.Add("@IdJogo", idJogo);
         parametros.Add("@IdTime1", idTime1);
         parametros.Add("@IdTime2", idTime2);
+
+        parametros.Add("@DataInicio", Util.FormatarData(dataInicio,Util.TipoDado.FormatoDataBrasileira));
+        parametros.Add("@HoraInicio", Util.FormatarData(horaInicio, Util.TipoDado.FormatoHora));
+
+        parametros.Add("@DataFinal", Util.FormatarData(dataFinal, Util.TipoDado.FormatoDataBrasileira));
+        parametros.Add("@HoraFinal", Util.FormatarData(horaFinal, Util.TipoDado.FormatoHora));
 
         new Dao().ExecutarAcao(acao, parametros);
 
@@ -107,13 +126,16 @@
             idJogo = jogo.IdJogo;
             idTime1 = jogo.IdTime1;
             idTime2 = jogo.IdTime2;
+
+            dataInicio = Util.FormatarData(jogo.DataHoraInicio, Util.TipoDado.FormatoDataAmericada);
+            horaInicio = Util.FormatarData(jogo.DataHoraInicio, Util.TipoDado.FormatoHora);
+            dataFinal = Util.FormatarData(jogo.DataHoraFinal, Util.TipoDado.FormatoDataAmericada);
+            horaFinal = Util.FormatarData(jogo.DataHoraFinal, Util.TipoDado.FormatoHora);
         }
     }
-
 }
 
 @{
-
     AlimentaVariaveis();
 
     if (acao == "I" || acao == "A" || acao == "E")
@@ -201,6 +223,30 @@
                     </select>
                     @PageHelper.MakeFeedBack("times2")
                 </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="dataInicio">Data Início</label>
+                    <input class="form-control @Util.IsInvalid(ModelState,"dataInicio")" type="date" id="dataInicio" name="dataInicio" value="@Util.FormatarData( dataInicio,Util.TipoDado.FormatoDataAmericada)">
+                    @PageHelper.MakeFeedBack("dataInicio")
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="horaInicio">Hora Início</label>
+                    <input class="form-control @Util.IsInvalid(ModelState,"horaInicio")" step="1" type="time" id="horaInicio" name="horaInicio" value="@horaInicio">
+                    @PageHelper.MakeFeedBack("horaInicio")
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="dataFinal">Data Final</label>
+                    <input class="form-control @Util.IsInvalid(ModelState,"dataFinal")" type="date" id="dataFinal" name="dataFinal" value="@Util.FormatarData( dataFinal, Util.TipoDado.FormatoDataAmericada)">
+                    @PageHelper.MakeFeedBack("dataFinal")
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="horaFinal">Hora Final</label>
+                    <input class="form-control @Util.IsInvalid(ModelState,"horaFinal")" step="1" type="time" id="horaFinal" name="horaFinal" value="@horaFinal">
+                    @PageHelper.MakeFeedBack("horaFinal")
+                </div>
             }
 
             @if (view == View.Index)
@@ -220,6 +266,8 @@
                                 <th>Time 2</th>
                                 <th>Placar 1</th>
                                 <th>Placar 2</th>
+                                <th>Data/Hora Início</th>
+                                <th>Data/Hora Final</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -231,6 +279,8 @@
                                     <td>@item.Time2</td>
                                     <td>@item.Placar1</td>
                                     <td>@item.Placar2</td>
+                                    <td>@item.DataHoraInicio</td>
+                                    <td>@item.DataHoraFinal</td>
                                     <td>
                                         @if (botoes.Any(x => x.Codigo == "A"))
                                         {
