@@ -19,6 +19,7 @@
         public string Nome { get; set; }
         public string Senha { get; set; }
         public string Confirmacao { get; set; }
+        public bool Ativo { get; set; }
     }
 
     string acao = null;
@@ -27,6 +28,7 @@
     string nome = null;
     string senha = null;
     string confirmacao = null;
+    bool ativo = true;
 
     View view = View.Index;
 
@@ -42,6 +44,8 @@
         senha = Util.ChecarNulo(Request.Form["senha"]);
         confirmacao = Util.ChecarNulo(Request.Form["confirmacao"]);
 
+        ativo = (Request.Form["opcao"] == "ativo" ? true : false);
+
         botoes = new BotaoDao().GetAll();
 
         if (!string.IsNullOrWhiteSpace(Request.Form["view"]))
@@ -56,6 +60,7 @@
         cpf = null;
         nome = null;
         confirmacao = null;
+        ativo = true;
     }
 
     private void Consultar()
@@ -74,6 +79,7 @@
         parametros.Add("@Nome", nome);
         parametros.Add("@Senha", senha);
         parametros.Add("@Confirmacao", confirmacao);
+        parametros.Add("@Ativo", ativo);
 
         new Dao().ExecutarAcao(acao, parametros);
     }
@@ -87,6 +93,7 @@
             nome = operador.Nome;
             senha = operador.Senha;
             confirmacao = operador.Senha;
+            ativo = operador.Ativo;
         }
     }
 }
@@ -166,6 +173,13 @@
                     <input class="form-control @Util.IsInvalid(ModelState,"confirmacao")" type="password" name="confirmacao" id="confirmacao" value="@confirmacao" />
                     @PageHelper.MakeFeedBack("confirmacao")
 
+                    <div>
+                        <input type="radio" id="ativo" name="opcao" value="ativo" @(ativo ? "checked" : "")>
+                        <label class="form-label mt-3" for="ativo">Ativo</label>
+                        <input type="radio" id="inativo" name="opcao" value="inativo" @(!ativo ? "checked" : "")>
+                        <label class="form-label" for="inativo">Inativo</label>
+                    </div>
+
                 </div>
             }
 
@@ -183,6 +197,7 @@
                             <tr>
                                 <th>CPF</th>
                                 <th>Nome</th>
+                                <th>Ativo</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -192,6 +207,9 @@
                                 <tr>
                                     <td>@item.CPF</td>
                                     <td>@item.Nome</td>
+                                    <td>
+                                        @(item.Ativo ? "Sim": "Não")
+                                    </td>
                                     <td>
                                         @if (botoes.Any(x => x.Codigo == "A"))
                                         {
