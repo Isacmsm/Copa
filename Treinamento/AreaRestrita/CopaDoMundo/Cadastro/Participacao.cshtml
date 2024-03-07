@@ -124,9 +124,13 @@
 
         <div class="container">
 
-            @RenderPage("~/AreaRestrita/Menu.cshtml")
+            <div class="d-flex">
+                @RenderPage("~/AreaRestrita/Menu.cshtml")
+            </div>
 
-            <h1>Participação</h1>
+            <div class="my-4">
+                <h1>Participação</h1>
+            </div>
 
             @PageHelper.MakeAlert()
 

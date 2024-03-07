@@ -108,7 +108,7 @@
         parametros.Add("@IdTime1", idTime1);
         parametros.Add("@IdTime2", idTime2);
 
-        parametros.Add("@DataInicio", Util.FormatarData(dataInicio,Util.TipoDado.FormatoDataBrasileira));
+        parametros.Add("@DataInicio", Util.FormatarData(dataInicio, Util.TipoDado.FormatoDataBrasileira));
         parametros.Add("@HoraInicio", Util.FormatarData(horaInicio, Util.TipoDado.FormatoHora));
 
         parametros.Add("@DataFinal", Util.FormatarData(dataFinal, Util.TipoDado.FormatoDataBrasileira));
@@ -173,9 +173,14 @@
         <input type="hidden" name="view" id="view" value="@((int)view)" />
 
         <div class="container">
-            @RenderPage("~/AreaRestrita/Menu.cshtml")
 
-            <h1>Jogos</h1>
+            <div class="d-flex">
+                @RenderPage("~/AreaRestrita/Menu.cshtml")
+            </div>
+
+            <div class="my-4">
+                <h1>Jogos</h1>
+            </div>
 
             @PageHelper.MakeAlert()
 
@@ -194,7 +199,7 @@
 
             @if (view == View.New || view == View.Edit)
             {
-                <div class="mb-3">
+                <div class="my-3">
                     <label class="form-label" for="times1">Time 1: </label>
                     <select class="form-control @Util.IsInvalid(ModelState,"times1")" id="times1" name="times1">
                         <option value=""></option>

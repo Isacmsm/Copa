@@ -172,8 +172,16 @@
         Util.ExceptionHandler(() =>
         {
             Manutencao();
-            view = View.Index;
-            LimpaVariaveis();
+
+            if (view != View.Configurar)
+            {
+                view = View.Index;
+                LimpaVariaveis();
+            }
+            else
+            {
+                idJogador = null;
+            }
 
             ModelState.AddError("alert-success", "Operação realizada com sucesso");
         }, this.ModelState);
@@ -196,10 +204,7 @@
 @section head {
     <link href="~/Scripts/Style.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- jQuery -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <!-- jQuery Mask Plugin -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+
 
 }
 
@@ -212,9 +217,13 @@
         <input type="hidden" name="campoAlterado" id="campoAlterado" value="@campoAlterado" />
 
         <div class="container">
-            @RenderPage("~/AreaRestrita/Menu.cshtml")
 
-            <h1>Jogadores</h1>
+            <div class="d-flex">
+                @RenderPage("~/AreaRestrita/Menu.cshtml")
+            </div>
+            <div class="my-4">
+                <h1>Jogadores</h1>
+            </div>
 
             @PageHelper.MakeAlert()
 
@@ -238,7 +247,7 @@
 
             @if (view == View.New || view == View.Edit)
             {
-                <div class="mb-3">
+                <div class="my-3">
                     <label class="form-label" for="jogador">Jogador: </label>
                     <input class="form-control @IsInvalid("nomeJogador")" type="text" name="nomeJogador" id="nomeJogador" value="@nomeJogador" />
                     @PageHelper.MakeFeedBack("nomeJogador")
@@ -312,10 +321,10 @@
                                     <tr>
                                         <td>@item.NomeJogador</td>
                                         <td>
-                                            <input type="radio" id="capitao@(item.IdJogador)" name="capitao@(item.IdJogador)" value="1" onchange="alterarConfiguracao('c',@item.IdJogador)" @(item.Capitao ? "checked" : "")>
+                                            <input type="radio" id="capitao@(item.IdJogador)" name="idCapitao" value="@(item.IdJogador)" onchange="alterarConfiguracao('c',@item.IdJogador)" @(item.Capitao ? "checked" : "")>
                                         </td>
                                         <td>
-                                            <input type="radio" id="tecnico@(item.IdJogador)" name="tecnico@(item.IdJogador)" value="1" onchange="alterarConfiguracao('t',@item.IdJogador)" @(item.Tecnico ? "checked" : "")>
+                                            <input type="radio" id="tecnico@(item.IdJogador)" name="idTecnico" value="@(item.IdJogador)" onchange="alterarConfiguracao('t',@item.IdJogador)" @(item.Tecnico ? "checked" : "")>
                                         </td>
                                         <td>
                                             <input type="checkbox" id="suspenso@(item.IdJogador)" name="suspenso@(item.IdJogador)" value="1" onchange="alterarConfiguracao('s',@item.IdJogador)" @(item.Suspenso ? "checked" : "")>
@@ -388,8 +397,13 @@
 
         </div>
     </form>
-
+    <script src="~/Scripts/jquery-3.7.1.js"></script>
     <script src="~/Scripts/Scripts.js"></script>
+    <!-- jQuery -->
+    @*<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>*@
+    <!-- jQuery Mask Plugin -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+
     <script>
         function editar(idJogador) {
         document.form1.view.value = "@((int)View.Edit)";
@@ -412,8 +426,8 @@
         executaAcao('');
     }
 
-        $(document).ready(function () {
-            $('#salario').mask('000.000.000,00', { reverse: true });
+    $(document).ready(function () {
+        $('#salario').mask('000.000.000,00', { reverse: true });
     });
 
     </script>

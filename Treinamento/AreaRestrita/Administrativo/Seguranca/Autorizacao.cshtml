@@ -66,6 +66,7 @@
         parametros.Add("@TipoConsulta", "1");
 
         operadores = new Dao().ExecutarAcaoList<Operador>("C", parametros);
+
     }
     private void ConsultarAcoes()
     {
@@ -73,7 +74,7 @@
         parametros.Add("@TipoConsulta", "2");
         parametros.Add("@IdOperador", idOperador);
 
-        acoes = new Dao().ExecutarProcedureList<Acao>("C", parametros);
+        acoes = new Dao().ExecutarAcaoList<Acao>("C", parametros);
     }
 
     private void Manutencao()
@@ -126,25 +127,30 @@
         <input type="hidden" name="view" id="view" value="@((int)view)" />
 
         <div class="container">
-            @RenderPage("~/AreaRestrita/Menu.cshtml")
 
-            <h1>Autorizações</h1>
+            <div class="d-flex">
+                @RenderPage("~/AreaRestrita/Menu.cshtml")
+            </div>
+
+            <div class="my-3">
+                <h1>Autorizações</h1>
+            </div>
 
             @PageHelper.MakeAlert()
 
-            <button class="btn btn-secondary mb-3" type="submit" onclick="estadoInicial()">Limpar</button>
+            <button class="btn btn-secondary" type="submit" onclick="estadoInicial()">Limpar</button>
 
             @if (view == View.Edit)
             {
                 if (botoes.Any(x => x.Codigo == "A"))
                 {
-                    <button class="btn btn-secondary mb-3" type="button" onclick="executaAcao('A')">Salvar</button>
+                    <button class="btn btn-secondary" type="button" onclick="executaAcao('A')">Salvar</button>
                 }
             }
 
             @if (view == View.Index || view == View.Edit)
             {
-                <div class="mb-3">
+                <div class="my-3">
                     <label class="form-label" for="idOperador">Operador</label>
                     <select class="form-control" id="idOperador" name="idOperador" onchange="editar('@idOperador')">
                         <option value=""></option>

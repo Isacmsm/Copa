@@ -5,6 +5,7 @@
 }
 
 @functions {
+
     private enum View
     {
         Index,
@@ -96,9 +97,21 @@
             ativo = operador.Ativo;
         }
     }
+    public void GerarSenha()
+    {
+        string novaSenha = "";
+
+        Random rand = new Random();
+
+        for (int i = 0; i < 11; i++)
+        {
+            //gera um caractere aleatório entre caracteres especiais, números, letras maiusculas e minúsculas
+            novaSenha += Convert.ToChar(rand.Next(33, 127));
+        }
+        senha = novaSenha;
+    }
 }
 @{
-
     AlimentaVariaveis();
 
     if (acao == "I" || acao == "A" || acao == "E")
@@ -113,6 +126,12 @@
 
         }, this.ModelState);
     }
+    //else if (acao == "GS")
+    //{
+    //    GerarSenha();
+    //    Response.Write(senha);
+    //    Response.End();
+    //}
 
     Util.ExceptionHandler(() =>
     {
@@ -126,6 +145,7 @@
 
 @section head {
     <link href="~/Scripts/Style.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 }
 
 <body>
@@ -135,9 +155,14 @@
         <input type="hidden" name="view" id="view" value="@((int)view)" />
 
         <div class="container">
-            @RenderPage("~/AreaRestrita/Menu.cshtml")
 
-            <h1>Operadores</h1>
+            <div class="d-flex">
+                @RenderPage("~/AreaRestrita/Menu.cshtml")
+            </div>
+
+            <div class="my-4">
+                <h1>Operadores</h1>
+            </div>
 
             @PageHelper.MakeAlert()
 
@@ -156,7 +181,7 @@
 
             @if (view == View.New || view == View.Edit)
             {
-                <div class="mt-3 mb-3">
+                <div class=" mb-3">
                     <label class="form-label mt-3" for="cpf">CPF</label>
                     <input class="form-control @Util.IsInvalid(ModelState,"CPF")" type="text" name="cpf" id="cpf" value="@cpf" maxlength="11" />
                     @PageHelper.MakeFeedBack("cpf")
@@ -165,12 +190,14 @@
                     <input class="form-control @Util.IsInvalid(ModelState,"nome")" type="text" name="nome" id="nome" value="@nome" />
                     @PageHelper.MakeFeedBack("nome")
 
+
                     <label class="form-label mt-3" for="senha">Senha</label>
-                    <input class="form-control @Util.IsInvalid(ModelState,"senha")" type="password" name="senha" id="senha" value="@senha" />
+                    <input class="form-control @Util.IsInvalid(ModelState,"senha")" type="text" name="senha" id="senha" value="@senha" />
                     @PageHelper.MakeFeedBack("senha")
+                    <button class="btn btn-secondary d-flex" type="button" onclick="gerarSenha()">Gerar Senha</button>
 
                     <label class="form-label mt-3" for="confirmacao">Confirmação</label>
-                    <input class="form-control @Util.IsInvalid(ModelState,"confirmacao")" type="password" name="confirmacao" id="confirmacao" value="@confirmacao" />
+                    <input class="form-control @Util.IsInvalid(ModelState,"confirmacao")" type="text" name="confirmacao" id="confirmacao" value="@confirmacao" />
                     @PageHelper.MakeFeedBack("confirmacao")
 
                     <div>
@@ -192,7 +219,7 @@
 
                 if (operadores != null)
                 {
-                    <table class="table mt-3">
+                    <table class="table">
                         <thead>
                             <tr>
                                 <th>CPF</th>
@@ -225,9 +252,8 @@
 
         </div>
     </form>
+    <script src="~/Scripts/jquery-3.7.1.js"></script>
     <script src="~/Scripts/Scripts.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
     <script>
         function editar(idOperador) {
             document.form1.view.value = "@((int)View.Edit)";
@@ -238,6 +264,30 @@
             document.form1.view.value = "@((int)View.New)";
             executaAcao('');
         }
+
+        function gerarSenha(){
+            $.ajax({
+                method: "POST",
+                url: "Operador.cshtml",
+                data: { acao: "GS" }
+            }).done(function (res) {
+                $("#senha").val(res);
+            });
+        }
+
+        function gerarSenha2() {
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "OperadorAux.cshtml", true);
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    var res = xhr.responseText;
+                    document.getElementById("senha").value = res;
+                }
+            };
+            xhr.send("acao=GS");
+        }
+
     </script>
 </body>
 

@@ -142,9 +142,14 @@
         <input type="hidden" name="view" id="view" value="@((int)view)" />
 
         <div class="container">
-            @RenderPage("~/AreaRestrita/Menu.cshtml")
 
-            <h1>Páginas</h1>
+            <div class="d-flex">
+                @RenderPage("~/AreaRestrita/Menu.cshtml")
+            </div>
+
+            <div class="my-4">
+                <h1>Páginas</h1>
+            </div>
 
             @PageHelper.MakeAlert()
 
@@ -163,7 +168,7 @@
 
             @if (view == View.New || view == View.Edit)
             {
-                <div class="mt-3 mb-3">
+                <div class="mb-3">
                     <label class="form-label mt-3" for="caption">Caption</label>
                     <input class="form-control @Util.IsInvalid(ModelState, "caption")" type="text" name="caption" id="caption" value="@caption" />
                     @PageHelper.MakeFeedBack("caption")
@@ -173,7 +178,7 @@
                     @PageHelper.MakeFeedBack("codigo")
 
                 </div>
-                <div class="mt-3 mb-3">
+                <div class="mb-3">
                     <label class="form-label" for="idModulo">Sistema / Módulo</label>
                     <select class="form-control @Util.IsInvalid(ModelState,"idModulo")" id="idModulo" name="idModulo">
                         <option value=""></option>
@@ -199,7 +204,7 @@
 
                 if (paginas != null)
                 {
-                    <table class="table mt-3">
+                    <table class="table">
                         <thead>
                             <tr>
                                 <th>Caption</th>

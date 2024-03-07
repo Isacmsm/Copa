@@ -40,9 +40,12 @@
 
         <div class="container">
 
-            @RenderPage("~/AreaRestrita/Menu.cshtml")
-
-            <h1>Artilheiros</h1>
+            <div class="d-flex">
+                @RenderPage("~/AreaRestrita/Menu.cshtml")
+            </div>
+            <div class="my-4">
+                <h1>Artilheiros</h1>
+            </div>
 
             <button class="btn btn-secondary" type="submit" onclick="estadoInicial()">Limpar</button>
 

@@ -1,0 +1,25 @@
+﻿@functions {
+
+    string senha = null;
+
+    public void GerarSenha()
+    {
+        string novaSenha = "";
+
+        Random rand = new Random();
+
+        for (int i = 0; i < 11; i++)
+        {
+            //gera um caractere aleatório entre caracteres especiais, números, letras maiusculas e minúsculas
+            novaSenha += Convert.ToChar(rand.Next(33, 127));
+        }
+        senha = novaSenha;
+    }
+}
+@{
+
+    GerarSenha();
+    Response.Write(senha);
+    Response.End();
+
+}

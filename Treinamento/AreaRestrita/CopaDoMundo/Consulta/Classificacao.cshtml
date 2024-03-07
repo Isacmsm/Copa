@@ -38,8 +38,12 @@
     <form name="form1" method="post">
 
         <div class="container">
-            @RenderPage("~/AreaRestrita/Menu.cshtml")
-            <h1>Classificação</h1>
+            <div class="d-flex">
+                @RenderPage("~/AreaRestrita/Menu.cshtml")
+            </div>
+            <div class="my-4">
+                <h1>Classificação</h1>
+            </div>
             <button class="btn btn-secondary" type="submit" onclick="estadoInicial()">Limpar</button>
             @if (classificacao != null)
             {

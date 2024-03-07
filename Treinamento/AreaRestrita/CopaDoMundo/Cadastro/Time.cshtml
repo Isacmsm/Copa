@@ -111,9 +111,14 @@
         <input type="hidden" name="view" id="view" value="@((int)view)" />
 
         <div class="container">
-            @RenderPage("~/AreaRestrita/Menu.cshtml")
 
-            <h1>Times</h1>
+            <div class="d-flex">
+                @RenderPage("~/AreaRestrita/Menu.cshtml")
+            </div>
+
+            <div class="my-4">
+                <h1>Times</h1>
+            </div>
 
             @PageHelper.MakeAlert()
 
@@ -132,7 +137,7 @@
 
             @if (view == View.New || view == View.Edit)
             {
-                <div class="mb-3">
+                <div class="my-3">
                     <label class="form-label" for="time">Time: </label>
                     <input class="form-control @Util.IsInvalid(ModelState,"nome")" type="text" name="nome" id="nome" value="@nome" />
                     @PageHelper.MakeFeedBack("nome")
@@ -146,7 +151,6 @@
                 {
                     <button class="btn btn-secondary" type="button" onclick="adicionarNovo('')">Adicionar Novo</button>
                 }
-
                 if (times != null)
                 {
                     <table class="table">
