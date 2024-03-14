@@ -38,7 +38,6 @@ public class ErroExecucaoException: Exception
             {
                 throw new Exception(item.Message);
             }
-
         }
     }
 }
