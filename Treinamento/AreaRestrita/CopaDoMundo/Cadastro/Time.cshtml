@@ -37,6 +37,7 @@
         {
             view = (View)Enum.Parse(typeof(View), Request.Form["view"]);
         }
+
     }
     private void LimpaVariaveis()
     {
@@ -72,7 +73,6 @@
         }
     }
 }
-
 @{
 
     AlimentaVariaveis();
@@ -105,11 +105,10 @@
 }
 
 <body>
-    <form name="form1" method="post">
+    <form name="form1" method="post" >
         <input type="hidden" name="acao" id="acao" />
         <input type="hidden" name="idTime" id="idTime" value="@idTime" />
         <input type="hidden" name="view" id="view" value="@((int)view)" />
-
         <div class="container">
 
             <div class="d-flex">
@@ -144,7 +143,6 @@
 
                 </div>
             }
-
             @if (view == View.Index)
             {
                 if (botoes.Any(x => x.Codigo == "I"))
@@ -177,7 +175,6 @@
                     </table>
                 }
             }
-
         </div>
     </form>
     <script src="~/Scripts/Scripts.js"></script>
@@ -189,10 +186,12 @@
             document.form1.idTime.value = idTime;
             executaAcao('C');
         }
+
         function adicionarNovo() {
             document.form1.view.value = "@((int)View.New)";
             executaAcao('');
         }
+
     </script>
 </body>
 

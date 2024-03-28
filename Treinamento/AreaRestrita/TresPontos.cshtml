@@ -1,0 +1,238 @@
+@{
+    Page.Title = "Três Pontos";
+    Layout = "~/AreaRestrita/_Layout.cshtml";
+}
+@section head{
+    <link href="~/Scripts/Style.css" rel="stylesheet" />
+}
+<body>
+    <form name="form1" method="post">
+
+        <div class="container">
+            <h1>Modal e Três Pontos</h1>
+
+            @PageHelper.MakeAlert()
+
+            <div class="mt-5">
+
+                <label for="idTime">IdTime</label>
+                <div class="row">
+                    <div class="col-2">
+                        <input type="text" id="idTime" name="idTime" class="form-control" data-group="group1" data-column="IdTime" />
+                        @PageHelper.MakeFeedBack("idTime")
+                    </div>
+                    <div class="col-auto">
+                        @PageHelper.MakeTresPontos("group1", "Consulta de times", "Informe o nome do time", "Time", null)
+                    </div>
+                    <div class="col">
+                        <input type="text" id="nome" name="nome" class="form-control" data-group="group1" data-column="Nome" />
+                        @PageHelper.MakeFeedBack("nome")
+                    </div>
+                </div>
+
+                <label for="idJogador">IdJogador</label>
+                <div class="row">
+                    <div class="col-2">
+                        <input type="text" id="idJogador" name="idJogador" class="form-control" data-group="group2" data-column="IdJogador" />
+                        @PageHelper.MakeFeedBack("idJogador")
+                    </div>
+                    <div class="col-auto">
+                        @PageHelper.MakeTresPontos("group2", "Consulta de jogadores", "Informe o nome do jogador", "Jogador", "idTime")
+                    </div>
+                    <div class="col">
+                        <input type="text" id="nome" name="nome" class="form-control" data-group="group2" data-column="Nome" />
+                        @PageHelper.MakeFeedBack("nome")
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+</body>
+<script src="~/Scripts/Scripts.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script>
+    function openSearch(obj) {
+
+        if (!obj) return;
+
+        //localiza a qual grupo o obj pertence
+        var group = findGroup(obj);
+
+        if (!group) return;
+
+        //se group existir, procura dentro dele o obj com a class search
+        var search = document.querySelector(`[data-group="${group}"][class="search"]`);
+
+        if (!search) return;
+
+        //se o search existir, procurar dentro dele o objeto que tem a classe search-card
+        var card = search.querySelector(".search-card");
+
+        if (!card) return;
+
+        //se o card existir, adiciona na lista de classes dele a class show (classe do css)
+        card.classList.add("show");
+
+        initSearch(search);
+    }
+    function closeSearch(obj) {
+
+        if (!obj) return;
+
+        //localiza a qual grupo o obj pertence
+        var group = findGroup(obj);
+
+        if (!group) return;
+
+        //se group existir, procura dentro dele o obj com a class search
+        var search = document.querySelector(`[data-group="${group}"][class="search"]`);
+
+        if (!search) return;
+
+        //se o search existir, procurar dentro dele o objeto que tem a classe search-card
+        var card = search.querySelector(".search-card");
+
+        if (!card) return;
+
+        //se o card existir, adiciona na lista de classes dele a class show (classe do css)
+        card.classList.remove("show");
+
+        initSearch(search);
+    }
+
+    //função recursiva.  recebe um obj e retorna de qual o grupo que ele faz parte
+    function findGroup(obj) {
+
+        //se o obj contém a class search, recupera o data-group dele
+        if (obj.classList.contains("search")) {
+            return obj.getAttribute("data-group");
+        }
+        //caso contrario, chama a mesma função passando o obj pai
+        return findGroup(obj.parentElement);
+    }
+
+    function initSearch(search) {
+        //localizar dentro do search o elemento com o name = "chave"
+        var chave = search.querySelector('[name="chave"]');
+
+        if (!chave) return;
+
+        chave.value = "";
+
+        //localizad dentro do search um elemento que tem a classe = "resultado"
+        var resultado = search.querySelector('.resultado');
+
+        if (!resultado) return;
+
+        //limpa o conteúdo da div
+        resultado.innerHTML = "";
+    }
+    function makeSearch(obj) {
+
+        if (!obj) return;
+
+        //encontra de qual grupo o objeto faz parte
+        var group = findGroup(obj);
+
+        if (!group) return;
+
+        //encontra de qual search, o grupo faz parte (encontra dentro do grupo, o elemento que tem a classe search)
+        var search = document.querySelector(`[data-group="${group}"][class="search"]`);
+
+        if (!search) return;
+
+        //procura dentro do search o texto pesquisado
+        var chave = search.querySelector(`[name="chave"]`).value;
+
+        //procura o valor da propriedade personalizada
+        var tipoConsulta = search.getAttribute("data-tipo-consulta");
+
+        //verifica se essa pesquisa (search), possui uma consulta composta (ex. pesquisar todos os jogadores de um time específico)
+        if (search.getAttribute("data-consulta-composta")) {
+
+            //recupera o nome do input setado no atributo data-consulta-composta e recupera o valor dele (no exemplo acima, o nome do input seria: idTime e o valor o id do time selecionado)
+            var consultaComposta = document.getElementById(search.getAttribute("data-consulta-composta")).value;
+
+        }
+
+        //procura qual a div de resultado oculta (abaixo do texto pesquisa)
+        var resultado = search.querySelector(`.resultado`);
+
+        $.ajax({
+            method: "POST",
+            url: "/arearestrita/AuxConsulta.cshtml",
+            datatype: "json",
+            data: {
+                chave: chave,
+                tipoConsulta: tipoConsulta,
+                consultaComposta: consultaComposta
+            }
+        }).done(function (res) {
+            if (res.length == 0) {
+                resultado.innerHTML = "<div>Nenhum registro encontrado</div>";
+            }
+            else {
+                var table = populateTable(res);
+                resultado.innerHTML = table;
+            }
+        });
+    }
+    function populateTable(json) {
+        var tablei = '<table class="table table-striped table-sm table-bordered table-hover mt-3">';
+        var thead = populateTableHeader(json);
+        var tbody = populateTableBody(json);
+        var tablef = '</table>';
+
+        return tablei + thead + tbody + tablef;
+    }
+    function populateTableBody(jsonString) {
+
+        //convertendo para JSON
+        var json = JSON.parse(jsonString);
+
+        var columns = Object.keys(json[0]);
+
+        var results = json.map((r, index) => {
+            var row = "<tr onclick='fecharSearch(this)'>";
+            columns.forEach(function (key) {
+                row += "<td data-column=" + key + ">" + r[key] + "</td>";
+            });
+            row += "</tr>";
+            return row;
+        });
+
+        return "<tbody>" + results.join('') + "</tbody>";
+    }
+    function populateTableHeader(jsonString) {
+
+        //convertendo para JSON
+        var json = JSON.parse(jsonString);
+
+        var columns = Object.keys(json[0]);
+        var headerCells = columns.map(r => {
+            return "<th>" + r + "</th>";
+        });
+
+        return "<thead><tr>" + headerCells.join('') + "</thead></tr>";
+    }
+    function fecharSearch(obj) {
+
+        var group = findGroup(obj);
+        if (!group) return;
+
+        //encontra todos os elementos do atributo data-group igual ao grupo passado como parametro e faz um forEach
+        document.querySelectorAll('[data-group=' + group + ']').forEach((item) => {
+
+            //verifica se o elemento é do tipo input
+            if (item instanceof HTMLInputElement) {
+                //procurar na linha clicada, quem tem o atributo data-column igual ao atributo data-column do item
+                item.value = obj.querySelector("[data-column=" + item.getAttribute("data-column") + "]").innerHTML;
+            }
+
+        });
+
+        closeSearch(obj);
+
+    }
+</script>

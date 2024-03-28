@@ -1,0 +1,55 @@
+﻿@functions {
+    private class Configuracao
+    {
+        public string Tema { get; set; }
+    }
+    List<Configuracao> configuracao = null;
+    string tema = null;
+    string acao = null;
+
+    private void AlimentaVariaveis()
+    {
+
+        acao = Request.Form["acao"];
+        if (Request.Form["novoTema"] == "Tema Escuro")
+        {
+            tema = "dark";
+        }
+        else
+        {
+            tema = "";
+        }
+
+    }
+
+    private void Manutencao()
+    {
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@Tema", tema);
+
+        new Dao().ExecutarProcedure("stp_Das_Configuracao_Upd", parametros);
+
+        Response.Write(tema);
+        Response.End();
+    }
+
+    private void Consultar()
+    {
+        configuracao = new Dao().ExecutarProcedureList<Configuracao>("stp_Das_Configuracao_Sel", null);
+        tema = configuracao.FirstOrDefault().Tema;
+
+        Response.Write(tema);
+        Response.End();
+    }
+}
+@{
+    AlimentaVariaveis();
+    if (acao == "ST")
+    {
+        Manutencao();
+    }
+    else if (acao == "RT")
+    {
+        Consultar();
+    }
+}

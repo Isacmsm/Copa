@@ -1,4 +1,5 @@
-﻿.table {
+﻿
+.table {
     width: 100%;
     border-collapse: collapse;
 }
@@ -77,4 +78,42 @@ ul.menu ul ul {
     font-size: 12px;
     float: right;
     margin-right: 5px;
+}
+
+.search {
+    position: relative;
+}
+
+.search-card {
+    position: absolute;
+    top: 40px;
+    left: 0;
+    min-width: 512px;
+    border: 1px solid rgba(0,0,0,.2);
+    background-color: #FFF;
+    z-index: 2;
+    display: none;
+}
+
+    .search-card.show {
+        display: block;
+    }
+
+.search-head {
+    background-color: #f7f7f7;
+    border-bottom: 1px solid #abebeb;
+    padding: .5rem .75rem;
+    display: flex;
+}
+
+.search-title {
+    flex: 1;
+}
+
+.search-body {
+    padding: .5rem .75rem;
+}
+
+.search-close {
+    cursor: pointer;
 }

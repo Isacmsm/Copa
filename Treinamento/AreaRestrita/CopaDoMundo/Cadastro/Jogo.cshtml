@@ -27,6 +27,7 @@
         public string HoraInicio { get; set; }
         public string DataFinal { get; set; }
         public string HoraFinal { get; set; }
+        public string CaminhoArquivoSumula { get; set; }
     }
 
     private class Time
@@ -47,12 +48,17 @@
 
     string dataFinal = null;
     string horaFinal = null;
+    string caminhoArquivoSumula = null;
 
     View view = View.Index;
 
     List<Jogo> jogos = null;
     List<Time> times = null;
     List<Botao> botoes = null;
+
+    string extensoesValidas = ".pdf";
+    HttpPostedFileBase arquivo = null;
+    string nomeArquivo = null;
 
     private void AlimentaVariaveis()
     {
@@ -70,9 +76,21 @@
 
         botoes = new BotaoDao().GetAll();
 
+        if (!string.IsNullOrWhiteSpace(idJogo))
+        {
+            caminhoArquivoSumula = Path.Combine("arquivos", idJogo.PadLeft(5, '0'));
+        }
+
         if (!string.IsNullOrWhiteSpace(Request.Form["view"]))
         {
             view = (View)Enum.Parse(typeof(View), Request.Form["view"]);
+        }
+
+        nomeArquivo = Util.ChecarNulo(Request.Form["nomeArquivo"]);
+
+        if (Request.Files.Count > 0)
+        {
+            arquivo = Request.Files["arquivo"];
         }
     }
     private void LimpaVariaveis()
@@ -85,6 +103,7 @@
         horaInicio = null;
         dataFinal = null;
         horaFinal = null;
+        caminhoArquivoSumula = null;
     }
     private void Consultar()
     {
@@ -114,6 +133,11 @@
         parametros.Add("@DataFinal", Util.FormatarData(dataFinal, Util.TipoDado.FormatoDataBrasileira));
         parametros.Add("@HoraFinal", Util.FormatarData(horaFinal, Util.TipoDado.FormatoHora));
 
+        if (string.IsNullOrWhiteSpace(idJogo))
+        {
+            parametros.Add("@CaminhoSumula", caminhoArquivoSumula);
+        }
+
         new Dao().ExecutarAcao(acao, parametros);
 
     }
@@ -131,6 +155,51 @@
             horaInicio = Util.FormatarData(jogo.DataHoraInicio, Util.TipoDado.FormatoHora);
             dataFinal = Util.FormatarData(jogo.DataHoraFinal, Util.TipoDado.FormatoDataAmericada);
             horaFinal = Util.FormatarData(jogo.DataHoraFinal, Util.TipoDado.FormatoHora);
+            //caminhoArquivoSumula = jogo.CaminhoArquivoSumula;
+        }
+    }
+    private void SalvarArquivos()
+    {
+        if (arquivo == null)
+        {
+            throw new InvalidOperationException("Informe o arquivo");
+        }
+
+        if (string.IsNullOrWhiteSpace(arquivo.FileName))
+        {
+            throw new InvalidOperationException("Não foi possível identificar o nome do arquivo");
+        }
+
+        if (arquivo.ContentLength > 512 * 1000)
+        {
+            ModelState.AddError("arquivo", "Arquivo deve ter o tamanho de até 512 Kb.");
+        }
+
+        if (!Directory.Exists(Server.MapPath(caminhoArquivoSumula)))
+        {
+            Directory.CreateDirectory(Server.MapPath(caminhoArquivoSumula));
+        }
+
+        if (Path.GetExtension( arquivo.FileName).ToLower()!=".pdf")
+        {
+            throw new InvalidOperationException("Apenas arquivos do tipo pdf, podem ser salvos");
+        }
+
+        string caminhoArquivo = Path.Combine(Server.MapPath(caminhoArquivoSumula), arquivo.FileName);
+
+        arquivo.SaveAs(caminhoArquivo);
+    }
+
+    private void ExcluirArquivo()
+    {
+        if (nomeArquivo != null)
+        {
+            string caminhoArquivo = Path.Combine(Server.MapPath(caminhoArquivoSumula), nomeArquivo);
+
+            if (File.Exists(caminhoArquivo))
+            {
+                File.Delete(caminhoArquivo);
+            }
         }
     }
 }
@@ -151,15 +220,33 @@
         }, this.ModelState);
 
     }
-
-    Util.ExceptionHandler(() =>
+    else if (acao == "IA")
     {
-        ConsultarTimes();
-        Consultar();
+        Util.ExceptionHandler(() =>
+        {
+            SalvarArquivos();
+            ModelState.AddError("alert-success", "Operação realizada com sucesso");
+        }, this.ModelState);
+    }
+    if (acao == "EA")
+    {
+        Util.ExceptionHandler(() =>
+        {
+            ExcluirArquivo();
+            ModelState.AddError("alert-success", "Operação realizada com sucesso");
+        }, this.ModelState);
+    }
+    else
+    {
+        Util.ExceptionHandler(() =>
+        {
+            ConsultarTimes();
+            Consultar();
 
-        CarregarDados();
+            CarregarDados();
 
-    }, this.ModelState);
+        }, this.ModelState);
+    }
 }
 
 @section head {
@@ -167,10 +254,11 @@
 }
 
 <body>
-    <form name="form1" method="post">
+    <form name="form1" method="post" enctype="multipart/form-data">
         <input type="hidden" name="acao" id="acao" />
         <input type="hidden" name="idJogo" id="idJogo" value="@idJogo" />
         <input type="hidden" name="view" id="view" value="@((int)view)" />
+        <input type="hidden" name="nomeArquivo" id="nomeArquivo" />
 
         <div class="container">
 
@@ -252,8 +340,61 @@
                     <input class="form-control @Util.IsInvalid(ModelState,"horaFinal")" step="1" type="time" id="horaFinal" name="horaFinal" value="@horaFinal">
                     @PageHelper.MakeFeedBack("horaFinal")
                 </div>
-            }
 
+
+                if (!string.IsNullOrWhiteSpace(dataFinal))
+                {
+                    <div class="mt-5">
+                        <div class="card my-3">
+                            <h3 class="text-center">SÚMULA DO JOGO</h3>
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                <input type="file" id="arquivo" name="arquivo" class="form-control @Util.IsInvalid(ModelState,"arquivo")" onchange="checkfile(this)" />
+                                @PageHelper.MakeFeedBack("arquivo")
+                            </div>
+                            <div class="col-auto">
+                                <button type="button" class="btn btn-sm btn-primary" onclick="enviar()">Enviar arquivo</button>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <div class="small text-muted">Extensões válidas: @extensoesValidas</div>
+                            <div class="small text-muted">Tamanho máximo do arquivo: 512Kb</div>
+                        </div>
+
+                    </div>
+
+                    if (!string.IsNullOrWhiteSpace(caminhoArquivoSumula))
+                    {
+                        if (Directory.Exists(Server.MapPath(caminhoArquivoSumula)))
+                        {
+                            string[] arquivos = Directory.GetFiles(Server.MapPath(caminhoArquivoSumula));
+
+                            if (arquivos != null && arquivos.Length > 0)
+                            {
+                                <div class="card mt-3">
+                                    Arquivos enviados
+                                </div>
+                                <div class="list-group list-group-flush mb-10">
+                                    @foreach (string item in arquivos)
+                                    {
+                                        <div class="list-group-item list-group-flush">
+                                            <div class="row">
+                                                <div class="col">@Path.GetFileName(item)</div>
+                                                <div class="col-auto">
+                                                    <a href="~/AreaRestrita/Administrativo/Cadastro/arquivos/@Path.GetFileName(item)" target="_blank">Baixar</a>
+                                                    <a href="javascript:void(0)" onclick="excluirArquivo('@Path.GetFileName(item)')">Excluir</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        }
+                    }
+
+                }
+            }
             @if (view == View.Index)
             {
 
@@ -312,6 +453,33 @@
         function adicionarNovo() {
             document.form1.view.value = "@((int)View.New)";
             executaAcao('');
+        }
+        function checkfile(input) {
+            const extensoesValidas = "@extensoesValidas".toUpperCase().split(",");
+            const extensaoArquivo = input.value.substring(input.value.lastIndexOf("."));
+
+            if (extensoesValidas.indexOf(extensaoArquivo.toUpperCase()) < 0) {
+                alert("Formato de arquivo inválido. Extensões aceitas: " + extensoesValidas);
+                input.value = "";
+                return false;
+            }
+            return true;
+        }
+
+        function enviar() {
+            var arquivo = document.form1.arquivo.value;
+            if (!arquivo) {
+                alert("Informe o arquivo");
+                return;
+            }
+            document.form1.acao.value = "IA";
+            document.form1.submit();
+        }
+
+        function excluirArquivo(nomeArquivo) {
+            document.form1.acao.value = "EA";
+            document.form1.nomeArquivo.value = nomeArquivo;
+            document.form1.submit();
         }
     </script>
 </body>

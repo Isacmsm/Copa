@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 
@@ -67,6 +68,34 @@ public class Dao
             CommandType = System.Data.CommandType.StoredProcedure,
             CommandTimeout = 60
         };
+    }
+    public DataTable ExecutarProcedureDt(string procedure, Dictionary<string,object> parametros)
+    {
+        DataTable dt = new DataTable();
+
+        SqlConnection conn = new SqlConnection(stringConexao);
+
+        conn.Open();
+        SqlCommand cmmd = NomeCmmd(procedure, conn);
+
+        AdicionarParametros(cmmd, parametros);
+
+        SqlDataReader dr = cmmd.ExecuteReader();
+
+        dt.BeginLoadData();
+        dt.Load(dr);
+        dt.EndLoadData();
+
+        dr.Close();
+        dr.Dispose();
+        
+        cmmd.Dispose();
+
+        conn.Close();
+        conn.Dispose();
+
+        return dt;
+
     }
     private string GetNomeProcedure(string acao)
     {

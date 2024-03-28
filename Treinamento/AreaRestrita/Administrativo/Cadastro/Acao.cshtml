@@ -248,6 +248,7 @@
 
     <script src="~/Scripts/Scripts.js"></script>
     <script>
+
         function editar(idAcao) {
             document.form1.view.value = "@((int)View.Edit)";
             document.form1.idAcao.value = idAcao;
@@ -257,5 +258,6 @@
             document.form1.view.value = "@((int)View.New)";
             executaAcao('');
         }
+
     </script>
 </body>
