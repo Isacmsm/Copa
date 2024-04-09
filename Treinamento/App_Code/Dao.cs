@@ -117,6 +117,26 @@ public class Dao
 
         return autorizacoes.FirstOrDefault().NomeProcedure;
     }
+    private string GetNomeProcedure(string sistema, string modulo, string pagina, string acao)
+    {
+        Identificacao identificacao = new Identificacao();
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@TipoConsulta", "C_Acao");
+        parametros.Add("@IdOperador", identificacao.IdOperador);
+        parametros.Add("@CodigoSistema", sistema);
+        parametros.Add("@CodigoModulo", modulo);
+        parametros.Add("@CodigoPagina", pagina);
+        parametros.Add("@CodigoAcao", acao);
+
+        List<Autorizacao> autorizacoes = ExecutarProcedureList<Autorizacao>("stp_Das_MontaMenu", parametros);
+
+        if (autorizacoes == null)
+        {
+            throw new InvalidOperationException("Operador não autorizado para executar essa ação");
+        }
+
+        return autorizacoes.FirstOrDefault().NomeProcedure;
+    }
     public List<T> ExecutarProcedureList<T>(string procedure, Dictionary<string, object> parametros)
     {
         //as mensagens geradas no SQL são gerenciadas na aplicação por essa SqlError
@@ -183,9 +203,19 @@ public class Dao
         string procedure = GetNomeProcedure(acao);
         ExecutarProcedure(procedure, parametros);
     }
+    public void ExecutarAcao(string sistema, string modulo, string pagina, string acao, Dictionary<string, object> parametros)
+    {
+        string procedure = GetNomeProcedure(sistema, modulo, pagina, acao);
+        ExecutarProcedure(procedure, parametros);
+    }
     public List<T> ExecutarAcaoList<T>(string acao, Dictionary<string, object> parametros)
     {
         string procedure = GetNomeProcedure(acao);
+        return ExecutarProcedureList<T>(procedure, parametros);
+    }
+    public List<T> ExecutarAcaoList<T>(string sistema, string modulo, string pagina, string acao, Dictionary<string, object> parametros)
+    {
+        string procedure = GetNomeProcedure(sistema, modulo, pagina, acao);
         return ExecutarProcedureList<T>(procedure, parametros);
     }
     private void AdicionarParametros(SqlCommand cmmd, Dictionary<string, object> parametros)

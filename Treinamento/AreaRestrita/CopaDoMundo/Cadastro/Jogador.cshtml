@@ -400,35 +400,35 @@
     <script src="~/Scripts/jquery-3.7.1.js"></script>
     <script src="~/Scripts/Scripts.js"></script>
     <!-- jQuery -->
-    @*<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>*@
+    <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>-->
     <!-- jQuery Mask Plugin -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
 
     <script>
         function editar(idJogador) {
-        document.form1.view.value = "@((int)View.Edit)";
-        document.form1.idJogador.value = idJogador;
-        executaAcao('C');
-    }
-    function configurar() {
-        document.form1.view.value = "@((int)View.Configurar)";
-        executaAcao('C');
-    }
-    function alterarConfiguracao(campoAlterado, idJogador) {
-        document.form1.campoAlterado.value = campoAlterado;
-        document.form1.tipoConsulta.value = '1';
-        document.form1.idJogador.value = idJogador;
-        executaAcao('A');
-    }
+            document.form1.view.value = "@((int)View.Edit)";
+            document.form1.idJogador.value = idJogador;
+            executaAcao('C');
+        }
+        function configurar() {
+            document.form1.view.value = "@((int)View.Configurar)";
+            executaAcao('C');
+        }
+        function alterarConfiguracao(campoAlterado, idJogador) {
+            document.form1.campoAlterado.value = campoAlterado;
+            document.form1.tipoConsulta.value = '1';
+            document.form1.idJogador.value = idJogador;
+            executaAcao('A');
+        }
 
-    function adicionarNovo() {
-        document.form1.view.value = "@((int)View.New)";
-        executaAcao('');
-    }
+        function adicionarNovo() {
+            document.form1.view.value = "@((int)View.New)";
+            executaAcao('');
+        }
 
-    $(document).ready(function () {
-        $('#salario').mask('000.000.000,00', { reverse: true });
-    });
+        $(document).ready(function () {
+            $('#salario').mask('000.000.000,00', { reverse: true });
+        });
 
     </script>
 </body>
