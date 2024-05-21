@@ -1,124 +1,14 @@
-﻿
-.table {
-    width: 100%;
+﻿.table {
+    width:100%;
     border-collapse: collapse;
 }
 
-    .table th {
-        padding-top: 11px;
-        padding-bottom: 11px;
-        background-color: #ccc;
-    }
+.table th {
+    padding-top: 11px;
+    padding-bottom: 11px;
+    background-color: #ccc;
+}
 
     .table, .table th, .table td {
         border: 1px solid black;
     }
-
-
-
-.menu .parent {
-    display: block;
-    position: relative;
-    float: left;
-    line-height: 30px;
-    background-color: #4FA0D8;
-    border-right: #CCC 1px solid;
-}
-
-    .menu .parent a {
-        margin: 10px;
-        color: #FFFFFF;
-        text-decoration: none;
-    }
-
-    .menu .parent:hover > ul {
-        display: block;
-        position: absolute;
-    }
-
-.menu .child {
-    display: none;
-}
-
-    .menu .child li {
-        background-color: #E4EFF7;
-        line-height: 30px;
-        border-bottom: #CCC 1px solid;
-        border-right: #CCC 1px solid;
-        width: 100%;
-    }
-
-        .menu .child li a {
-            color: #000000;
-        }
-
-.menu,
-.menu ul {
-    list-style: none;
-    margin: 0;
-    padding: 0px;
-    min-width: 10em;
-}
-
-ul.menu ul ul {
-    left: 100%;
-    top: 0;
-    margin-left: 1px;
-}
-
-.menu li:hover {
-    background-color: #95B4CA;
-}
-
-.menu .parent li:hover {
-    background-color: #F0F0F0;
-}
-
-.menu .expand {
-    font-size: 12px;
-    float: right;
-    margin-right: 5px;
-}
-
-.search {
-    position: relative;
-}
-
-.search-card {
-    position: absolute;
-    top: 40px;
-    left: 0;
-    min-width: 512px;
-    border: 1px solid rgba(0,0,0,.2);
-    background-color: #FFF;
-    z-index: 2;
-    display: none;
-}
-
-    .search-card.show {
-        display: block;
-    }
-
-.search-head {
-    background-color: #f7f7f7;
-    border-bottom: 1px solid #abebeb;
-    padding: .5rem .75rem;
-    display: flex;
-}
-
-.search-title {
-    flex: 1;
-}
-
-.search-body {
-    padding: .5rem .75rem;
-}
-
-.search-close {
-    cursor: pointer;
-}
-
-
-.cor-verde {
-    background-color: green;
-}
