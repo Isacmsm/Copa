@@ -1,3 +1,12 @@
 ﻿@{
-    Response.Redirect("AreaRestrita/");
+    Session["idOperador"] = "1"; // Essa linha deve ser removida mais tarde.
+
+    if (Session["idOperador"] == null)
+    {
+        Response.Redirect("/ControleAcesso");
+    }
+    else
+    {
+        Response.Redirect("/AreaRestrita");
+    }
 }
