@@ -1,0 +1,281 @@
+﻿@{
+    Page.Title = "Participações";
+    Layout = "~/AreaRestrita/_Layout.cshtml";
+}
+
+
+
+@functions {
+    private class Jogo
+    {
+
+        public string IdJogo { get; set; }
+        public string NomeTime1 { get; set; }
+        public string NomeTime2 { get; set; }
+        public string Placar1 { get; set; }
+        public string Placar2 { get; set; }
+
+    }
+
+    private class Participacao
+    {
+        public string IdJogo { get; set; }
+        public string IdJogador { get; set; }
+        public string IdTime { get; set; }
+        public string NomeTime { get; set; }
+        public string NomeJogador { get; set; }
+        public int GolsMarcados { get; set; }
+
+    }
+
+    string acao = null;
+    string idJogo = null;
+    Participacao participacao = null;
+    List<Jogo> jogos = null;
+    List<Participacao> participacoes = null;
+
+    private void AlimentaVariaveis()
+    {
+        acao = Util.ChecaNulo(Request.Form["acao"]);
+        idJogo = Util.ChecaNulo(Request.Form["idJogo"]);
+    }
+
+    //Metodo invocado após a manutenção paral limpar os valores das variáveis que estão na memoria do servidor.
+    private void LimparVariaveis()
+    {
+        participacao = null;
+    }
+
+    private void ConsultarJogo()
+    {
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@Tipo", 1);
+        string procedure = GetNomeProcedure("C");
+
+        Dao dao = new Dao();
+        jogos = dao.ExecutarProcedureList<Jogo>(procedure, parametros);
+    }
+
+
+    private void Consultar()
+    {
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@Tipo", 2);
+        parametros.Add("@IdJogo", idJogo);
+        string procedure = GetNomeProcedure("C");
+
+        Dao dao = new Dao();
+        participacoes = dao.ExecutarProcedureList<Participacao>(procedure, parametros);
+    }
+
+    private string GetNomeProcedure(string acao)
+    {
+        switch (acao)
+        {
+            case "C": return "stp_Ism_Participacao_Sel";
+            case "A": return "stp_Ism_Participacao_Upt";
+            default: return null;
+        }
+    }
+
+    private void Manutencao()
+    {
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@IdJogo", idJogo);
+        parametros.Add("@IdJogador", participacao.IdJogador);
+        parametros.Add("@IdTime", participacao.IdTime);
+
+        string procedure = GetNomeProcedure(acao);
+
+        Dao dao = new Dao();
+        dao.ExecutarProcedure(procedure, parametros);
+        acao = "C";
+        LimparVariaveis();
+    }
+
+
+
+
+}
+
+@{
+    AlimentaVariaveis();
+
+    if (acao == "A")
+    {
+        Util.ExceptionHandler(() =>
+        {
+            participacao = new Participacao()
+            {
+                IdJogador = Util.ChecaNulo(Request.Form["nome"]),
+                IdTime = Util.ChecaNulo(Request.Form["idTime"])
+            };
+            Manutencao();
+            ModelState.AddError("alert-success", "Operação realizada com sucesso");
+        }, this.ModelState);
+    }
+
+
+    if (acao == "C")
+    {
+        Util.ExceptionHandler(Consultar, this.ModelState);
+    }
+
+
+    Util.ExceptionHandler(ConsultarJogo, this.ModelState);
+
+
+    if (participacao == null)
+    {
+        participacao = new Participacao();
+    }
+
+
+
+}
+
+@section head {
+    <link rel="stylesheet" href="~/Scripts/Style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+}
+
+<body>
+    <form name="form1" method="post">
+        <input type="hidden" name="acao" id="acao" />
+        <input type="hidden" name="idJogador" id="idJogador" value="@participacao.IdJogador" />
+        <input type="hidden" name="idTime" id="idTime" value="@participacao.IdTime" />
+
+        <div class="container">
+            <div class="row g-3 d-flex mb-5">
+                <div>
+                    @RenderPage("~/AreaRestrita/Menu.cshtml")
+                </div>
+
+                <div>
+                    <h1>Participações</h1>
+                </div>
+
+                <div class="col-12">
+                    @PageHelper.MakeAlert()
+                </div>
+
+                <div class="col-md-4">
+                    <select class="form-select" name="idJogo" id="idJogo" onchange="selecionarConsulta()">
+
+                        <option value="">
+                            Selecione um Jogo
+                        </option>
+                        @foreach (Jogo item in jogos)
+                        {
+                            <option @(item.IdJogo == idJogo ? "selected" : "") value="@item.IdJogo">
+                                @item.NomeTime1 x @item.NomeTime2
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-4 mb-5">
+                    <button class="btn btn-outline-primary" type="submit" onclick="estadoInicial()"><i class="bi bi-eraser"></i> Limpar</button>
+                </div>
+
+                @{
+                    var jogoSelecionado = jogos.FirstOrDefault(x => x.IdJogo == idJogo);
+
+                }
+
+                @if (jogoSelecionado != null)
+                {
+                    <div class="col-lg-6 mb-4 mx-auto">
+
+                        <div class="card shadow-sm p-4 campo-card">
+
+                            <div class="linha-meio-topo"></div>
+                            <div class="linha-meio-baixo"></div>
+
+                            <div class="row align-items-center justify-content-center">
+
+                                <div class="col-md-4 text-end">
+                                    <h4 class="fw-bold mb-0">@jogoSelecionado.NomeTime1</h4>
+                                    <span class="display-4 fw-bold text-primary">
+                                        @jogoSelecionado.Placar1
+                                    </span>
+                                </div>
+
+                                <div class="col-md-2 text-center">
+                                    <span class="display-5 fw-bold">
+                                        <i class="fa fa-futbol-o"></i>
+                                    </span>
+                                </div>
+
+                                <div class="col-md-4 text-start">
+                                    <span class="display-4 fw-bold text-primary">
+                                        @jogoSelecionado.Placar2
+                                    </span>
+                                    <h4 class="fw-bold mb-0">@jogoSelecionado.NomeTime2</h4>
+                                </div>
+
+                            </div>
+                            <div class="gol-direito"></div>
+                        </div>
+
+                    </div>
+                }
+
+            </div>
+
+
+
+            @if (participacoes != null)
+            {
+                <table class="table table-striped rounded mb-0">
+                    <thead>
+                        <tr>
+                            <th class="text-center align-middle">Time</th>
+                            <th class="text-center align-middle">Jogador</th>
+                            <th class="text-center align-middle">Gols Marcados</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-group-divider">
+                        @foreach (Participacao item in participacoes)
+                        {
+                            <tr>
+                                <td class="text-center align-middle">@item.NomeTime</td>
+                                <td class="text-center align-middle">@item.NomeJogador</td>
+                                <td class="text-center align-middle">@item.GolsMarcados</td>
+                                <td><button class="btn btn-outline-success btn-sm" type="button" onclick="adicionarGol('@item.IdJogo', '@item.IdTime', '@item.IdJogador',)"><i class="fa fa-futbol-o"></i> Gol</button></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+            }
+
+        </div>
+    </form>
+
+    <script src="~/Scripts/Scripts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        function selecionarConsulta() { // aqui depois do botão (html) gerar o evento que foi capturado pela função do Js ele vai definir o valor de acao no forms ( Js alterando o HTML)
+            document.form1.acao.value = 'C';
+            document.form1.submit();
+
+        }
+        function adicionarGol(idJogo, idTime, idJogador) { // recebe as informações do html, ao capturar o evento onclick, e altera o estado do html do forms para ser depois capturado pelo servidor
+            document.form1.idJogo.value = idJogo;
+            document.form1.idJogador.value = idJogador;
+            document.form1.idTime.value = idTime;
+            document.form1.acao.value = 'A';
+            document.form1.submit();
+
+        }
+    </script>
+
+
+</body>
+
+

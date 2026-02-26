@@ -1,0 +1,334 @@
+﻿@{
+    Page.Title = "Ações";
+    Layout = "~/AreaRestrita/_Layout.cshtml";
+}
+
+@functions {
+    private enum View
+    {
+        Index,
+        New,
+        Edit
+    }
+
+    private class Acao
+    {
+
+        public string IdAcao { get; set; }
+        public string IdPagina{ get; set; }
+        public string NomePagina { get; set; }
+        public string Caption { get; set; }
+        public string Codigo { get; set; }
+        public string Procedure { get; set; }
+
+    }
+
+    private class Pagina
+    {
+        public string IdPagina { get; set; }
+        public string NomeSistema { get; set; }
+        public string NomeModulo { get; set; }
+        public string Caption { get; set; }
+
+    }
+
+    string acao = null;
+    string idAcao = null;
+    Acao acaoObjeto = null;
+    View view = View.Index;
+    List<Pagina> paginas = null;
+    List<Acao> acoes = null;
+
+    private void AlimentaVariaveis()
+    {
+        acao = Util.ChecaNulo(Request.Form["acao"]);
+        idAcao = Util.ChecaNulo(Request.Form["idAcao"]);
+
+        if (!string.IsNullOrWhiteSpace(Request.Form["view"]))
+        {
+            view = (View)Enum.Parse(typeof(View), Request.Form["view"]);
+        }
+
+    }
+
+    private string IsInvalid(string key)
+    {
+        return (!ModelState.IsValidField(key) ? "is-invalid" : "");
+    }
+
+    //Metodo invocado após a manutenção paral limpar os valores das variáveis que estão na memoria do servidor.
+    private void LimparVariaveis()
+    {
+        acao = null;
+        idAcao = null;
+        acaoObjeto = null;
+    }
+
+    private void Consultar()
+    {
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@Tipo", 1);
+        parametros.Add("@IdAcao", idAcao);
+        string procedure = GetNomeProcedure("C");
+
+        Dao dao = new Dao();
+        acoes = dao.ExecutarProcedureList<Acao>(procedure, parametros);
+    }
+
+
+    private void ConsultaSistema()
+    {
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@Tipo", 2);
+        string procedure = GetNomeProcedure("C");
+
+        Dao dao = new Dao();
+        paginas = dao.ExecutarProcedureList<Pagina>(procedure, parametros);
+    }
+
+    private string GetNomeProcedure(string acao)
+    {
+        switch (acao)
+        {
+            case "C": return "stp_Ism_Acao_Sel";
+            case "I": return "stp_Ism_Acao_Ins";
+            case "A": return "stp_Ism_Acao_Upt";
+            case "E": return "stp_Ism_Acao_Del";
+            default: return null;
+        }
+    }
+
+    private void Manutencao()
+    {
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@IdAcao", idAcao);
+        parametros.Add("@IdPagina", acaoObjeto.IdPagina);
+        parametros.Add("@Codigo", acaoObjeto.Codigo);
+        parametros.Add("@Caption",acaoObjeto.Caption);
+        parametros.Add("@Procedure",acaoObjeto.Procedure);
+
+        string procedure = GetNomeProcedure(acao);
+
+        Dao dao = new Dao();
+        dao.ExecutarProcedure(procedure, parametros);
+
+    }
+
+    private void CarregarDados()
+    {
+        if (view == View.Edit && acao == "C" && acoes != null && acoes.Count == 1)
+        {
+            acaoObjeto = acoes.FirstOrDefault();
+        }
+    }
+
+
+
+
+}
+
+@{
+    AlimentaVariaveis();
+
+    if (acao == "I" || acao == "A" || acao == "E")
+    {
+        Util.ExceptionHandler(() =>
+        {
+            acaoObjeto = new Acao()
+            {
+                IdAcao = Util.ChecaNulo(Request.Form["idAcao"]),
+                IdPagina = Util.ChecaNulo(Request.Form["idPagina"]),
+                Codigo = Util.ChecaNulo(Request.Form["codigo"]),
+                Caption = Util.ChecaNulo(Request.Form["caption"]),
+                Procedure = Util.ChecaNulo(Request.Form["procedure"])
+            };
+
+            Manutencao();
+            LimparVariaveis();
+            view = View.Index;
+            ModelState.AddError("alert-success", "Operação realizada com sucesso");
+        }, this.ModelState);
+    }
+
+    Util.ExceptionHandler(() =>
+    {
+        Consultar();
+        CarregarDados();
+
+    }, this.ModelState);
+
+
+    Util.ExceptionHandler(ConsultaSistema, this.ModelState);
+
+    if (acaoObjeto == null)
+    {
+        acaoObjeto = new Acao();
+    }
+
+
+}
+
+@section head {
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+}
+
+<body>
+    <form name="form1" method="post">
+        <input type="hidden" name="acao" id="acao" />
+        <input type="hidden" name="idAcao" id="idAcao" value="@idAcao" />
+        <input type="hidden" name="view" id="view" value="@((int)view)" />
+
+        <div class="container">
+
+            <div class="row g-3">
+                <div>
+                    @RenderPage("~/AreaRestrita/Menu.cshtml")
+                </div>
+                <div>
+                    <h1>Acões</h1>
+                </div>
+
+                @if (view == View.Edit || view == View.New)
+                {
+
+                    <div class="col-12 mb-3">
+                        @PageHelper.MakeAlert()
+                    </div>
+
+                    <div class="col-md-6">
+                        <select class="form-select @IsInvalid("idPagina")" name="idPagina" id="idPagina">
+
+                            <option value="">
+                                Selecione um Modulo
+                            </option>
+                            @foreach (Pagina item in paginas)
+                            {
+                                <option @(item.IdPagina == acaoObjeto.IdPagina ? "selected" : "") value="@item.IdPagina">
+                                    Sistema: @item.NomeSistema - Modulo: @item.NomeModulo - Pagina: @item.Caption
+                                </option>
+                            }
+                        </select>
+                        @PageHelper.MakeFeedBack("idPagina")
+                    </div>
+
+                    <div class="col-md-6">
+                        <input class="form-control @IsInvalid("codigo")" placeholder="Codigo da Ação" type="text" name="codigo" id="codigo" value="@acaoObjeto.Codigo" />
+                        @PageHelper.MakeFeedBack("codigo")
+                    </div>
+
+                    <div class="col-md-6">
+                        <input class="form-control @IsInvalid("caption")" placeholder="Nome da Ação" type="text" name="caption" id="caption" value="@acaoObjeto.Caption" />
+                        @PageHelper.MakeFeedBack("caption")
+                    </div>
+
+
+                    <div class="col-md-6">
+                        <input class="form-control @IsInvalid("procedure")" placeholder="Nome da Procure" type="text" name="procedure" id="procedure" value="@acaoObjeto.Procedure" />
+                        @PageHelper.MakeFeedBack("procedure")
+                    </div>
+
+                    <div class="col-md-4">
+                        <button class="btn btn-outline-primary" type="submit" onclick="estadoInicial()"><i class="bi bi-eraser"></i> Limpar</button>
+                    </div>
+                }
+
+
+
+
+
+                @if (view == View.Index)
+                {
+                    <div class="col-md-4 mb-3">
+                        <button class="btn btn-primary btn-sm" type="submit" onclick="novo()"><i class="bi bi-file-earmark-plus"></i> Novo</button>
+                    </div>
+                }
+
+
+                @if (view == View.New || view == View.Edit)
+                {
+                    <div class="col-12 mb-5">
+                        @if (view == View.New)
+                        {
+                            <button class="btn btn-primary btn-sm" type="button" onclick="executarAcao('I')"><i class="bi bi-plus-circle-dotted"></i> Incluir</button>
+
+                        }
+                        @if (view == View.Edit)
+                        {
+                            <button class="btn btn-warning btn-sm" type="button" onclick="executarAcao('A')"><i class="bi bi-pencil-square"></i> Alterar</button>
+                            <button class="btn btn-danger btn-sm" type="button" onclick="executarAcao('E')"><i class="bi bi-trash3"></i> Excluir</button>
+                        }
+                    </div>
+                }
+            </div>
+
+            @if (view == View.Index)
+            {
+
+                if (acoes != null)
+                {
+                    <div>
+                        <table class="table table-striped rounded mb-0">
+                            <colgroup>
+                                <col style="width: 15%" />
+                                <col style="width: 15%" />
+                                <col style="width: 20%" />
+                                <col style="width: 15%" />
+                                <col style="width: 20%" />
+                                <col style="width: 15%" />
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th class="text-center align-middle">Id</th>
+                                    <th>Pagina</th>
+                                    <th>Ação</th>
+                                    <th>Codigo</th>
+                                    <th>Procedure</th>
+                                    <th class="text-center align-middle"></th>
+                                </tr>
+                            </thead>
+                            <tbody class="table-group-divider">
+                                @foreach (Acao item in acoes)
+                                {
+                                    <tr>
+                                        <td class="text-center align-middle">#@item.IdAcao</td>
+                                        <td>@item.NomePagina</td>
+                                        <td>@item.Caption</td>
+                                        <td>@item.Codigo</td>
+                                        <td>@item.Procedure</td>
+                                        <td class="text-center align-middle"><button class="btn btn-outline-dark btn-sm" type="button" onclick="editar('@item.IdAcao')">Editar</button></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                }
+            }
+
+
+        </div>
+    </form>
+
+    <script src="~/Scripts/Scripts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+
+        function editar(idAcao) {
+        document.form1.idAcao.value = idAcao;
+        document.form1.view.value = "@((int)View.Edit)";
+        executarAcao("C")
+        }
+
+    function novo() {
+        document.form1.view.value = "@((int)View.New)";
+        document.form1.submit();
+    }
+    </script>
+
+
+</body>
+
+

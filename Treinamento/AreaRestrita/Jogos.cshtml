@@ -1,0 +1,324 @@
+﻿@{
+    Page.Title = "Jogos";
+    Layout = "~/AreaRestrita/_Layout.cshtml";
+}
+
+
+
+@functions {
+    private enum View
+    {
+        Index,
+        New,
+        Edit
+    }
+
+    private class Jogo
+    {
+
+        public string IdJogo { get; set; }
+        public string IdTime1 { get; set; }
+        public string NomeTime1 { get; set; }
+        public string IdTime2 { get; set; }
+        public string NomeTime2 { get; set; }
+        public string Placar1 { get; set; }
+        public string Placar2 { get; set; }
+
+    }
+
+    private class Time
+    {
+        public string IdTime { get; set; }
+        public string Nome { get; set; }
+
+    }
+
+    string acao = null;
+    string idJogo = null;
+    Jogo jogo = null;
+    List<Jogo> jogos = null;
+    List<Time> times = null;
+    View view = View.Index;
+
+    private void AlimentaVariaveis()
+    {
+        acao = Util.ChecaNulo(Request.Form["acao"]);
+        idJogo = Util.ChecaNulo(Request.Form["idJogo"]);
+
+        if (!string.IsNullOrWhiteSpace(Request.Form["view"]))
+        {
+            view = (View)Enum.Parse(typeof(View), Request.Form["view"]);
+        }
+    }
+
+    private string IsInvalid(string key)
+    {
+        return (!ModelState.IsValidField(key) ? "is-invalid" : "");
+    }
+
+    //Metodo invocado após a manutenção paral limpar os valores das variáveis que estão na memoria do servidor.
+    private void LimparVariaveis()
+    {
+        acao = null;
+        idJogo = null;
+        jogo = null;
+    }
+
+    private void Consultar()
+    {
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@Tipo", 1);
+        parametros.Add("@IdJogo", idJogo);
+        string procedure = GetNomeProcedure("C");
+
+        Dao dao = new Dao();
+        jogos = dao.ExecutarProcedureList<Jogo>(procedure, parametros);
+    }
+
+
+    private void ConsultaTime()
+    {
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@Tipo", 2);
+        string procedure = GetNomeProcedure("C");
+
+        Dao dao = new Dao();
+        times = dao.ExecutarProcedureList<Time>(procedure, parametros);
+    }
+
+    private string GetNomeProcedure(string acao)
+    {
+        switch (acao)
+        {
+            case "C": return "stp_Ism_Jogo_Sel";
+            case "I": return "stp_Ism_Jogo_Ins";
+            case "A": return "stp_Ism_Jogo_Upt";
+            case "E": return "stp_Ism_Jogo_Del";
+            default: return null;
+        }
+    }
+
+    private void Manutencao()
+    {
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@IdJogo", idJogo);
+        parametros.Add("@IdTime1", jogo.IdTime1);
+        parametros.Add("@IdTime2", jogo.IdTime2);
+
+        string procedure = GetNomeProcedure(acao);
+
+        Dao dao = new Dao();
+        dao.ExecutarProcedure(procedure, parametros);
+        
+    }
+
+    private void CarregarDados()
+    {
+        if (view == View.Edit && acao == "C" && jogos != null && jogos.Count == 1)
+        {
+            jogo = jogos.FirstOrDefault();
+
+        }
+    }
+
+
+
+
+}
+
+@{
+    AlimentaVariaveis();
+
+    if (acao == "I" || acao == "A" || acao == "E")
+    {
+        Util.ExceptionHandler(() =>
+        {
+            jogo = new Jogo()
+            {
+                IdJogo = Util.ChecaNulo(Request.Form["idJogo"]),
+                IdTime1 = Util.ChecaNulo(Request.Form["idTime1"]),
+                IdTime2 = Util.ChecaNulo(Request.Form["idTime2"])
+
+            };
+            Manutencao();
+            LimparVariaveis();
+            ModelState.AddError("alert-success", "Operação realizada com sucesso");
+            view = View.Index;
+        }, this.ModelState);
+    }
+
+    Util.ExceptionHandler(() =>
+    {
+        Consultar();
+        CarregarDados();
+
+    }, this.ModelState);
+
+
+    Util.ExceptionHandler(ConsultaTime, this.ModelState);
+
+    if (jogo == null)
+    {
+        jogo = new Jogo();
+    }
+
+
+
+}
+
+@section head {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+
+}
+
+<body>
+    <form name="form1" method="post">
+        <input type="hidden" name="acao" id="acao" />
+        <input type="hidden" name="idJogo" id="idJogo" value="@idJogo" />
+        <input type="hidden" name="view" id="view" value="@((int)view)" />
+
+        <div class="container">
+            <div class="row g-3">
+                <div>
+                    @RenderPage("~/AreaRestrita/Menu.cshtml")
+                </div>
+
+                <div>
+                    <h1>Jogos</h1>
+                </div>
+
+                @if (view == View.Edit || view == View.New)
+                {
+
+                    <div class="col-12">
+                        @PageHelper.MakeAlert()
+                    </div>
+
+                    <div class="col-md-4">
+                        <select class="form-select @IsInvalid("idtime1")" name="idTime1" id="idTime1">
+
+                            <option value="">
+                                Selecione um Time
+                            </option>
+                            @foreach (Time item in times)
+                            {
+                                <option @(item.IdTime == jogo.IdTime1 ? "selected" : "") value="@item.IdTime">
+                                    @item.Nome
+                                </option>
+                            }
+                        </select>
+                        @PageHelper.MakeFeedBack("idtime1")
+                    </div>
+
+                    <div class="col-md-1 text-center">
+                        <i class="bi bi-x-lg fs-4"></i>
+                    </div>
+
+
+                    <div class="col-md-4">
+                        <select class="form-select @IsInvalid("idtime2")" name="idTime2" id="idTime2">
+
+                            <option value="">
+                                Selecione um Jogo
+                            </option>
+                            @foreach (Time item in times)
+                            {
+                                <option @(item.IdTime == jogo.IdTime2 ? "selected" : "") value="@item.IdTime">
+                                    @item.Nome
+                                </option>
+                            }
+                        </select>
+                        @PageHelper.MakeFeedBack("idtime2")
+                    </div>
+
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-primary" type="submit" onclick="estadoInicial()"><i class="bi bi-eraser"></i> Limpar</button>
+                    </div>
+                }
+
+
+                @if (view == View.Index)
+                {
+                    <div class="col-md-4 mb-3">
+                        <button class="btn btn-primary btn-sm" type="submit" onclick="novo()"><i class="bi bi-file-earmark-plus"></i> Novo</button>
+                    </div>
+                }
+
+                @if (view == View.New || view == View.Edit)
+                {
+                    <div class="col-12 mb-5">
+                        @if (view == View.New)
+                        {
+                            <button class="btn btn-primary btn-sm" type="button" onclick="executarAcao('I')"><i class="bi bi-plus-circle-dotted"></i> Incluir</button>
+
+                        }
+                        @if (view == View.Edit)
+                        {
+                            <button class="btn btn-warning btn-sm" type="button" onclick="executarAcao('A')"><i class="bi bi-pencil-square"></i> Alterar</button>
+                            <button class="btn btn-danger btn-sm" type="button" onclick="executarAcao('E')"><i class="bi bi-trash3"></i> Excluir</button>
+                        }
+                    </div>
+                }
+            </div>
+
+            @if (view == View.Index)
+            {
+                if (jogos != null)
+                {
+                    <table class="table table-striped rounded mb-0">
+                        <colgroup>
+                            <col style="width: 5%" />
+                            <col style="width: 30%" />
+                            <col style="width: 30%" />
+                            <col style="width: 30%" />
+                            <col style="width: 5%" />
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th class="text-center align-middle">Id</th>
+                                <th class="text-center align-middle">Time 1</th>
+                                <th class="text-center align-middle">Placar</th>
+                                <th class="text-center align-middle">Time 2</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody class="table-group-divider">
+                            @foreach (Jogo item in jogos)
+                            {
+                                <tr>
+                                    <td class="text-center align-middle">#@item.IdJogo</td>
+                                    <td class="text-center align-middle">@item.NomeTime1</td>
+                                    <td class="text-center align-middle">@item.Placar1 x @item.Placar2</td>
+                                    <td class="text-center align-middle">@item.NomeTime2</td>
+                                    <td><button class="btn btn-outline-dark btn-sm" type="button" onclick="editar('@item.IdJogo')">Editar</button></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            }
+
+
+        </div>
+    </form>
+    <script src="~/Scripts/Scripts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+
+        function editar(idJogo) { // recebe as informações do html, ao capturar o evento onclick, e altera o estado do html do forms para ser depois capturado pelo servidor
+            document.form1.idJogo.value = idJogo;
+            document.form1.view.value = "@((int)View.Edit)";
+            executarAcao("C")
+        }
+        function novo() {
+            document.form1.view.value = "@((int)View.New)";
+            document.form1.submit();
+        }
+
+    </script>
+
+
+</body>
+
+

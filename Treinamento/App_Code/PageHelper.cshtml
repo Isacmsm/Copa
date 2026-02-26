@@ -1,0 +1,26 @@
+@helper MakeAlert() // renderiza as mensagens de erros (helpers são metodos do razor que permite criar componentes reutilizaveis com codigos c# + html)
+{
+    foreach (var ms in ModelState.Where(x => x.Key.StartsWith("alert-"))) //o model state é uma classe do asp.net que armazena um dicionario de chave e valor e pode ser usado para adicionar informações
+    //que podem ser apresentado pela view
+    {
+        foreach (var error in ms.Value.Errors)
+        {
+            <div class="alert @Html.Raw(ms.Key)">
+                <i class="bi bi-exclamation-circle"></i> @Html.Raw(error)
+            </div>
+        }
+    }
+}
+
+@helper MakeFeedBack(string key)
+    //
+{
+    foreach (var item in ModelState.Where(x => x.Key.Equals(key, StringComparison.OrdinalIgnoreCase)))
+    {
+        foreach (var item1 in item.Value.Errors)
+        {
+            <div class="invalid-feedback"><i class="bi bi-exclamation-diamond-fill"></i> @(item1)</div>
+        }
+    }
+}
+

@@ -1,0 +1,284 @@
+﻿@{
+    Page.Title = "Sistemas";
+    Layout = "~/AreaRestrita/_Layout.cshtml";
+}
+
+
+@functions {
+    private enum View
+    {
+        Index,
+        New,
+        Edit
+    }
+
+    
+    private class Sistema
+    {
+        
+        public string IdSistema { get; set; }
+        public string Codigo { get; set; }
+        public string Caption { get; set; }
+
+    }
+    
+    string acao = null;
+    string idSistema = null;
+    Sistema sistema = null;
+    View view = View.Index;
+    List<Sistema> sistemas = null;
+
+    
+    private void AlimentaVariaveis()
+    {
+        acao = Util.ChecaNulo(Request.Form["acao"]);
+        idSistema = Util.ChecaNulo(Request.Form["idSistema"]);
+
+        if (!string.IsNullOrWhiteSpace(Request.Form["view"]))
+        {
+            view = (View)Enum.Parse(typeof(View), Request.Form["view"]);
+        }
+    }
+
+    
+    private void LimparVariaveis()
+    {
+        acao = null;
+        idSistema = null;
+        sistema = null;
+
+    }
+
+    private void Consultar()
+    {
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@IdSistema", idSistema);
+
+        string procedure = GetNomeProcedure("C");
+        Dao dao = new Dao();
+        sistemas = dao.ExecutarProcedureList<Sistema>(procedure, parametros);
+    }
+
+    
+    private string GetNomeProcedure(string acao)
+    {
+        switch (acao)
+        {
+            case "C": return "stp_Ism_Sistema_Sel";
+            case "I": return "stp_Ism_Sistema_Ins";
+            case "A": return "stp_Ism_Sistema_Upt";
+            case "E": return "stp_Ism_Sistema_Del";
+            default: return null;
+        }
+    }
+
+
+    private string IsInvalid(string key)
+    {
+        return (!ModelState.IsValidField(key) ? "is-invalid" : "");
+    }
+
+    private void Manutencao()
+    {
+       
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@IdSistema", idSistema);
+        parametros.Add("@Codigo", sistema.Codigo);
+        parametros.Add("@Caption", sistema.Caption);
+
+        
+        string procedure = GetNomeProcedure(acao);
+
+        Dao dao = new Dao();
+        
+        dao.ExecutarProcedure(procedure, parametros);
+
+    }
+
+    private void CarregarDados()
+    {
+        if (view == View.Edit && acao == "C" && sistemas != null && sistemas.Count == 1)
+        {
+            sistema = sistemas.FirstOrDefault();
+        }
+    }
+
+
+}
+
+@{
+    AlimentaVariaveis();
+
+    if (acao == "I" || acao == "A" || acao == "E")
+    {
+        Util.ExceptionHandler(() =>
+        {
+            sistema = new Sistema()
+            {
+                IdSistema = Util.ChecaNulo(Request.Form["idSistema"]),
+                Codigo = Util.ChecaNulo(Request.Form["codigo"]),
+                Caption = Util.ChecaNulo(Request.Form["caption"])
+            };
+
+            Manutencao();
+            LimparVariaveis();
+            ModelState.AddError("alert-success", "Operação realizada com sucesso");
+            view = View.Index;
+        }, this.ModelState);
+
+    }
+
+    Util.ExceptionHandler(() =>
+    {
+        Consultar();
+        CarregarDados();
+    }, this.ModelState);
+
+    if (sistema == null)
+    {
+        sistema = new Sistema();
+    }
+
+
+
+
+
+
+}
+
+@section head {
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+
+}
+
+<body>
+    <form name="form1" method="post">
+        <input type="hidden" name="acao" id="acao" />
+        <input type="hidden" name="idSistema" id="idSistema" value="@idSistema" />
+        <input type="hidden" name="view" id="view" value="@((int)view)" />
+
+        <div class="container">
+
+            <div class="row g-3">
+                <div>
+                    @RenderPage("~/AreaRestrita/Menu.cshtml")
+                </div>
+                <div>
+                    <h1>Sistemas</h1>
+                </div>
+
+
+                @if (view == View.Edit || view == View.New)
+                {
+                    <div class="col-12 mb-3">
+                        @PageHelper.MakeAlert()
+                    </div>
+
+                    <div class="col-md-4">
+                        <input class="form-control @IsInvalid("codigo")" placeholder="Codigo" type="text" name="codigo" id="codigo" value="@sistema.Codigo" />
+                        @PageHelper.MakeFeedBack("codigo")
+                    </div>
+
+                    <div class="col-md-4">
+                        <input class="form-control @IsInvalid("caption")" placeholder="Caption" type="text" name="caption" id="caption" value="@sistema.Caption" />
+                        @PageHelper.MakeFeedBack("caption")
+                    </div>
+
+
+                    <div class="col-md-4">
+                        <button class="btn btn-outline-primary" type="submit" onclick="estadoInicial()"><i class="bi bi-eraser-fill"></i> Limpar</button>
+                    </div>
+
+                }
+
+                @if (view == View.Index)
+                {
+                    <div class="col-md-4 mb-3">
+                        <button class="btn btn-primary btn-sm" type="submit" onclick="novo()"><i class="bi bi-file-earmark-plus"></i> Novo</button>
+                    </div>
+                }
+
+                @if (view == View.New || view == View.Edit)
+                {
+                    <div class="col-12 mb-5">
+                        @if (view == View.New)
+                        {
+                            <button class="btn btn-primary btn-sm" type="button" onclick="executarAcao('I')"><i class="bi bi-plus-circle-dotted"></i> Incluir</button>
+
+                        }
+                        @if (view == View.Edit)
+                        {
+                            <button class="btn btn-warning btn-sm" type="button" onclick="executarAcao('A')"><i class="bi bi-pencil-square"></i> Alterar</button>
+                            <button class="btn btn-danger btn-sm" type="button" onclick="executarAcao('E')"><i class="bi bi-trash3"></i> Excluir</button>
+                        }
+                    </div>
+                }
+            </div>
+
+
+
+            @if (view == View.Index)
+            {
+                
+                if (sistemas != null)
+                {
+                    <div>
+                        <table class="table table-striped rounded mb-0">
+                            <colgroup>
+                                <col style="width: 10%" />
+                                <col style="width: 50%" />
+                                <col style="width: 25%" />
+                                <col style="width: 10%" />
+                            </colgroup>
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="text-center align-middle" scope="col">Id</th>
+                                    <th scope="col">Codigo Sistema</th>
+                                    <th scope="col">Nome Sistema</th>
+                                    <th scope="col"></th>
+                                </tr>
+                            </thead>
+                            <tbody class="table-group-divider">
+                                
+                                @foreach (Sistema item in sistemas)
+                                {
+                                    <tr>
+                                        <td class="text-center align-middle">#@item.IdSistema</td>
+                                        <td>@item.Codigo</td>
+                                        <td>@item.Caption</td>
+                                        <td class="text-center align-middle"><button class="btn btn-outline-dark btn-sm" type="button" onclick="editar('@item.IdSistema')"><i class="bi bi-pencil-square"></i> Editar</button></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                }
+            }
+
+
+        </div>
+    </form>
+
+    <script src="~/Scripts/Scripts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        function editar(idSistema) {
+            document.form1.view.value = "@((int)View.Edit)";
+            document.form1.idSistema.value = idSistema;
+            executarAcao('C');
+        }
+
+        function novo() {
+            document.form1.view.value = "@((int)View.New)";
+            document.form1.submit();
+        }
+    </script>
+
+
+</body>
+
+

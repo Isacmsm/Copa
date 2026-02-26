@@ -1,0 +1,246 @@
+﻿@{
+    Page.Title = "Autorizações";
+    Layout = "~/AreaRestrita/_Layout.cshtml";
+}
+
+
+
+@functions {
+    private class Operador
+    {
+
+        public string IdOperador { get; set; }
+        public string Nome { get; set; }
+
+
+    }
+
+    private class Autorizacao
+    {
+        public string IdAcao { get; set; }
+        public string IdAutorizacao { get; set; }
+        public string NomeSt { get; set; }
+        public string NomeMd { get; set; }
+        public string NomePag { get; set; }
+        public string NomeAcao { get; set; }
+
+    }
+
+    string acao = null;
+    string idOperador = null;
+    Autorizacao autorizacao = null;
+    List<Operador> operadores = null;
+    List<Autorizacao> autorizacoes = null;
+
+    private void AlimentaVariaveis()
+    {
+        acao = Util.ChecaNulo(Request.Form["acao"]);
+        idOperador = Util.ChecaNulo(Request.Form["idOperador"]);
+    }
+
+    private void LimparVariaveis()
+    {
+        autorizacao = null;
+        idOperador = null;
+        autorizacoes = null;
+
+    }
+
+    private void ConsultarOperador()
+    {
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@Tipo", 1);
+        string procedure = GetNomeProcedure("C");
+
+        Dao dao = new Dao();
+        operadores = dao.ExecutarProcedureList<Operador>(procedure, parametros);
+    }
+
+
+    private void Consultar()
+    {
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@Tipo", 2);
+        parametros.Add("@IdOperador", idOperador);
+        string procedure = GetNomeProcedure("C");
+
+        Dao dao = new Dao();
+        autorizacoes = dao.ExecutarProcedureList<Autorizacao>(procedure, parametros);
+    }
+
+    private string GetNomeProcedure(string acao)
+    {
+        switch (acao)
+        {
+            case "C": return "stp_Ism_Autorizacao_Sel";
+            case "A": return "stp_Ism_Autorizacao_Upt";
+            default: return null;
+        }
+    }
+
+    private void Manutencao()
+    {
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@IdOperador", idOperador);
+        parametros.Add("@IdAcao", autorizacao.IdAcao);
+
+        string procedure = GetNomeProcedure(acao);
+
+        Dao dao = new Dao();
+        dao.ExecutarProcedure(procedure, parametros);
+        acao = "C";
+    }
+
+
+
+
+}
+
+@{
+    AlimentaVariaveis();
+
+    if (acao == "A")
+    {
+        Util.ExceptionHandler(() =>
+        {
+            autorizacao = new Autorizacao()
+            {
+                IdAcao = Util.ChecaNulo(Request.Form["idAcao"]),
+            };
+            Manutencao();
+            LimparVariaveis();
+            ModelState.AddError("alert-success", "Operação realizada com sucesso");
+        }, this.ModelState);
+    }
+
+
+    if (acao == "C")
+    {
+        Util.ExceptionHandler(Consultar, this.ModelState);
+    }
+
+
+    Util.ExceptionHandler(ConsultarOperador, this.ModelState);
+
+
+    if (autorizacao == null)
+    {
+        autorizacao = new Autorizacao();
+    }
+
+
+
+}
+
+@section head {
+    <link rel="stylesheet" href="~/Scripts/Style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+}
+
+<body>
+    <form name="form1" method="post">
+        <input type="hidden" name="acao" id="acao" />
+        <input type="hidden" name="idJogador" id="idJogador" value="@autorizacao.IdAcao" />
+
+        <div class="container">
+            <div class="row g-3 d-flex mb-5">
+                <div>
+                    @RenderPage("~/AreaRestrita/Menu.cshtml")
+                </div>
+
+                <div>
+                    <h1>Autorizações</h1>
+                </div>
+
+                <div class="col-12">
+                    @PageHelper.MakeAlert()
+                </div>
+
+                <div class="col-md-4">
+                    <select class="form-select" name="idOperador" id="idOperador" onchange="selecionarConsulta()">
+
+                        <option value="">
+                            Selecione um Operador
+                        </option>
+                        @foreach (Operador item in operadores)
+                        {
+                            <option @(item.IdOperador == idOperador ? "selected" : "") value="@item.IdOperador">
+                                @item.Nome
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-4 mb-5">
+                    <button class="btn btn-outline-primary" type="submit" onclick="estadoInicial()"><i class="bi bi-eraser"></i> Limpar</button>
+                </div>
+
+                @if (autorizacoes != null)
+                {
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <div class="">
+                            <button class="btn btn-primary me-md-2" type="submit" onclick="Registrar()"><i class="bi bi-pencil-square"></i> Registrar</button>
+                        </div>
+                    </div>
+                }
+
+            </div>
+
+
+
+            @if (autorizacoes != null)
+            {
+                <div class="container">
+                    <table class="table table-striped rounded mb-0 ">
+                        <thead>
+                            <tr>
+                                <th class="text-center align-middle">Sistema</th>
+                                <th class="text-center align-middle">Modulo</th>
+                                <th class="text-center align-middle">Pagina</th>
+                                <th class="text-center align-middle">Ação</th>
+                                <th class="text-center align-middle">Permissão</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody class="table-group-divider">
+                            @foreach (Autorizacao item in autorizacoes)
+                            {
+                                <tr>
+                                    <td class="text-center align-middle">@item.NomeSt</td>
+                                    <td class="text-center align-middle">@item.NomeMd</td>
+                                    <td class="text-center align-middle">@item.NomePag</td>
+                                    <td class="text-center align-middle">@item.NomeAcao</td>
+                                    <td class="text-center align-middle"><div class="form-check form-switch d-flex justify-content-center"><input class="form-check-input" type="checkbox" role="switch" name="idAcao" value="@item.IdAcao" @(item.IdAutorizacao != null ? "checked" : "")></div></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+            }
+
+        </div>
+    </form>
+
+    <script src="~/Scripts/Scripts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        function selecionarConsulta() { // aqui depois do botão (html) gerar o evento que foi capturado pela função do Js ele vai definir o valor de acao no forms ( Js alterando o HTML)
+            document.form1.acao.value = 'C';
+            document.form1.submit();
+
+        }
+        function Registrar() { // recebe as informações do html, ao capturar o evento onclick, e altera o estado do html do forms para ser depois capturado pelo servidor
+            document.form1.acao.value = 'A';
+            document.form1.submit();
+
+        }
+    </script>
+
+
+</body>
+
+

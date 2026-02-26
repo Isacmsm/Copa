@@ -1,14 +1,51 @@
-﻿.table {
-    width:100%;
-    border-collapse: collapse;
+﻿/* Card campo */
+.campo-card {
+    position: relative;
 }
 
-.table th {
-    padding-top: 11px;
-    padding-bottom: 11px;
-    background-color: #ccc;
+/* Linha superior */
+.linha-meio-topo {
+    position: absolute;
+    top: 0;
+    left: 49.9%;
+    width: 3px;
+    height: 36%;
+    background: #000;
+    transform: translateX(-50%);
 }
 
-    .table, .table th, .table td {
-        border: 1px solid black;
-    }
+/* Linha inferior */
+.linha-meio-baixo {
+    position: absolute;
+    bottom: 0;
+    left: 49.9%;
+    width: 3px;
+    height: 33%;
+    background: #000;
+    transform: translateX(-50%);
+}
+
+/* Gol esquerdo */
+.campo-card::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 40px;
+    height: 80px;
+    border: 3px solid #000;
+    border-left: none;
+    transform: translateY(-50%);
+}
+
+/* Gol direito */
+.gol-direito {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    width: 40px;
+    height: 80px;
+    border: 3px solid #000;
+    border-right: none;
+    transform: translateY(-50%);
+}

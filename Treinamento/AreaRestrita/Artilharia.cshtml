@@ -1,0 +1,94 @@
+﻿@{
+    Page.Title = "Artilharia";
+    Layout = "~/AreaRestrita/_Layout.cshtml";
+}
+
+
+@functions {
+    private class Artilharia //Definindo a Classe Time
+    {
+        public string NomeTime { get; set; } // e suas propiedades (todo Objeto Time tem um IdTime e um Nome.
+        public string NomeJogador { get; set; }
+        public string GolsMarcados { get; set; }
+
+    }
+
+
+    List<Artilharia> artilheiros = null;
+
+
+
+    private void Consultar()
+    {
+        string procedure = "stp_Ism_Artilharia_Sel";
+
+        Dao dao = new Dao();//instaciando objeto Dao para que a gente posso utilizar seus metodos
+        artilheiros = dao.ExecutarProcedureList<Artilharia>(procedure, null); //Ta executando o metodo ExecutarProcedureList definindo a Classe Time no coringa do metodo
+                                                                              //e qual tipo de procedure, deixando os parametros nulos
+    }
+
+}
+
+@{
+    Consultar();
+}
+
+
+
+@section head {
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+}
+
+<body>
+    <div class="container">
+        <div class="row g-3">
+            <div class="col-12">
+                @RenderPage("~/AreaRestrita/Menu.cshtml")
+            </div>
+
+            <div class="col-12 mb-5 text-center">
+                <h1>Artilharia</h1>
+            </div>
+        </div>
+
+
+
+
+
+
+
+        @if (artilheiros != null) // se a lista de times não estiver vazia ele vai criar a tabela dos times no site
+        {
+            <div>
+                <table class="table table-striped rounded mb-0">
+                    <colgroup>
+                        <col style="width: 10%" />
+                        <col style="width: 30%" />
+                        <col style="width: 10%" />
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th class="text-center align-middle">Time</th>
+                            <th class="text-center align-middle">Artilheiros</th>
+                            <th class="text-center align-middle">Gols</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-group-divider">
+                        @foreach (Artilharia item in artilheiros) //vai pecorrer todos os itens da lista times e vai criar uma coluna da tabela para cada Time com as suas propiedades
+                        {
+                            <tr>
+                                <td class="text-center align-middle">@item.NomeTime</td>
+                                <td class="text-center align-middle">@item.NomeJogador</td>
+                                <td class="text-center align-middle">@item.GolsMarcados</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+        }
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+

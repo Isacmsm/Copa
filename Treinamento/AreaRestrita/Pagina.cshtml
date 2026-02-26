@@ -1,0 +1,322 @@
+﻿@{
+    Page.Title = "Paginas";
+    Layout = "~/AreaRestrita/_Layout.cshtml";
+}
+
+@functions {
+    private enum View
+    {
+        Index,
+        New,
+        Edit
+    }
+
+    private class Pagina
+    {
+        public string IdPagina { get; set; }
+        public string IdModulo { get; set; }
+        public string NomeModulo { get; set; }
+        public string Caption { get; set; }
+        public string Codigo { get; set; }
+
+    }
+
+    private class Modulo
+    {
+
+        public string IdModulo { get; set; }
+        public string IdSistema { get; set; }
+        public string NomeSistema { get; set; }
+        public string Caption { get; set; }
+        public string Codigo { get; set; }
+
+    }
+
+    string acao = null;
+    string idPagina = null;
+    Pagina pagina = null;
+    View view = View.Index;
+    List<Modulo> modulos = null;
+    List<Pagina> paginas = null;
+
+    private void AlimentaVariaveis()
+    {
+        acao = Util.ChecaNulo(Request.Form["acao"]);
+        idPagina = Util.ChecaNulo(Request.Form["idPagina"]);
+
+        if (!string.IsNullOrWhiteSpace(Request.Form["view"]))
+        {
+            view = (View)Enum.Parse(typeof(View), Request.Form["view"]);
+        }
+
+    }
+
+    private string IsInvalid(string key)
+    {
+        return (!ModelState.IsValidField(key) ? "is-invalid" : "");
+    }
+
+    //Metodo invocado após a manutenção paral limpar os valores das variáveis que estão na memoria do servidor.
+    private void LimparVariaveis()
+    {
+        acao = null;
+        idPagina = null;
+        pagina = null;
+    }
+
+    private void Consultar()
+    {
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@Tipo", 1);
+        parametros.Add("@IdPagina", idPagina);
+        string procedure = GetNomeProcedure("C");
+
+        Dao dao = new Dao();
+        paginas = dao.ExecutarProcedureList<Pagina>(procedure, parametros);
+    }
+
+
+    private void ConsultaSistema()
+    {
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@Tipo", 2);
+        string procedure = GetNomeProcedure("C");
+
+        Dao dao = new Dao();
+        modulos = dao.ExecutarProcedureList<Modulo>(procedure, parametros);
+    }
+
+    private string GetNomeProcedure(string acao)
+    {
+        switch (acao)
+        {
+            case "C": return "stp_Ism_Pagina_Sel";
+            case "I": return "stp_Ism_Pagina_Ins";
+            case "A": return "stp_Ism_Pagina_Upt";
+            case "E": return "stp_Ism_Pagina_Del";
+            default: return null;
+        }
+    }
+
+    private void Manutencao()
+    {
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@IdPagina", idPagina);
+        parametros.Add("@IdModulo", pagina.IdModulo);
+        parametros.Add("@Codigo", pagina.Codigo);
+        parametros.Add("@Caption",pagina.Caption);
+
+        string procedure = GetNomeProcedure(acao);
+
+        Dao dao = new Dao();
+        dao.ExecutarProcedure(procedure, parametros);
+
+    }
+
+    private void CarregarDados()
+    {
+        if (view == View.Edit && acao == "C" && paginas != null && paginas.Count == 1)
+        {
+            pagina = paginas.FirstOrDefault();
+        }
+    }
+
+
+
+
+}
+
+@{
+    AlimentaVariaveis();
+
+    if (acao == "I" || acao == "A" || acao == "E")
+    {
+        Util.ExceptionHandler(() =>
+        {
+            pagina = new Pagina()
+            {
+                IdPagina = Util.ChecaNulo(Request.Form["idPagina"]),
+                IdModulo = Util.ChecaNulo(Request.Form["idModulo"]),
+                Codigo = Util.ChecaNulo(Request.Form["codigo"]),
+                Caption = Util.ChecaNulo(Request.Form["caption"])
+            };
+
+            Manutencao();
+            LimparVariaveis();
+            ModelState.AddError("alert-success", "Operação realizada com sucesso");
+            view = View.Index;
+        }, this.ModelState);
+    }
+
+    Util.ExceptionHandler(() =>
+    {
+        Consultar();
+        CarregarDados();
+
+    }, this.ModelState);
+
+
+    Util.ExceptionHandler(ConsultaSistema, this.ModelState);
+
+    if (pagina == null)
+    {
+        pagina = new Pagina();
+    }
+
+
+}
+
+@section head {
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+}
+
+<body>
+    <form name="form1" method="post">
+        <input type="hidden" name="acao" id="acao" />
+        <input type="hidden" name="idPagina" id="idPagina" value="@idPagina" />
+        <input type="hidden" name="view" id="view" value="@((int)view)" />
+
+        <div class="container">
+
+            <div class="row g-3">
+                <div>
+                    @RenderPage("~/AreaRestrita/Menu.cshtml")
+                </div>
+                <div>
+                    <h1>Paginas</h1>
+                </div>
+
+                @if (view == View.Edit || view == View.New)
+                {
+
+                    <div class="col-12 mb-3">
+                        @PageHelper.MakeAlert()
+                    </div>
+
+                    <div class="col-md-4">
+                        <select class="form-select @IsInvalid("idModulo")" name="idModulo" id="idModulo">
+
+                            <option value="">
+                                Selecione um Modulo
+                            </option>
+                            @foreach (Modulo item in modulos)
+                            {
+                                <option @(item.IdModulo == pagina.IdModulo ? "selected" : "") value="@item.IdModulo">
+                                    Sistema: @item.NomeSistema - Modulo: @item.Caption
+                                </option>
+                            }
+                        </select>
+                        @PageHelper.MakeFeedBack("idModulo")
+                    </div>
+
+                    <div class="col-md-4">
+                        <input class="form-control @IsInvalid("codigo")" placeholder="Codigo da Pagina" type="text" name="codigo" id="codigo" value="@pagina.Codigo" />
+                        @PageHelper.MakeFeedBack("codigo")
+                    </div>
+
+                    <div class="col-md-4">
+                        <input class="form-control @IsInvalid("caption")" placeholder="Nome da Pagina" type="text" name="caption" id="caption" value="@pagina.Caption" />
+                        @PageHelper.MakeFeedBack("caption")
+                    </div>
+
+                    <div class="col-md-4">
+                        <button class="btn btn-outline-primary" type="submit" onclick="estadoInicial()"><i class="bi bi-eraser"></i> Limpar</button>
+                    </div>
+                }
+
+
+
+
+
+                @if (view == View.Index)
+                {
+                    <div class="col-md-4 mb-3">
+                        <button class="btn btn-primary btn-sm" type="submit" onclick="novo()"><i class="bi bi-file-earmark-plus"></i> Novo</button>
+                    </div>
+                }
+
+
+                @if (view == View.New || view == View.Edit)
+                {
+                    <div class="col-12 mb-5">
+                        @if (view == View.New)
+                        {
+                            <button class="btn btn-primary btn-sm" type="button" onclick="executarAcao('I')"><i class="bi bi-plus-circle-dotted"></i> Incluir</button>
+
+                        }
+                        @if (view == View.Edit)
+                        {
+                            <button class="btn btn-warning btn-sm" type="button" onclick="executarAcao('A')"><i class="bi bi-pencil-square"></i> Alterar</button>
+                            <button class="btn btn-danger btn-sm" type="button" onclick="executarAcao('E')"><i class="bi bi-trash3"></i> Excluir</button>
+                        }
+                    </div>
+                }
+            </div>
+
+            @if (view == View.Index)
+            {
+
+                if (paginas != null)
+                {
+                    <div>
+                        <table class="table table-striped rounded mb-0">
+                            <colgroup>
+                                <col style="width: 15%" />
+                                <col style="width: 35%" />
+                                <col style="width: 35%" />
+                                <col style="width: 15%" />
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th class="text-center align-middle">Id</th>
+                                    <th>Modulo</th>
+                                    <th>Pagina</th>
+                                    <th>Codigo</th>
+                                    <th class="text-center align-middle"></th>
+                                </tr>
+                            </thead>
+                            <tbody class="table-group-divider">
+                                @foreach (Pagina item in paginas)
+                                {
+                                    <tr>
+                                        <td class="text-center align-middle">#@item.IdPagina</td>
+                                        <td>@item.NomeModulo</td>
+                                        <td>@item.Caption</td>
+                                        <td>@item.Codigo</td>
+                                        <td class="text-center align-middle"><button class="btn btn-outline-dark btn-sm" type="button" onclick="editar('@item.IdPagina')">Editar</button></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                }
+            }
+
+
+        </div>
+    </form>
+
+    <script src="~/Scripts/Scripts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+
+        function editar(idPagina) { // recebe as informações do html, ao capturar o evento onclick, e altera o estado do html do forms para ser depois capturado pelo servidor
+        document.form1.idPagina.value = idPagina;
+        document.form1.view.value = "@((int)View.Edit)";
+        executarAcao("C")
+        }
+
+    function novo() {
+        document.form1.view.value = "@((int)View.New)";
+        document.form1.submit();
+    }
+    </script>
+
+
+</body>
+
+

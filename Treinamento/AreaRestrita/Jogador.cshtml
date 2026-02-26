@@ -1,0 +1,309 @@
+﻿@{
+    Page.Title = "Jogadores";
+    Layout = "~/AreaRestrita/_Layout.cshtml";
+}
+
+@functions {
+    private enum View
+    {
+        Index,
+        New,
+        Edit
+    }
+
+    private class Jogador
+    {
+
+        public string IdJogador { get; set; }
+        public string IdTime { get; set; }
+        public string NomeTime { get; set; }
+        public string Nome { get; set; }
+
+    }
+
+    private class Time
+    {
+        public string IdTime { get; set; }
+        public string Nome { get; set; }
+
+    }
+
+    string acao = null;
+    string idJogador = null;
+    Jogador jogador = null;
+    View view = View.Index;
+    List<Jogador> jogadores = null;
+    List<Time> times = null;
+
+    private void AlimentaVariaveis()
+    {
+        acao = Util.ChecaNulo(Request.Form["acao"]);
+        idJogador = Util.ChecaNulo(Request.Form["idJogador"]);
+
+        if (!string.IsNullOrWhiteSpace(Request.Form["view"]))
+        {
+            view = (View)Enum.Parse(typeof(View), Request.Form["view"]);
+        }
+
+    }
+
+    private string IsInvalid(string key)
+    {
+        return (!ModelState.IsValidField(key) ? "is-invalid" : "");
+    }
+
+    //Metodo invocado após a manutenção paral limpar os valores das variáveis que estão na memoria do servidor.
+    private void LimparVariaveis()
+    {
+        acao = null;
+        idJogador = null;
+        jogador = null;
+    }
+
+    private void Consultar()
+    {
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@Tipo", 1);
+        parametros.Add("@IdJogador", idJogador);
+        string procedure = GetNomeProcedure("C");
+
+        Dao dao = new Dao();
+        jogadores = dao.ExecutarProcedureList<Jogador>(procedure, parametros);
+    }
+
+
+    private void ConsultaTime()
+    {
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@Tipo", 2);
+        string procedure = GetNomeProcedure("C");
+
+        Dao dao = new Dao();
+        times = dao.ExecutarProcedureList<Time>(procedure, parametros);
+    }
+
+    private string GetNomeProcedure(string acao)
+    {
+        switch (acao)
+        {
+            case "C": return "stp_Ism_Jogador_Sel";
+            case "I": return "stp_Ism_Jogador_Ins";
+            case "A": return "stp_Ism_Jogador_Upt";
+            case "E": return "stp_Ism_Jogador_Del";
+            default: return null;
+        }
+    }
+
+    private void Manutencao()
+    {
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@IdJogador", idJogador);
+        parametros.Add("@IdTime", jogador.IdTime);
+        parametros.Add("@Nome", jogador.Nome);
+
+        string procedure = GetNomeProcedure(acao);
+
+        Dao dao = new Dao();
+        dao.ExecutarProcedure(procedure, parametros);
+        
+    }
+
+    private void CarregarDados()
+    {
+        if (view == View.Edit && acao == "C" && jogadores != null && jogadores.Count == 1)
+        {
+            jogador = jogadores.FirstOrDefault();
+        }
+    }
+
+
+
+
+}
+
+@{
+    AlimentaVariaveis();
+
+    if (acao == "I" || acao == "A" || acao == "E")
+    {
+        Util.ExceptionHandler(() =>
+        {
+            jogador = new Jogador()
+            {
+                IdJogador = Util.ChecaNulo(Request.Form["idJogador"]),
+                IdTime = Util.ChecaNulo(Request.Form["idTime"]),
+                Nome = Util.ChecaNulo(Request.Form["nome"])
+            };
+
+            Manutencao();
+            LimparVariaveis();
+            ModelState.AddError("alert-success", "Operação realizada com sucesso");
+            view = View.Index;
+        }, this.ModelState);
+    }
+
+    Util.ExceptionHandler(() =>
+    {
+        Consultar();
+        CarregarDados();
+
+    }, this.ModelState);
+
+
+    Util.ExceptionHandler(ConsultaTime, this.ModelState);
+
+    if (jogador == null)
+    {
+        jogador = new Jogador();
+    }
+
+
+}
+
+@section head {
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+}
+
+<body>
+    <form name="form1" method="post">
+        <input type="hidden" name="acao" id="acao" />
+        <input type="hidden" name="idJogador" id="idJogador" value="@idJogador" />
+        <input type="hidden" name="view" id="view" value="@((int)view)" />
+
+        <div class="container">
+
+            <div class="row g-3">
+                <div>
+                    @RenderPage("~/AreaRestrita/Menu.cshtml")
+                </div>
+                <div>
+                    <h1>Jogadores</h1>
+                </div>
+
+                @if (view == View.Edit || view == View.New)
+                {
+
+                    <div class="col-12 mb-3">
+                        @PageHelper.MakeAlert()
+                    </div>
+
+                    <div class="col-md-4">
+                        <input class="form-control @IsInvalid("nome")" placeholder="Nome" type="text" name="nome" id="nome" value="@jogador.Nome" />
+                        @PageHelper.MakeFeedBack("nome")
+                    </div>
+
+                    <div class="col-md-4">
+                        <select class="form-select @IsInvalid("idtime")" name="idTime" id="idTime">
+
+                            <option value="">
+                                Selecione um Time
+                            </option>
+                            @foreach (Time item in times)
+                            {
+                                <option @(item.IdTime == jogador.IdTime ? "selected" : "") value="@item.IdTime">
+                                    @item.Nome
+                                </option>
+                            }
+                        </select>
+                        @PageHelper.MakeFeedBack("idtime")
+                    </div>
+
+                    <div class="col-md-4">
+                        <button class="btn btn-outline-primary" type="submit" onclick="estadoInicial()"><i class="bi bi-eraser"></i> Limpar</button>
+                    </div>
+                }
+
+
+
+
+
+                @if (view == View.Index)
+                {
+                    <div class="col-md-4 mb-3">
+                        <button class="btn btn-primary btn-sm" type="submit" onclick="novo()"><i class="bi bi-file-earmark-plus"></i> Novo</button>
+                    </div>
+                }
+
+
+                @if (view == View.New || view == View.Edit)
+                {
+                    <div class="col-12 mb-5">
+                        @if (view == View.New)
+                        {
+                            <button class="btn btn-primary btn-sm" type="button" onclick="executarAcao('I')"><i class="bi bi-plus-circle-dotted"></i> Incluir</button>
+
+                        }
+                        @if (view == View.Edit)
+                        {
+                            <button class="btn btn-warning btn-sm" type="button" onclick="executarAcao('A')"><i class="bi bi-pencil-square"></i> Alterar</button>
+                            <button class="btn btn-danger btn-sm" type="button" onclick="executarAcao('E')"><i class="bi bi-trash3"></i> Excluir</button>
+                        }
+                    </div>
+                }
+            </div>
+
+            @if (view == View.Index)
+            {
+
+                if (jogadores != null)
+                {
+                    <div>
+                        <table class="table table-striped rounded mb-0">
+                            <colgroup>
+                                <col style="width: 15%" />
+                                <col style="width: 35%" />
+                                <col style="width: 35%" />
+                                <col style="width: 15%" />
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th class="text-center align-middle">Id</th>
+                                    <th>Nome do Time</th>
+                                    <th>Nome</th>
+                                    <th class="text-center align-middle"></th>
+                                </tr>
+                            </thead>
+                            <tbody class="table-group-divider">
+                                @foreach (Jogador item in jogadores)
+                                {
+                                    <tr>
+                                        <td class="text-center align-middle">#@item.IdJogador</td>
+                                        <td>@item.NomeTime</td>
+                                        <td>@item.Nome</td>
+                                        <td class="text-center align-middle"><button class="btn btn-outline-dark btn-sm" type="button" onclick="editar('@item.IdJogador')">Editar</button></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                }
+            }
+
+
+        </div>
+    </form>
+
+    <script src="~/Scripts/Scripts.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+
+        function editar(idJogador) { // recebe as informações do html, ao capturar o evento onclick, e altera o estado do html do forms para ser depois capturado pelo servidor
+            document.form1.idJogador.value = idJogador;
+            document.form1.view.value = "@((int)View.Edit)";
+            executarAcao("C")
+        }
+
+        function novo() {
+            document.form1.view.value = "@((int)View.New)";
+            document.form1.submit();
+        }
+    </script>
+
+
+</body>
+
+
