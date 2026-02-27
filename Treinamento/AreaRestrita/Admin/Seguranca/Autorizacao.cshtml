@@ -50,10 +50,8 @@
     {
         Dictionary<string, object> parametros = new Dictionary<string, object>();
         parametros.Add("@Tipo", 1);
-        string procedure = GetNomeProcedure("C");
 
-        Dao dao = new Dao();
-        operadores = dao.ExecutarProcedureList<Operador>(procedure, parametros);
+        operadores = new Dao().ExecutarAcaoList<Operador>("C", parametros);
     }
 
 
@@ -62,21 +60,10 @@
         Dictionary<string, object> parametros = new Dictionary<string, object>();
         parametros.Add("@Tipo", 2);
         parametros.Add("@IdOperador", idOperador);
-        string procedure = GetNomeProcedure("C");
 
-        Dao dao = new Dao();
-        autorizacoes = dao.ExecutarProcedureList<Autorizacao>(procedure, parametros);
+        autorizacoes = new Dao().ExecutarAcaoList<Autorizacao>("C", parametros);
     }
 
-    private string GetNomeProcedure(string acao)
-    {
-        switch (acao)
-        {
-            case "C": return "stp_Ism_Autorizacao_Sel";
-            case "A": return "stp_Ism_Autorizacao_Upt";
-            default: return null;
-        }
-    }
 
     private void Manutencao()
     {
@@ -84,10 +71,7 @@
         parametros.Add("@IdOperador", idOperador);
         parametros.Add("@IdAcao", autorizacao.IdAcao);
 
-        string procedure = GetNomeProcedure(acao);
-
-        Dao dao = new Dao();
-        dao.ExecutarProcedure(procedure, parametros);
+        new Dao().ExecutarAcao(acao, parametros);
         acao = "C";
     }
 

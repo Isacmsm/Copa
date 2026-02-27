@@ -69,34 +69,20 @@
         Dictionary<string, object> parametros = new Dictionary<string, object>();
         parametros.Add("@Tipo", 1);
         parametros.Add("@IdPagina", idPagina);
-        string procedure = GetNomeProcedure("C");
 
-        Dao dao = new Dao();
-        paginas = dao.ExecutarProcedureList<Pagina>(procedure, parametros);
+        paginas = new Dao().ExecutarAcaoList<Pagina>("C", parametros);
     }
 
 
-    private void ConsultaSistema()
+    private void ConsultaModulo()
     {
         Dictionary<string, object> parametros = new Dictionary<string, object>();
         parametros.Add("@Tipo", 2);
-        string procedure = GetNomeProcedure("C");
 
-        Dao dao = new Dao();
-        modulos = dao.ExecutarProcedureList<Modulo>(procedure, parametros);
+        modulos = new Dao().ExecutarAcaoList<Modulo>("C", parametros);
     }
 
-    private string GetNomeProcedure(string acao)
-    {
-        switch (acao)
-        {
-            case "C": return "stp_Ism_Pagina_Sel";
-            case "I": return "stp_Ism_Pagina_Ins";
-            case "A": return "stp_Ism_Pagina_Upt";
-            case "E": return "stp_Ism_Pagina_Del";
-            default: return null;
-        }
-    }
+
 
     private void Manutencao()
     {
@@ -104,12 +90,9 @@
         parametros.Add("@IdPagina", idPagina);
         parametros.Add("@IdModulo", pagina.IdModulo);
         parametros.Add("@Codigo", pagina.Codigo);
-        parametros.Add("@Caption",pagina.Caption);
+        parametros.Add("@Caption", pagina.Caption);
 
-        string procedure = GetNomeProcedure(acao);
-
-        Dao dao = new Dao();
-        dao.ExecutarProcedure(procedure, parametros);
+        new Dao().ExecutarAcao(acao, parametros);
 
     }
 
@@ -156,7 +139,7 @@
     }, this.ModelState);
 
 
-    Util.ExceptionHandler(ConsultaSistema, this.ModelState);
+    Util.ExceptionHandler(ConsultaModulo, this.ModelState);
 
     if (pagina == null)
     {

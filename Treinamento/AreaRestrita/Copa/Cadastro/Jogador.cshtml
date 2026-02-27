@@ -65,10 +65,8 @@
         Dictionary<string, object> parametros = new Dictionary<string, object>();
         parametros.Add("@Tipo", 1);
         parametros.Add("@IdJogador", idJogador);
-        string procedure = GetNomeProcedure("C");
 
-        Dao dao = new Dao();
-        jogadores = dao.ExecutarProcedureList<Jogador>(procedure, parametros);
+        jogadores = new Dao().ExecutarAcaoList<Jogador>("C", parametros);
     }
 
 
@@ -76,23 +74,11 @@
     {
         Dictionary<string, object> parametros = new Dictionary<string, object>();
         parametros.Add("@Tipo", 2);
-        string procedure = GetNomeProcedure("C");
 
-        Dao dao = new Dao();
-        times = dao.ExecutarProcedureList<Time>(procedure, parametros);
+        times = new Dao().ExecutarAcaoList<Time>("C", parametros);
     }
 
-    private string GetNomeProcedure(string acao)
-    {
-        switch (acao)
-        {
-            case "C": return "stp_Ism_Jogador_Sel";
-            case "I": return "stp_Ism_Jogador_Ins";
-            case "A": return "stp_Ism_Jogador_Upt";
-            case "E": return "stp_Ism_Jogador_Del";
-            default: return null;
-        }
-    }
+
 
     private void Manutencao()
     {
@@ -101,11 +87,8 @@
         parametros.Add("@IdTime", jogador.IdTime);
         parametros.Add("@Nome", jogador.Nome);
 
-        string procedure = GetNomeProcedure(acao);
+        new Dao().ExecutarAcao(acao, parametros);
 
-        Dao dao = new Dao();
-        dao.ExecutarProcedure(procedure, parametros);
-        
     }
 
     private void CarregarDados()

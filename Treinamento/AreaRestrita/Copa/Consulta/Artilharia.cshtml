@@ -20,10 +20,8 @@
 
     private void Consultar()
     {
-        string procedure = "stp_Ism_Artilharia_Sel";
 
-        Dao dao = new Dao();//instaciando objeto Dao para que a gente posso utilizar seus metodos
-        artilheiros = dao.ExecutarProcedureList<Artilharia>(procedure, null); //Ta executando o metodo ExecutarProcedureList definindo a Classe Time no coringa do metodo
+        artilheiros = new Dao().ExecutarAcaoList<Artilharia>("C", null); //Ta executando o metodo ExecutarProcedureList definindo a Classe Time no coringa do metodo
                                                                               //e qual tipo de procedure, deixando os parametros nulos
     }
 

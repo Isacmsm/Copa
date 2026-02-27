@@ -1,5 +1,5 @@
 ﻿@{
-    Page.Title = "Operadores";
+    Page.Title = "Sistemas";
     Layout = "~/AreaRestrita/_Layout.cshtml";
 }
 
@@ -12,27 +12,27 @@
         Edit
     }
 
-    
-    private class Operador
+
+    private class Sistema
     {
-        public string IdOperador { get; set; }
-        public string Cpf { get; set; }
-        public string Nome { get; set; }
-        public string Senha { get; set; }
+
+        public string IdSistema { get; set; }
+        public string Codigo { get; set; }
+        public string Caption { get; set; }
 
     }
-    
-    string acao = null;
-    string idOperador = null;
-    Operador operador = null;
-    View view = View.Index;
-    List<Operador> operadores = null;
 
-    
+    string acao = null;
+    string idSistema = null;
+    Sistema sistema = null;
+    View view = View.Index;
+    List<Sistema> sistemas = null;
+
+
     private void AlimentaVariaveis()
     {
         acao = Util.ChecaNulo(Request.Form["acao"]);
-        idOperador = Util.ChecaNulo(Request.Form["idOperador"]);
+        idSistema = Util.ChecaNulo(Request.Form["idSistema"]);
 
         if (!string.IsNullOrWhiteSpace(Request.Form["view"]))
         {
@@ -40,37 +40,24 @@
         }
     }
 
-    
+
     private void LimparVariaveis()
     {
         acao = null;
-        idOperador = null;
-        operador = null;
+        idSistema = null;
+        sistema = null;
 
     }
 
     private void Consultar()
     {
         Dictionary<string, object> parametros = new Dictionary<string, object>();
-        parametros.Add("@IdOperador", idOperador);
+        parametros.Add("@IdSistema", idSistema);
 
-        string procedure = GetNomeProcedure("C");
-        Dao dao = new Dao();
-        operadores = dao.ExecutarProcedureList<Operador>(procedure, parametros);
+        sistemas = new Dao().ExecutarAcaoList<Sistema>("C", parametros);
     }
 
-    
-    private string GetNomeProcedure(string acao)
-    {
-        switch (acao)
-        {
-            case "C": return "stp_Ism_Operador_Sel";
-            case "I": return "stp_Ism_Operador_Ins";
-            case "A": return "stp_Ism_Operador_Upt";
-            case "E": return "stp_Ism_Operador_Del";
-            default: return null;
-        }
-    }
+
 
 
     private string IsInvalid(string key)
@@ -80,27 +67,21 @@
 
     private void Manutencao()
     {
-        
+
         Dictionary<string, object> parametros = new Dictionary<string, object>();
-        parametros.Add("@IdOperador", idOperador);
-        parametros.Add("@CPF", operador.Cpf);
-        parametros.Add("@NOME", operador.Nome);
-        parametros.Add("@SENHA", operador.Senha);
+        parametros.Add("@IdSistema", idSistema);
+        parametros.Add("@Codigo", sistema.Codigo);
+        parametros.Add("@Caption", sistema.Caption);
 
-        
-        string procedure = GetNomeProcedure(acao);
+        new Dao().ExecutarAcao(acao, parametros);
 
-        Dao dao = new Dao();
-        
-        dao.ExecutarProcedure(procedure, parametros);
-        
     }
 
     private void CarregarDados()
     {
-        if (view == View.Edit && acao == "C" && operadores != null && operadores.Count == 1)
+        if (view == View.Edit && acao == "C" && sistemas != null && sistemas.Count == 1)
         {
-            operador = operadores.FirstOrDefault();
+            sistema = sistemas.FirstOrDefault();
         }
     }
 
@@ -114,12 +95,11 @@
     {
         Util.ExceptionHandler(() =>
         {
-            operador = new Operador()
+            sistema = new Sistema()
             {
-                IdOperador = Util.ChecaNulo(Request.Form["idOperador"]),
-                Cpf= Util.ChecaNulo(Request.Form["cpf"]),
-                Nome = Util.ChecaNulo(Request.Form["nome"]),
-                Senha = Util.ChecaNulo(Request.Form["senha"])
+                IdSistema = Util.ChecaNulo(Request.Form["idSistema"]),
+                Codigo = Util.ChecaNulo(Request.Form["codigo"]),
+                Caption = Util.ChecaNulo(Request.Form["caption"])
             };
 
             Manutencao();
@@ -136,9 +116,9 @@
         CarregarDados();
     }, this.ModelState);
 
-    if (operador == null)
+    if (sistema == null)
     {
-        operador = new Operador();
+        sistema = new Sistema();
     }
 
 
@@ -158,7 +138,7 @@
 <body>
     <form name="form1" method="post">
         <input type="hidden" name="acao" id="acao" />
-        <input type="hidden" name="idOperador" id="idOperador" value="@idOperador" />
+        <input type="hidden" name="idSistema" id="idSistema" value="@idSistema" />
         <input type="hidden" name="view" id="view" value="@((int)view)" />
 
         <div class="container">
@@ -168,7 +148,7 @@
                     @RenderPage("~/AreaRestrita/Menu.cshtml")
                 </div>
                 <div>
-                    <h1>Operadores</h1>
+                    <h1>Sistemas</h1>
                 </div>
 
 
@@ -179,18 +159,13 @@
                     </div>
 
                     <div class="col-md-4">
-                        <input class="form-control @IsInvalid("cpf")" placeholder="CPF" type="text" name="cpf" id="cpf" value="@operador.Cpf" />
-                        @PageHelper.MakeFeedBack("cpf")
+                        <input class="form-control @IsInvalid("codigo")" placeholder="Codigo" type="text" name="codigo" id="codigo" value="@sistema.Codigo" />
+                        @PageHelper.MakeFeedBack("codigo")
                     </div>
 
                     <div class="col-md-4">
-                        <input class="form-control @IsInvalid("nome")" placeholder="Nome" type="text" name="nome" id="nome" value="@operador.Nome" />
-                        @PageHelper.MakeFeedBack("nome")
-                    </div>
-
-                    <div class="col-md-4">
-                        <input class="form-control @IsInvalid("senha")" placeholder="Senha" type="text" name="senha" id="senha" value="@operador.Senha" />
-                        @PageHelper.MakeFeedBack("senha")
+                        <input class="form-control @IsInvalid("caption")" placeholder="Caption" type="text" name="caption" id="caption" value="@sistema.Caption" />
+                        @PageHelper.MakeFeedBack("caption")
                     </div>
 
 
@@ -229,36 +204,33 @@
             @if (view == View.Index)
             {
                 
-                if (operadores != null)
+                if (sistemas != null)
                 {
                     <div>
                         <table class="table table-striped rounded mb-0">
                             <colgroup>
                                 <col style="width: 10%" />
-                                <col style="width: 35%" />
-                                <col style="width: 35%" />
-                                <col style="width: 10%" />
+                                <col style="width: 50%" />
+                                <col style="width: 25%" />
                                 <col style="width: 10%" />
                             </colgroup>
                             <thead class="table-light">
                                 <tr>
                                     <th class="text-center align-middle" scope="col">Id</th>
-                                    <th scope="col">CPF</th>
-                                    <th scope="col">Nome</th>
-                                    <th scope="col">Senha</th>
+                                    <th scope="col">Codigo Sistema</th>
+                                    <th scope="col">Nome Sistema</th>
                                     <th scope="col"></th>
                                 </tr>
                             </thead>
                             <tbody class="table-group-divider">
                                 
-                                @foreach (Operador item in operadores)
+                                @foreach (Sistema item in sistemas)
                                 {
                                     <tr>
-                                        <td class="text-center align-middle">#@item.IdOperador</td>
-                                        <td>@item.Cpf</td>
-                                        <td>@item.Nome</td>
-                                        <td>@item.Senha</td>
-                                        <td class="text-center align-middle"><button class="btn btn-outline-dark btn-sm" type="button" onclick="editar('@item.IdOperador')"><i class="bi bi-pencil-square"></i> Editar</button></td>
+                                        <td class="text-center align-middle">#@item.IdSistema</td>
+                                        <td>@item.Codigo</td>
+                                        <td>@item.Caption</td>
+                                        <td class="text-center align-middle"><button class="btn btn-outline-dark btn-sm" type="button" onclick="editar('@item.IdSistema')"><i class="bi bi-pencil-square"></i> Editar</button></td>
                                     </tr>
                                 }
                             </tbody>
@@ -276,10 +248,9 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        
-        function editar(idOperador) {
+        function editar(idSistema) {
             document.form1.view.value = "@((int)View.Edit)";
-            document.form1.idOperador.value = idOperador;
+            document.form1.idSistema.value = idSistema;
             executarAcao('C');
         }
 

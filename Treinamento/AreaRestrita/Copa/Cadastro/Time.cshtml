@@ -21,7 +21,11 @@
         public string Nome { get; set; }
 
     }
-    //definição de variaveis
+
+
+
+
+
     string acao = null;
     string idTime = null;
     Time time = null;
@@ -54,23 +58,11 @@
         Dictionary<string, object> parametros = new Dictionary<string, object>();
         parametros.Add("@IdTime", idTime);
 
-        string procedure = GetNomeProcedure("C");
-        Dao dao = new Dao();
-        times = dao.ExecutarProcedureList<Time>(procedure, parametros);
+        times = new Dao().ExecutarAcaoList<Time>("C", parametros);
     }
 
-    // a procedure executada vai depender do valor de acao que é definido pelo usaurio a clicar nos botões Incluir, Excluir e Alterar
-    private string GetNomeProcedure(string acao)
-    {
-        switch (acao)
-        {
-            case "C": return "stp_Ism_Time_Sel";
-            case "I": return "stp_Ism_Time_Ins";
-            case "A": return "stp_Ism_Time_Upt";
-            case "E": return "stp_Ism_Time_Del";
-            default: return null;
-        }
-    }
+
+
 
 
     private string IsInvalid(string key)
@@ -80,18 +72,12 @@
 
     private void Manutencao()
     {
-        //Dicionario com valor dos parametros @IdTime e @Nome que as procedures de Time (Ins, Upt, Del) pedem
         Dictionary<string, object> parametros = new Dictionary<string, object>();
         parametros.Add("@IdTime", idTime);
         parametros.Add("@Nome", time.Nome);
 
-        //vai buscar na função GetNomeProcedure qual deve ser a procedure executada
-        string procedure = GetNomeProcedure(acao);
+        new Dao().ExecutarAcao(acao, parametros);
 
-        Dao dao = new Dao();
-        //envia qual procedure deve ser utilizada e os parametros dessa procedure para serem executada no metodo ExecutarProcedure
-        dao.ExecutarProcedure(procedure, parametros);
-        
     }
 
     private void CarregarDados()
@@ -257,7 +243,7 @@
 
     <script>
         // aqui depois do botão (html) gerar o evento que foi capturado pela função do Js ele vai definir o valor de acao no forms ( Js alterando o HTML)
-        
+
         // recebe as informações do html, ao capturar o evento onclick, e altera o estado do html do forms para ser depois capturado pelo servidor
         function editar(idTime) {
             document.form1.view.value = "@((int)View.Edit)";

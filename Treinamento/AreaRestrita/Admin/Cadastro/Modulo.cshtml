@@ -68,10 +68,8 @@
         Dictionary<string, object> parametros = new Dictionary<string, object>();
         parametros.Add("@Tipo", 1);
         parametros.Add("@IdModulo", idModulo);
-        string procedure = GetNomeProcedure("C");
 
-        Dao dao = new Dao();
-        modulos = dao.ExecutarProcedureList<Modulo>(procedure, parametros);
+        modulos = new Dao().ExecutarAcaoList<Modulo>("C", parametros);
     }
 
 
@@ -79,23 +77,10 @@
     {
         Dictionary<string, object> parametros = new Dictionary<string, object>();
         parametros.Add("@Tipo", 2);
-        string procedure = GetNomeProcedure("C");
 
-        Dao dao = new Dao();
-        sistemas = dao.ExecutarProcedureList<Sistema>(procedure, parametros);
+        sistemas = new Dao().ExecutarAcaoList<Sistema>("C", parametros);
     }
 
-    private string GetNomeProcedure(string acao)
-    {
-        switch (acao)
-        {
-            case "C": return "stp_Ism_Modulo_Sel";
-            case "I": return "stp_Ism_Modulo_Ins";
-            case "A": return "stp_Ism_Modulo_Upt";
-            case "E": return "stp_Ism_Modulo_Del";
-            default: return null;
-        }
-    }
 
     private void Manutencao()
     {
@@ -105,10 +90,7 @@
         parametros.Add("@Codigo", modulo.Codigo);
         parametros.Add("@Caption", modulo.Caption);
 
-        string procedure = GetNomeProcedure(acao);
-
-        Dao dao = new Dao();
-        dao.ExecutarProcedure(procedure, parametros);
+        new Dao().ExecutarAcao(acao, parametros);
 
     }
 

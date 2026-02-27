@@ -69,34 +69,19 @@
         Dictionary<string, object> parametros = new Dictionary<string, object>();
         parametros.Add("@Tipo", 1);
         parametros.Add("@IdAcao", idAcao);
-        string procedure = GetNomeProcedure("C");
 
-        Dao dao = new Dao();
-        acoes = dao.ExecutarProcedureList<Acao>(procedure, parametros);
+        acoes = new Dao().ExecutarAcaoList<Acao>("C", parametros);
     }
 
 
-    private void ConsultaSistema()
+    private void ConsultaPagina()
     {
         Dictionary<string, object> parametros = new Dictionary<string, object>();
         parametros.Add("@Tipo", 2);
-        string procedure = GetNomeProcedure("C");
 
-        Dao dao = new Dao();
-        paginas = dao.ExecutarProcedureList<Pagina>(procedure, parametros);
+        paginas = new Dao().ExecutarAcaoList<Pagina>("C", parametros);
     }
 
-    private string GetNomeProcedure(string acao)
-    {
-        switch (acao)
-        {
-            case "C": return "stp_Ism_Acao_Sel";
-            case "I": return "stp_Ism_Acao_Ins";
-            case "A": return "stp_Ism_Acao_Upt";
-            case "E": return "stp_Ism_Acao_Del";
-            default: return null;
-        }
-    }
 
     private void Manutencao()
     {
@@ -107,10 +92,7 @@
         parametros.Add("@Caption",acaoObjeto.Caption);
         parametros.Add("@Procedure",acaoObjeto.Procedure);
 
-        string procedure = GetNomeProcedure(acao);
-
-        Dao dao = new Dao();
-        dao.ExecutarProcedure(procedure, parametros);
+        new Dao().ExecutarAcao(acao, parametros);
 
     }
 
@@ -158,7 +140,7 @@
     }, this.ModelState);
 
 
-    Util.ExceptionHandler(ConsultaSistema, this.ModelState);
+    Util.ExceptionHandler(ConsultaPagina, this.ModelState);
 
     if (acaoObjeto == null)
     {
@@ -201,7 +183,7 @@
                         <select class="form-select @IsInvalid("idPagina")" name="idPagina" id="idPagina">
 
                             <option value="">
-                                Selecione um Modulo
+                                Selecione uma Pagina
                             </option>
                             @foreach (Pagina item in paginas)
                             {

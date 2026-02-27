@@ -50,10 +50,8 @@
     {
         Dictionary<string, object> parametros = new Dictionary<string, object>();
         parametros.Add("@Tipo", 1);
-        string procedure = GetNomeProcedure("C");
 
-        Dao dao = new Dao();
-        jogos = dao.ExecutarProcedureList<Jogo>(procedure, parametros);
+        jogos = new Dao().ExecutarAcaoList<Jogo>("C", parametros);
     }
 
 
@@ -62,21 +60,11 @@
         Dictionary<string, object> parametros = new Dictionary<string, object>();
         parametros.Add("@Tipo", 2);
         parametros.Add("@IdJogo", idJogo);
-        string procedure = GetNomeProcedure("C");
 
-        Dao dao = new Dao();
-        participacoes = dao.ExecutarProcedureList<Participacao>(procedure, parametros);
+        participacoes = new Dao().ExecutarAcaoList<Participacao>(acao, parametros);
     }
 
-    private string GetNomeProcedure(string acao)
-    {
-        switch (acao)
-        {
-            case "C": return "stp_Ism_Participacao_Sel";
-            case "A": return "stp_Ism_Participacao_Upt";
-            default: return null;
-        }
-    }
+    
 
     private void Manutencao()
     {
@@ -85,10 +73,7 @@
         parametros.Add("@IdJogador", participacao.IdJogador);
         parametros.Add("@IdTime", participacao.IdTime);
 
-        string procedure = GetNomeProcedure(acao);
-
-        Dao dao = new Dao();
-        dao.ExecutarProcedure(procedure, parametros);
+        new Dao().ExecutarAcao(acao, parametros);
         acao = "C";
         LimparVariaveis();
     }
@@ -107,7 +92,7 @@
         {
             participacao = new Participacao()
             {
-                IdJogador = Util.ChecaNulo(Request.Form["nome"]),
+                IdJogador = Util.ChecaNulo(Request.Form["idJogador"]),
                 IdTime = Util.ChecaNulo(Request.Form["idTime"])
             };
             Manutencao();

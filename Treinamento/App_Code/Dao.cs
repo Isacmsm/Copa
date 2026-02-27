@@ -2,11 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data.SqlClient;
+using System.Linq;
 using System.Reflection;
 using static DotNetOpenAuth.OpenId.Extensions.AttributeExchange.WellKnownAttributes;
 
 public class Dao
 {
+    private class Autorizacao
+    {
+        public string NomeProcedure { get; set; }
+    }
+
     private readonly string stringConexao = "Server=LOG-ISAC; Database=dbTreinamento; Trusted_Connection = True;"; 
 
     public void ExecutarProcedure(string procedure, Dictionary<string, object> parametros)
@@ -63,6 +69,41 @@ public class Dao
             CommandType = System.Data.CommandType.StoredProcedure,
             CommandTimeout = 60
         };
+    }
+
+    private string GetNomeProcedure(string acao)
+    {
+        Identificacao identificacao = new Identificacao();
+
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@TipoConsulta", "C_Acao");
+        parametros.Add("@IdOperador", identificacao.IdOperador);
+        parametros.Add("@CodigoSistema", identificacao.Sistema);
+        parametros.Add("@CodigoModulo", identificacao.Modulo);
+        parametros.Add("@CodigoPagina", identificacao.Pagina);
+        parametros.Add("@CodigoAcao", acao);
+
+        List<Autorizacao> autorizacoes = ExecutarProcedureList<Autorizacao>("stp_Ism_MontaMenu", parametros);
+
+        if (autorizacoes == null)
+        {
+            throw new InvalidCastException("Operador não autorizado para executar essa ação");
+
+        }
+
+        return autorizacoes.FirstOrDefault().NomeProcedure;
+    }
+
+    public List<T> ExecutarAcaoList<T>(string acao, Dictionary<string, object> parametros)
+    {
+        string procedure = GetNomeProcedure(acao);
+        return ExecutarProcedureList<T>(procedure, parametros);
+    }
+
+    public void ExecutarAcao(string acao, Dictionary<string, object> parametros)
+    {
+        string procedure = GetNomeProcedure(acao);
+        ExecutarProcedure(procedure, parametros);
     }
 
     public List<T> ExecutarProcedureList<T>(string procedure, Dictionary<string, object> parametros)

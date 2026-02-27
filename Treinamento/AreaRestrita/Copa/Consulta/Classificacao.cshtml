@@ -22,10 +22,8 @@
 
     private void Consultar()
     {
-        string procedure = "stp_Ism_Classificacao_Sel";
 
-        Dao dao = new Dao();//instaciando objeto Dao para que a gente posso utilizar seus metodos
-        classificacoes = dao.ExecutarProcedureList<Classificacao>(procedure, null); //Ta executando o metodo ExecutarProcedureList definindo a Classe Time no coringa do metodo
+        classificacoes = new Dao().ExecutarAcaoList<Classificacao>("C", null); //Ta executando o metodo ExecutarProcedureList definindo a Classe Time no coringa do metodo
                                                                                     //e qual tipo de procedure, deixando os parametros nulos
     }
 

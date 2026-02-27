@@ -1,3 +1,33 @@
+@functions{
+    private class Pagina
+    {
+        public string CodigoSistema { get; set; }
+        public string CaptionSistema { get; set; }
+        public string CodigoModulo { get; set; }
+        public string CaptionModulo { get; set; }
+        public string CodigoPagina { get; set; }
+        public string CaptionPagina { get; set; }
+    }
+
+    List<Pagina> paginas = null;
+
+    private void Consultar()
+    {
+        Identificacao identificacao = new Identificacao();
+
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@TipoConsulta", "C_Menu");
+        parametros.Add("@IdOperador", identificacao.IdOperador);
+
+        paginas = new Dao().ExecutarProcedureList<Pagina>("stp_Ism_MontaMenu", parametros);
+    }
+}
+
+
+
+
+
+
 <nav class="navbar navbar-expand-lg">
     <div class="container-fluid">
 
@@ -9,39 +39,88 @@
 
             <ul class="navbar-nav fs-5 d-flex flex-row gap-4">
 
-                
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" role="button"
-                       data-bs-toggle="dropdown" aria-expanded="false">
-                        CopaLog
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="~/AreaRestrita/Copa/Cadastro/Time.cshtml">Times</a></li>
-                        <li><a class="dropdown-item" href="~/AreaRestrita/Copa/Cadastro/Jogador.cshtml">Jogadores</a></li>
-                        <li><a class="dropdown-item" href="~/AreaRestrita/Copa/Cadastro/Jogos.cshtml">Jogos</a></li>
-                        <li><a class="dropdown-item" href="~/AreaRestrita/Copa/Cadastro/Participacao.cshtml">Participações</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="~/AreaRestrita/Copa/Consulta/Classificacao.cshtml">Classificações</a></li>
-                        <li><a class="dropdown-item" href="~/AreaRestrita/Copa/Consulta/Artilharia.cshtml">Artilharia</a></li>
-                    </ul>
-                </li>
 
-                
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" role="button"
-                       data-bs-toggle="dropdown" aria-expanded="false">
-                        Administração
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="~/AreaRestrita/Administrativo/Cadastro/Sistema.cshtml">Sistema</a></li>
-                        <li><a class="dropdown-item" href="~/AreaRestrita/Administrativo/Cadastro/Modulo.cshtml">Modulos</a></li>
-                        <li><a class="dropdown-item" href="~/AreaRestrita/Administrativo/Cadastro/Pagina.cshtml">Paginas</a></li>
-                        <li><a class="dropdown-item" href="~/AreaRestrita/Administrativo/Cadastro/Acao.cshtml">Ações</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="~/AreaRestrita/Administrativo/Segurança/Operador.cshtml">Operadores</a></li>
-                        <li><a class="dropdown-item" href="~/AreaRestrita/Administrativo/Segurança/Operador.cshtml">Autorizações</a></li>
-                    </ul>
-                </li>
+                @{ 
+                    Consultar();
+                }
+
+
+                @if (paginas != null && paginas.Any())
+                {
+                    var sistemas = paginas
+                        .GroupBy(s => new { s.CodigoSistema, s.CaptionSistema });
+
+                    foreach (var sistema in sistemas)
+                    {
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button"
+                               data-bs-toggle="dropdown" aria-expanded="false">
+                                @sistema.Key.CaptionSistema
+                            </a>
+
+                            <ul class="dropdown-menu">
+
+                                @{
+                                    var modulos = sistema
+                                        .GroupBy(m => new { m.CodigoModulo, m.CaptionModulo });
+                                }
+
+                                @foreach (var modulo in modulos)
+                                {
+                                    <li class="dropdown-header fw-bold">
+                                        @modulo.Key.CaptionModulo
+                                    </li>
+
+                                    foreach (var pagina in modulo)
+                                    {
+                                        <li>
+                                            <a class="dropdown-item"
+                                               href="~/AreaRestrita/@sistema.Key.CodigoSistema/@modulo.Key.CodigoModulo/@(pagina.CodigoPagina).cshtml">
+                                                @pagina.CaptionPagina
+                                            </a>
+                                        </li>
+                                    }
+
+                                    <li><hr class="dropdown-divider" /></li>
+                                }
+                            </ul>
+                        </li>
+                    }
+                }
+
+
+                @*<li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button"
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            CopaLog
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="~/AreaRestrita/Copa/Cadastro/Time.cshtml">Times</a></li>
+                            <li><a class="dropdown-item" href="~/AreaRestrita/Copa/Cadastro/Jogador.cshtml">Jogadores</a></li>
+                            <li><a class="dropdown-item" href="~/AreaRestrita/Copa/Cadastro/Jogos.cshtml">Jogos</a></li>
+                            <li><a class="dropdown-item" href="~/AreaRestrita/Copa/Cadastro/Participacao.cshtml">Participações</a></li>
+                            <li><h6 class="dropdown-header">Dropdown header</h6></li>
+                            <li><a class="dropdown-item" href="~/AreaRestrita/Copa/Consulta/Classificacao.cshtml">Classificações</a></li>
+                            <li><a class="dropdown-item" href="~/AreaRestrita/Copa/Consulta/Artilharia.cshtml">Artilharia</a></li>
+                        </ul>
+                    </li>
+
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button"
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            Administração
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="~/AreaRestrita/Admin/Cadastro/Sistema.cshtml">Sistema</a></li>
+                            <li><a class="dropdown-item" href="~/AreaRestrita/Admin/Cadastro/Modulo.cshtml">Modulos</a></li>
+                            <li><a class="dropdown-item" href="~/AreaRestrita/Admin/Cadastro/Pagina.cshtml">Paginas</a></li>
+                            <li><a class="dropdown-item" href="~/AreaRestrita/Admin/Cadastro/Acao.cshtml">Ações</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="~/AreaRestrita/Admin/Segurança/Operador.cshtml">Operadores</a></li>
+                            <li><a class="dropdown-item" href="~/AreaRestrita/Admin/Segurança/Autorizacao.cshtml">Autorizações</a></li>
+                        </ul>
+                    </li>*@
 
             </ul>
         </div>
