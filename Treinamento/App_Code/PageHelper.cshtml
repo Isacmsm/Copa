@@ -1,7 +1,7 @@
 @helper MakeAlert() // renderiza as mensagens de erros (helpers são metodos do razor que permite criar componentes reutilizaveis com codigos c# + html)
 {
     foreach (var ms in ModelState.Where(x => x.Key.StartsWith("alert-"))) //o model state é uma classe do asp.net que armazena um dicionario de chave e valor e pode ser usado para adicionar informações
-    //que podem ser apresentado pela view
+                                                                          //que podem ser apresentado pela view
     {
         foreach (var error in ms.Value.Errors)
         {
@@ -13,7 +13,7 @@
 }
 
 @helper MakeFeedBack(string key)
-    //
+//
 {
     foreach (var item in ModelState.Where(x => x.Key.Equals(key, StringComparison.OrdinalIgnoreCase)))
     {
@@ -22,5 +22,37 @@
             <div class="invalid-feedback"><i class="bi bi-exclamation-diamond-fill"></i> @(item1)</div>
         }
     }
+}
+
+
+@helper MakeBotao(List<Botao> botoes, string acao)
+{
+    if (botoes.Any(x => x.Codigo == acao))
+    {
+        Botao botao = botoes.Find(x => x.Codigo == acao);
+        string icone = "";
+        string tipoBotao = "";
+        switch (botao.Codigo)
+        {
+            case "I":
+                icone = "<i class=\"bi bi-plus-circle-dotted\"></i>";
+                tipoBotao = "btn btn-primary btn-sm";
+                break;
+            case "E":
+                icone = "<i class=\"bi bi-trash3\"></i>";
+                tipoBotao = "btn btn-danger btn-sm";
+                break;
+            case "A":
+                icone = "<i class=\"bi bi-pencil-square\"></i>";
+                tipoBotao = "btn btn-warning btn-sm";
+                break;
+        }
+        if (botao != null)
+        {
+            <button class="@Html.Raw(tipoBotao)" type="button" onclick="executarAcao('@botao.Codigo')">@Html.Raw(icone) @botao.Caption</button>
+        }
+
+
+}
 }
 

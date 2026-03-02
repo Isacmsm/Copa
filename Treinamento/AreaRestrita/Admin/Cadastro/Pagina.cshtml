@@ -38,11 +38,13 @@
     View view = View.Index;
     List<Modulo> modulos = null;
     List<Pagina> paginas = null;
+    List<Botao> botoes = null;
 
     private void AlimentaVariaveis()
     {
         acao = Util.ChecaNulo(Request.Form["acao"]);
         idPagina = Util.ChecaNulo(Request.Form["idPagina"]);
+        botoes = new BotaoDao().GetAll();
 
         if (!string.IsNullOrWhiteSpace(Request.Form["view"]))
         {
@@ -215,9 +217,12 @@
 
                 @if (view == View.Index)
                 {
-                    <div class="col-md-4 mb-3">
-                        <button class="btn btn-primary btn-sm" type="submit" onclick="novo()"><i class="bi bi-file-earmark-plus"></i> Novo</button>
-                    </div>
+                    if (botoes.Any(x => x.Codigo == "I"))
+                    {
+                        <div class="col-md-4 mb-3">
+                            <button class="btn btn-primary btn-sm" type="submit" onclick="novo()"><i class="bi bi-file-earmark-plus"></i> Novo</button>
+                        </div>
+                    }
                 }
 
 
@@ -226,13 +231,13 @@
                     <div class="col-12 mb-5">
                         @if (view == View.New)
                         {
-                            <button class="btn btn-primary btn-sm" type="button" onclick="executarAcao('I')"><i class="bi bi-plus-circle-dotted"></i> Incluir</button>
+                            @PageHelper.MakeBotao(botoes, "I")
 
                         }
                         @if (view == View.Edit)
                         {
-                            <button class="btn btn-warning btn-sm" type="button" onclick="executarAcao('A')"><i class="bi bi-pencil-square"></i> Alterar</button>
-                            <button class="btn btn-danger btn-sm" type="button" onclick="executarAcao('E')"><i class="bi bi-trash3"></i> Excluir</button>
+                            @PageHelper.MakeBotao(botoes, "A")
+                            @PageHelper.MakeBotao(botoes, "E")
                         }
                     </div>
                 }
@@ -247,8 +252,9 @@
                         <table class="table table-striped rounded mb-0">
                             <colgroup>
                                 <col style="width: 15%" />
-                                <col style="width: 35%" />
-                                <col style="width: 35%" />
+                                <col style="width: 30%" />
+                                <col style="width: 30%" />
+                                <col style="width: 15%" />
                                 <col style="width: 15%" />
                             </colgroup>
                             <thead>
@@ -268,7 +274,12 @@
                                         <td>@item.NomeModulo</td>
                                         <td>@item.Caption</td>
                                         <td>@item.Codigo</td>
-                                        <td class="text-center align-middle"><button class="btn btn-outline-dark btn-sm" type="button" onclick="editar('@item.IdPagina')">Editar</button></td>
+                                        <td class="text-center align-middle">
+                                            @if (botoes.Any(x => x.Codigo == "A" || x.Codigo == "E"))
+                                            {
+                                                <button class="btn btn-outline-dark btn-sm" type="button" onclick="editar('@item.IdPagina')">Editar</button>
+                                            }
+                                        </td>
                                     </tr>
                                 }
                             </tbody>

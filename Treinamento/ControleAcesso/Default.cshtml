@@ -3,6 +3,131 @@
     Layout = "~/ControleAcesso/_Layout.cshtml";
 }
 
+@functions
+{
+    public class Operador
+    {
+        public string IdOperador { get; set; }
+        public string Nome { get; set; }
+    }
+
+    string acao = null;
+    string cpf = null;
+    string senha = null;
+
+    private void AlimentarVariaveis()
+    {
+        acao = Util.ChecaNulo(Request.Form["acao"]);
+        cpf = Util.ChecaNulo(Request.Form["cpf"]);
+        senha = Util.ChecaNulo(Request.Form["senha"]);
+    }
+
+    private void Consultar()
+    {
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@Cpf", cpf);
+        parametros.Add("@Senha", senha);
+
+        List<Operador> operadores = new Dao().ExecutarProcedureList<Operador>("stp_Ism_AbreSessao", parametros);
+
+        if (operadores != null)
+        {
+            Operador operador = operadores.FirstOrDefault();
+            if (operador != null)
+            {
+                Session["IdOperador"] = operador.IdOperador;
+                Response.Redirect("~/");
+            }
+        }
+    }
+}
+
+@{
+    AlimentarVariaveis();
+    if (acao == "A")
+    {
+        Consultar();
+    }
+}
+<link rel="stylesheet" href="~/Scripts/Login.css">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+
 <body>
-    <h1>Controle de acesso</h1>
+    <div class="login-container">
+        <div class="bg-image"></div>
+
+        <div class="logo-overlay">
+            <img src="~/Imagens/Logo.png" class="img-fluid" style="max-width: 200px;" />
+        </div>
+
+        <div class="login-card">
+            <form name="form1" method="post">
+                <input type="hidden" name="acao" value="@acao" />
+
+
+                <input type="text" class="form-control mb-3" name="cpf" placeholder="CPF" value="@cpf" />
+
+                <input type="password" class="form-control mb-3" name="senha" placeholder="Senha" value="@senha" />
+
+                <button class="btn btn-primary btn-sm" type="submit" onclick="acessar()"><i class="bi bi-door-open"></i> Acessar</button>
+
+            </form>
+        </div>
+        
+    </div>
+
+
 </body>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@*<body>
+    <div class="container-fluid vh-100">
+        <div class="row h-100">
+            <div class="col-md-6 p-0 position-relative overflow-hidden">
+                <div class="bg-image"></div>
+
+                <div class="logo-overlay">
+                    <img src="~/Imagens/Logo.png" class"img fluid" style="max-width: 300px;" />
+                </div>
+
+            </div>
+            <div class="col-md-6 d-flex justify-content-center align-items-center">
+                <div class="card shadow-sm p-4 justify-content-center align-items-center ">
+                    <form name="form1" method="post">
+                        <input type="hidden" name="acao" value="@acao" />
+
+
+                        <input type="text" class="form-control mb-3" name="cpf" placeholder="CPF" value="@cpf" />
+
+                        <input type="password" class="form-control mb-3" name="senha" placeholder="Senha" value="@senha" />
+
+                        <button class="btn btn-primary btn-sm" type="submit" onclick="acessar()"><i class="bi bi-door-open"></i> Acessar</button>
+
+                    </form>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</body>*@
+<script>
+    function acessar() {
+        document.form1.acao.value = "A"
+        document.form1.submit();
+    }
+</script>

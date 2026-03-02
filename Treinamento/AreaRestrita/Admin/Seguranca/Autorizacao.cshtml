@@ -26,6 +26,7 @@
 
     }
 
+    List<Botao> botoes = null;
     string acao = null;
     string idOperador = null;
     Autorizacao autorizacao = null;
@@ -36,6 +37,7 @@
     {
         acao = Util.ChecaNulo(Request.Form["acao"]);
         idOperador = Util.ChecaNulo(Request.Form["idOperador"]);
+        botoes = new BotaoDao().GetAll();
     }
 
     private void LimparVariaveis()
@@ -163,11 +165,14 @@
 
                 @if (autorizacoes != null)
                 {
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                        <div class="">
-                            <button class="btn btn-primary me-md-2" type="submit" onclick="Registrar()"><i class="bi bi-pencil-square"></i> Registrar</button>
+                    if (botoes.Any(x => x.Codigo == "A"))
+                    {
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <div class="">
+                                <button class="btn btn-primary me-md-2" type="submit" onclick="Registrar()"><i class="bi bi-pencil-square"></i> Registrar</button>
+                            </div>
                         </div>
-                    </div>
+                    }
                 }
 
             </div>
@@ -196,7 +201,14 @@
                                     <td class="text-center align-middle">@item.NomeMd</td>
                                     <td class="text-center align-middle">@item.NomePag</td>
                                     <td class="text-center align-middle">@item.NomeAcao</td>
-                                    <td class="text-center align-middle"><div class="form-check form-switch d-flex justify-content-center"><input class="form-check-input" type="checkbox" role="switch" name="idAcao" value="@item.IdAcao" @(item.IdAutorizacao != null ? "checked" : "")></div></td>
+                                    <td class="text-center align-middle">
+                                        @if (botoes.Any(x => x.Codigo == "A"))
+                                        {
+                                            <div class="form-check form-switch d-flex justify-content-center">
+                                                <input class="form-check-input" type="checkbox" role="switch" name="idAcao" value="@item.IdAcao" @(item.IdAutorizacao != null ? "checked" : "")>
+                                            </div>
+                                        }
+                                    </td>
                                 </tr>
                             }
                         </tbody>

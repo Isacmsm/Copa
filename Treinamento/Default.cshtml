@@ -1,7 +1,5 @@
 ﻿@{
-    Session["idOperador"] = "1";
-
-    if (string.IsNullOrWhiteSpace(Session["idOperador"].ToString()))
+    if (Session["idOperador"] == null)
     {
         Response.Redirect("/ControleAcesso");
     }

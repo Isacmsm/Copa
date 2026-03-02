@@ -29,6 +29,7 @@
     }
 
     string acao = null;
+    List<Botao> botoes = null;
     string idJogo = null;
     Participacao participacao = null;
     List<Jogo> jogos = null;
@@ -38,6 +39,7 @@
     {
         acao = Util.ChecaNulo(Request.Form["acao"]);
         idJogo = Util.ChecaNulo(Request.Form["idJogo"]);
+        botoes = new BotaoDao().GetAll();
     }
 
     //Metodo invocado após a manutenção paral limpar os valores das variáveis que estão na memoria do servidor.
@@ -64,7 +66,7 @@
         participacoes = new Dao().ExecutarAcaoList<Participacao>(acao, parametros);
     }
 
-    
+
 
     private void Manutencao()
     {
@@ -230,7 +232,12 @@
                                 <td class="text-center align-middle">@item.NomeTime</td>
                                 <td class="text-center align-middle">@item.NomeJogador</td>
                                 <td class="text-center align-middle">@item.GolsMarcados</td>
-                                <td><button class="btn btn-outline-success btn-sm" type="button" onclick="adicionarGol('@item.IdJogo', '@item.IdTime', '@item.IdJogador',)"><i class="fa fa-futbol-o"></i> Gol</button></td>
+                                <td>
+                                    @if (botoes.Any(x => x.Codigo == "A" || x.Codigo == "E"))
+                                    {
+                                        <button class="btn btn-outline-success btn-sm" type="button" onclick="adicionarGol('@item.IdJogo', '@item.IdTime', '@item.IdJogador',)"><i class="fa fa-futbol-o"></i> Gol</button>
+                                    }
+                                </td>
                             </tr>
                         }
                     </tbody>

@@ -35,6 +35,7 @@
 
     string acao = null;
     string idJogo = null;
+    List<Botao> botoes = null;
     Jogo jogo = null;
     List<Jogo> jogos = null;
     List<Time> times = null;
@@ -44,6 +45,7 @@
     {
         acao = Util.ChecaNulo(Request.Form["acao"]);
         idJogo = Util.ChecaNulo(Request.Form["idJogo"]);
+        botoes = new BotaoDao().GetAll();
 
         if (!string.IsNullOrWhiteSpace(Request.Form["view"]))
         {
@@ -223,9 +225,12 @@
 
                 @if (view == View.Index)
                 {
-                    <div class="col-md-4 mb-3">
-                        <button class="btn btn-primary btn-sm" type="submit" onclick="novo()"><i class="bi bi-file-earmark-plus"></i> Novo</button>
-                    </div>
+                    if (botoes.Any(x => x.Codigo == "I"))
+                    {
+                        <div class="col-md-4 mb-3">
+                            <button class="btn btn-primary btn-sm" type="submit" onclick="novo()"><i class="bi bi-file-earmark-plus"></i> Novo</button>
+                        </div>
+                    }
                 }
 
                 @if (view == View.New || view == View.Edit)
@@ -233,13 +238,13 @@
                     <div class="col-12 mb-5">
                         @if (view == View.New)
                         {
-                            <button class="btn btn-primary btn-sm" type="button" onclick="executarAcao('I')"><i class="bi bi-plus-circle-dotted"></i> Incluir</button>
+                            @PageHelper.MakeBotao(botoes, "I")
 
                         }
                         @if (view == View.Edit)
                         {
-                            <button class="btn btn-warning btn-sm" type="button" onclick="executarAcao('A')"><i class="bi bi-pencil-square"></i> Alterar</button>
-                            <button class="btn btn-danger btn-sm" type="button" onclick="executarAcao('E')"><i class="bi bi-trash3"></i> Excluir</button>
+                            @PageHelper.MakeBotao(botoes, "A")
+                            @PageHelper.MakeBotao(botoes, "E")
                         }
                     </div>
                 }
@@ -274,7 +279,12 @@
                                     <td class="text-center align-middle">@item.NomeTime1</td>
                                     <td class="text-center align-middle">@item.Placar1 x @item.Placar2</td>
                                     <td class="text-center align-middle">@item.NomeTime2</td>
-                                    <td><button class="btn btn-outline-dark btn-sm" type="button" onclick="editar('@item.IdJogo')">Editar</button></td>
+                                    <td>
+                                        @if (botoes.Any(x => x.Codigo == "A" || x.Codigo == "E"))
+                                        {
+                                            <button class="btn btn-outline-dark btn-sm" type="button" onclick="editar('@item.IdJogo')">Editar</button>
+                                        }
+                                    </td>
                                 </tr>
                             }
                         </tbody>
