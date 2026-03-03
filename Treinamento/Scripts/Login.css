@@ -17,24 +17,24 @@
 }
 
 
-.logo-overlay {
-    position: absolute;
-    top: 20%;
-    left: 60%;
-    transform: translate(-50%, -50%);
-    z-index: 2;
-}
-
-
 .login-card {
     position: absolute;
     top: 50%;
-    right: 30%;
-    transform: translateY(-50%);
-    width: 400px;
+    left: 50%;
+    transform: translate(-50%, -50%); 
+    width: 90%;
+    max-width: 400px; 
     padding: 50px;
     background: rgba(255, 255, 255, 0.97);
     border-radius: 25px;
     box-shadow: 0 30px 60px rgba(0,0,0,0.4);
     z-index: 3;
+}
+
+.logo-overlay {
+    position: absolute;
+    top: 20%;
+    left: 50%; 
+    transform: translateX(-50%);
+    z-index: 2;
 }
