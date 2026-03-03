@@ -47,8 +47,13 @@
                     {
                         if (sistemaAtual != item.CodigoSistema)
                         {
+
                             if (sistemaAtual != null)
                             {
+                                if (moduloAtual != null)
+                                {
+                                    @Html.Raw("</ul></li>")
+                                }
                                 @Html.Raw("</ul></li>")
                             }
                             sistemaAtual = item.CodigoSistema;
@@ -57,32 +62,40 @@
                             <text>
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" role="button"
-                                       data-bs-toggle="dropdown" aria-expanded="false">
+                                       data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
                                         @item.CaptionSistema
                                     </a>
                             </text>
-                            @Html.Raw(" <ul class=\"dropdown-menu\">")
+                            @Html.Raw("<ul class=\"dropdown-menu\">")
                         }
                         if (moduloAtual != item.CodigoModulo)
                         {
                             if (moduloAtual != null)
                             {
-                                @Html.Raw("<li><hr class=\"dropdown-divider\" /></li>")
+                                @Html.Raw("</ul></li>")
                             }
                             moduloAtual = item.CodigoModulo;
 
-                            <li class="dropdown-header fw-bold">@item.CaptionModulo</li>
+                            <text>
+                            <li class="dropend">
+                                <a class="dropdown-item dropdown-toggle" href="#" 
+                                   data-bs-toggle="dropdown" aria-expanded="false">
+                                    @item.CaptionModulo
+                                </a>
+                            </text>
+                            @Html.Raw("<ul class=\"dropdown-menu\">")
                         }
-                        <li>
-                            <a class="dropdown-item"
-                               href="~/AreaRestrita/@item.CodigoSistema/@item.CodigoModulo/@(item.CodigoPagina).cshtml">
-                                @item.CaptionPagina
-                            </a>
-                        </li>
+                    <li>
+                        <a class="dropdown-item"
+                           href="~/AreaRestrita/@item.CodigoSistema/@item.CodigoModulo/@(item.CodigoPagina).cshtml">
+                            @item.CaptionPagina
+                        </a>
+                    </li>
 
-                    }
+                }
                     @if (sistemaAtual != null)
                     {
+                        @Html.Raw("</ul></li>")
                         @Html.Raw("</ul></li>")
                     }
 
