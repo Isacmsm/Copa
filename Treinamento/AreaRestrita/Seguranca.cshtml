@@ -1,0 +1,13 @@
+﻿@functions{
+    private void VerificaSessao()
+    {
+        if (Session["idOperador"] == null)
+        {
+            Response.Redirect("/");
+        }
+    }
+}
+
+@{ 
+    VerificaSessao();
+}

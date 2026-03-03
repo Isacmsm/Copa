@@ -1,4 +1,5 @@
-﻿@{
+﻿@RenderPage("~/AreaRestrita/Seguranca.cshtml")
+@{
     Page.Title = "Times";
     Layout = "~/AreaRestrita/_Layout.cshtml";
 }
@@ -112,11 +113,15 @@
 
     }
 
+
+
     Util.ExceptionHandler(() =>
     {
         Consultar();
         CarregarDados();
     }, this.ModelState);
+
+
 
     if (time == null)
     {

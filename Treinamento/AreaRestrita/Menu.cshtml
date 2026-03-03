@@ -23,75 +23,167 @@
     }
 }
 
+@{
+    Consultar();
+    string sistemaAtual = null;
+    string moduloAtual = null;
+}
 
 
 
+@if (paginas != null && paginas.Any())
+{
+    <nav class="navbar navbar-expand-lg">
+        <div class="container-fluid">
 
+            <div class="d-flex flex-column align-items-center w-100">
 
-<nav class="navbar navbar-expand-lg">
-    <div class="container-fluid">
+                <a class="navbar-brand mb-1 mt-1" href="/">
+                    <img src="~/Imagens/Logo.png" alt="Logo" width="80" height="80">
+                </a>
 
-        <div class="d-flex flex-column align-items-center w-100">
-
-            <a class="navbar-brand mb-1 mt-1" href="/">
-                <img src="~/Imagens/Logo.png" alt="Logo" width="80" height="80">
-            </a>
-
-            <ul class="navbar-nav fs-5 d-flex flex-row gap-4">
-
-
-                @{
-                    Consultar();
-                }
-
-
-                @if (paginas != null && paginas.Any())
-                {
-                    var sistemas = paginas
-                        .GroupBy(s => new { s.CodigoSistema, s.CaptionSistema });
-
-                    foreach (var sistema in sistemas)
+                <ul class="navbar-nav fs-5 d-flex flex-row gap-4">
+                    @foreach (Pagina item in paginas)
                     {
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button"
-                               data-bs-toggle="dropdown" aria-expanded="false">
-                                @sistema.Key.CaptionSistema
+                        if (sistemaAtual != item.CodigoSistema)
+                        {
+                            if (sistemaAtual != null)
+                            {
+                                @Html.Raw("</ul></li>")
+                            }
+                            sistemaAtual = item.CodigoSistema;
+                            moduloAtual = null;
+
+                            <text>
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" role="button"
+                                       data-bs-toggle="dropdown" aria-expanded="false">
+                                        @item.CaptionSistema
+                                    </a>
+                            </text>
+                            @Html.Raw(" <ul class=\"dropdown-menu\">")
+                        }
+                        if (moduloAtual != item.CodigoModulo)
+                        {
+                            if (moduloAtual != null)
+                            {
+                                @Html.Raw("<li><hr class=\"dropdown-divider\" /></li>")
+                            }
+                            moduloAtual = item.CodigoModulo;
+
+                            <li class="dropdown-header fw-bold">@item.CaptionModulo</li>
+                        }
+                        <li>
+                            <a class="dropdown-item"
+                               href="~/AreaRestrita/@item.CodigoSistema/@item.CodigoModulo/@(item.CodigoPagina).cshtml">
+                                @item.CaptionPagina
                             </a>
-
-                            <ul class="dropdown-menu">
-
-                                @{
-                                    var modulos = sistema
-                                        .GroupBy(m => new { m.CodigoModulo, m.CaptionModulo });
-                                }
-
-                                @foreach (var modulo in modulos)
-                                {
-                                    <li class="dropdown-header fw-bold">
-                                        @modulo.Key.CaptionModulo
-                                    </li>
-
-                                    foreach (var pagina in modulo)
-                                    {
-                                        <li>
-                                            <a class="dropdown-item"
-                                               href="~/AreaRestrita/@sistema.Key.CodigoSistema/@modulo.Key.CodigoModulo/@(pagina.CodigoPagina).cshtml">
-                                                @pagina.CaptionPagina
-                                            </a>
-                                        </li>
-                                    }
-
-                                    <li><hr class="dropdown-divider" /></li>
-                                }
-                            </ul>
                         </li>
+
+                    }
+                    @if (sistemaAtual != null)
+                    {
+                        @Html.Raw("</ul></li>")
                     }
 
+
+                </ul>
+            </div>
+        </div>
+        <a class="btn btn-outline-danger" href="~/ControleAcesso/Sair.cshtml">Sair</a>
+    </nav>
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@*var sistemas = paginas
+        .GroupBy(s => new { s.CodigoSistema, s.CaptionSistema });
+
+    foreach (var sistema in sistemas)
+    {
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" role="button"
+           data-bs-toggle="dropdown" aria-expanded="false">
+            @sistema.Key.CaptionSistema
+        </a>
+
+        <ul class="dropdown-menu">
+
+            @{
+                var modulos = sistema
+                    .GroupBy(m => new { m.CodigoModulo, m.CaptionModulo });
+            }
+
+            @foreach (var modulo in modulos)
+            {
+                <li class="dropdown-header fw-bold">
+                    @modulo.Key.CaptionModulo
+                </li>
+
+                foreach (var pagina in modulo)
+                {
+                    <li>
+                        <a class="dropdown-item"
+                           href="~/AreaRestrita/@sistema.Key.CodigoSistema/@modulo.Key.CodigoModulo/@(pagina.CodigoPagina).cshtml">
+                            @pagina.CaptionPagina
+                        </a>
+                    </li>
                 }
 
-            </ul>
-        </div>
-    </div>
-</nav>
+                <li><hr class="dropdown-divider" /></li>
+            }
+        </ul>
+    </li>
+    }*@
 
-<a href="~/ControleAcesso/Sair.cshtml">Sair</a>
+
+
+
+
+
+
+@*<li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" role="button"
+           data-bs-toggle="dropdown" aria-expanded="false">
+            CopaLog
+        </a>
+        <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="~/AreaRestrita/Copa/Cadastro/Time.cshtml">Times</a></li>
+            <li><a class="dropdown-item" href="~/AreaRestrita/Copa/Cadastro/Jogador.cshtml">Jogadores</a></li>
+            <li><a class="dropdown-item" href="~/AreaRestrita/Copa/Cadastro/Jogos.cshtml">Jogos</a></li>
+            <li><a class="dropdown-item" href="~/AreaRestrita/Copa/Cadastro/Participacao.cshtml">Participações</a></li>
+            <li><h6 class="dropdown-header">Dropdown header</h6></li>
+            <li><a class="dropdown-item" href="~/AreaRestrita/Copa/Consulta/Classificacao.cshtml">Classificações</a></li>
+            <li><a class="dropdown-item" href="~/AreaRestrita/Copa/Consulta/Artilharia.cshtml">Artilharia</a></li>
+        </ul>
+    </li>
+
+
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" role="button"
+           data-bs-toggle="dropdown" aria-expanded="false">
+            Administração
+        </a>
+        <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="~/AreaRestrita/Admin/Cadastro/Sistema.cshtml">Sistema</a></li>
+            <li><a class="dropdown-item" href="~/AreaRestrita/Admin/Cadastro/Modulo.cshtml">Modulos</a></li>
+            <li><a class="dropdown-item" href="~/AreaRestrita/Admin/Cadastro/Pagina.cshtml">Paginas</a></li>
+            <li><a class="dropdown-item" href="~/AreaRestrita/Admin/Cadastro/Acao.cshtml">Ações</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="~/AreaRestrita/Admin/Segurança/Operador.cshtml">Operadores</a></li>
+            <li><a class="dropdown-item" href="~/AreaRestrita/Admin/Segurança/Autorizacao.cshtml">Autorizações</a></li>
+        </ul>
+    </li>*@
