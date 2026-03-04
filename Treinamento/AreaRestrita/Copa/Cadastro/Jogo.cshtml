@@ -24,6 +24,10 @@
         public string NomeTime2 { get; set; }
         public string Placar1 { get; set; }
         public string Placar2 { get; set; }
+        public string DataInicio { get; set; }
+        public string HoraInicio { get; set; }
+        public string DataFinal { get; set; }
+        public string HoraFinal { get; set; }
 
     }
 
@@ -93,6 +97,8 @@
         parametros.Add("@IdJogo", idJogo);
         parametros.Add("@IdTime1", jogo.IdTime1);
         parametros.Add("@IdTime2", jogo.IdTime2);
+        parametros.Add("@DataHoraInicio", DateTime.Parse($"{jogo.DataInicio} {jogo.HoraInicio}").ToString("yyyy-MM-dd HH:mm:ss"));
+        parametros.Add("@DataHoraFinal", DateTime.Parse($"{jogo.DataFinal} {jogo.HoraFinal}").ToString("yyyy-MM-dd HH:mm:ss"));
 
         new Dao().ExecutarAcao(acao, parametros);
 
@@ -123,7 +129,12 @@
             {
                 IdJogo = Util.ChecaNulo(Request.Form["idJogo"]),
                 IdTime1 = Util.ChecaNulo(Request.Form["idTime1"]),
-                IdTime2 = Util.ChecaNulo(Request.Form["idTime2"])
+                IdTime2 = Util.ChecaNulo(Request.Form["idTime2"]),
+                DataInicio = Util.ChecaNulo(Request.Form["dataInicio"]),
+                HoraInicio = Util.ChecaNulo(Request.Form["horaInicio"]),
+                DataFinal = Util.ChecaNulo(Request.Form["dataFinal"]),
+                HoraFinal = Util.ChecaNulo(Request.Form["horaFinal"])
+                
 
             };
             Manutencao();
@@ -206,7 +217,7 @@
                         <select class="form-select @IsInvalid("idtime2")" name="idTime2" id="idTime2">
 
                             <option value="">
-                                Selecione um Jogo
+                                Selecione o Time Adversario
                             </option>
                             @foreach (Time item in times)
                             {
@@ -220,6 +231,37 @@
 
                     <div class="col-md-3">
                         <button class="btn btn-outline-primary" type="submit" onclick="estadoInicial()"><i class="bi bi-eraser"></i> Limpar</button>
+                    </div>
+
+
+                    <div class="col-md-4">
+                        <label for="data" class="form-label">Escolha uma data do inicio do jogo</label>
+                        <input type="date" class="form-control @IsInvalid("dataInicio")" id="dataInicio" name="dataInicio" value="@jogo.DataInicio">
+                        @PageHelper.MakeFeedBack("dataInicio")
+                    </div>
+
+                    <div class="col-md-1 text-center">
+
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="data" class="form-label">Escolha uma data do fim do jogo</label>
+                        <input type="date" class="form-control @IsInvalid("dataFinal")" id="dataFinal" name="dataFinal" value="@jogo.DataFinal">
+                        @PageHelper.MakeFeedBack("dataFinal")
+                    </div>
+
+                    <div class="col-md-4">
+                        <input type="time" step="1" class="form-control @IsInvalid("horaInicio")" id="horaInicio" name="horaInicio" placeholder="Selecione um horário" value="@jogo.HoraInicio">
+                        @PageHelper.MakeFeedBack("horaInicio")
+                    </div>
+
+                    <div class="col-md-1 text-center">
+
+                    </div>
+
+                    <div class="col-md-4">
+                        <input type="time" step="1" class="form-control @IsInvalid("horaFinal")" id="horaFinal" name="horaFinal" placeholder="Selecione um horário" value="@jogo.HoraFinal">
+                        @PageHelper.MakeFeedBack("horaFinal")
                     </div>
                 }
 
@@ -258,9 +300,11 @@
                     <table class="table table-striped rounded mb-0">
                         <colgroup>
                             <col style="width: 5%" />
-                            <col style="width: 30%" />
-                            <col style="width: 30%" />
-                            <col style="width: 30%" />
+                            <col style="width: 18%" />
+                            <col style="width: 18%" />
+                            <col style="width: 18%" />
+                            <col style="width: 18%" />
+                            <col style="width: 18%"  />
                             <col style="width: 5%" />
                         </colgroup>
                         <thead>
@@ -269,6 +313,8 @@
                                 <th class="text-center align-middle">Time 1</th>
                                 <th class="text-center align-middle">Placar</th>
                                 <th class="text-center align-middle">Time 2</th>
+                                <th class="text-center align-middle">Data do Inicio</th>
+                                <th class="text-center align-middle">Fim do Jogo</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -280,6 +326,9 @@
                                     <td class="text-center align-middle">@item.NomeTime1</td>
                                     <td class="text-center align-middle">@item.Placar1 x @item.Placar2</td>
                                     <td class="text-center align-middle">@item.NomeTime2</td>
+                                    <td class="text-center align-middle">@Util.FormatarData(@item.DataInicio, 103) @Util.FormatarData(@item.HoraInicio, 200)</td>
+                                    <td class="text-center align-middle">@Util.FormatarData(@item.DataFinal, 103) @Util.FormatarData(@item.HoraFinal, 200)</td>
+                                    
                                     <td>
                                         @if (botoes.Any(x => x.Codigo == "A" || x.Codigo == "E"))
                                         {

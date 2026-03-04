@@ -39,4 +39,22 @@ public static class Util
             model.AddError("alert-danger", ex.Message);
         }
     }
+
+    public static string FormatarData(string data, int style)
+    {
+        if (string.IsNullOrWhiteSpace(data)) 
+            return null;
+
+        if (!DateTime.TryParse(data, out DateTime dt)) 
+            return null;
+
+        switch (style)
+        {
+            case 103: return dt.ToString("dd/MM/yyyy"); 
+            case 108: return dt.ToString("HH:mm:ss"); 
+            case 23: return dt.ToString("yyyy-MM-dd"); 
+            case 200: return dt.ToString("HH:mm"); 
+            default: return dt.ToString();
+        }
+    }
 }
