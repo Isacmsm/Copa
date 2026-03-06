@@ -26,6 +26,9 @@
         public string NomeTime { get; set; }
         public string NomeJogador { get; set; }
         public int GolsMarcados { get; set; }
+        public bool Capitao { get; set; }
+        public bool Tecnico { get; set; }
+        public bool Suspenso { get; set; }
 
     }
 
@@ -173,40 +176,66 @@
 
                 }
 
+                @{
+                    var suspensos = participacoes?.Where(x => x.Suspenso).ToList();
+                    bool temSuspensos = suspensos != null && suspensos.Any();
+                }
+
                 @if (jogoSelecionado != null)
                 {
-                    <div class="col-lg-6 mb-4 mx-auto">
+                    <div class="row justify-content-center">
 
-                        <div class="card shadow-sm p-4 campo-card">
+                        <div class="@(temSuspensos ? "col-lg-5" : "col-lg-6") mb-4">
+                            <div class="card shadow-sm p-4 campo-card">
+                                <div class="linha-meio-topo"></div>
+                                <div class="linha-meio-baixo"></div>
 
-                            <div class="linha-meio-topo"></div>
-                            <div class="linha-meio-baixo"></div>
+                                <div class="row align-items-center justify-content-center">
 
-                            <div class="row align-items-center justify-content-center">
+                                    <div class="col-md-4 text-end">
+                                        <h4 class="fw-bold mb-0">@jogoSelecionado.NomeTime1</h4>
+                                        <span class="display-4 fw-bold text-primary">
+                                            @jogoSelecionado.Placar1
+                                        </span>
+                                    </div>
 
-                                <div class="col-md-4 text-end">
-                                    <h4 class="fw-bold mb-0">@jogoSelecionado.NomeTime1</h4>
-                                    <span class="display-4 fw-bold text-primary">
-                                        @jogoSelecionado.Placar1
-                                    </span>
+                                    <div class="col-md-2 text-center">
+                                        <span class="display-5 fw-bold">
+                                            <i class="fa fa-futbol-o"></i>
+                                        </span>
+                                    </div>
+
+                                    <div class="col-md-4 text-start">
+                                        <span class="display-4 fw-bold text-primary">
+                                            @jogoSelecionado.Placar2
+                                        </span>
+                                        <h4 class="fw-bold mb-0">@jogoSelecionado.NomeTime2</h4>
+                                    </div>
+
                                 </div>
-
-                                <div class="col-md-2 text-center">
-                                    <span class="display-5 fw-bold">
-                                        <i class="fa fa-futbol-o"></i>
-                                    </span>
-                                </div>
-
-                                <div class="col-md-4 text-start">
-                                    <span class="display-4 fw-bold text-primary">
-                                        @jogoSelecionado.Placar2
-                                    </span>
-                                    <h4 class="fw-bold mb-0">@jogoSelecionado.NomeTime2</h4>
-                                </div>
-
+                                <div class="gol-direito"></div>
                             </div>
-                            <div class="gol-direito"></div>
                         </div>
+
+                        @if (temSuspensos)
+                        {
+                            <div class="col-lg-4 mb-4">
+                                <div class="card shadow-sm p-3 border-danger">
+                                    <div class="card-header bg-danger text-white fw-bold">
+                                        <i class="bi bi-person-fill-dash"></i> Suspensos
+                                    </div>
+                                    <ul class="list-group list-group-flush">
+                                        @foreach (var s in suspensos)
+                                        {
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <span class="text-danger fw-bold">@s.NomeJogador</span>
+                                                <span class="badge bg-secondary">@s.NomeTime</span>
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
+                            </div>
+                        }
 
                     </div>
                 }
@@ -229,17 +258,27 @@
                     <tbody class="table-group-divider">
                         @foreach (Participacao item in participacoes)
                         {
-                            <tr>
-                                <td class="text-center align-middle">@item.NomeTime</td>
-                                <td class="text-center align-middle">@item.NomeJogador</td>
-                                <td class="text-center align-middle">@item.GolsMarcados</td>
-                                <td>
-                                    @if (botoes.Any(x => x.Codigo == "A" || x.Codigo == "E"))
-                                    {
-                                        <button class="btn btn-outline-success btn-sm" type="button" onclick="adicionarGol('@item.IdJogo', '@item.IdTime', '@item.IdJogador',)"><i class="fa fa-futbol-o"></i> Gol</button>
-                                    }
-                                </td>
-                            </tr>
+                            if (!item.Suspenso)
+                            {
+                                <tr>
+                                    <td class="text-center align-middle">@item.NomeTime</td>
+                                    <td class="text-center align-middle">
+                                        @if (item.Capitao)
+                                        {<i class="bi bi-star-fill text-warning"></i>}
+
+                                        @if (item.Tecnico)
+                                        {<i class="bi bi-person-badge text-info"></i>}
+                                        @item.NomeJogador
+                                    </td>
+                                    <td class="text-center align-middle">@item.GolsMarcados</td>
+                                    <td>
+                                        @if ((botoes.Any(x => x.Codigo == "A" || x.Codigo == "E")) && !item.Tecnico)
+                                        {
+                                            <button class="btn btn-outline-success btn-sm" type="button" onclick="adicionarGol('@item.IdJogo', '@item.IdTime', '@item.IdJogador',)"><i class="fa fa-futbol-o"></i> Gol</button>
+                                        }
+                                    </td>
+                                </tr>
+                            }
                         }
                     </tbody>
                 </table>

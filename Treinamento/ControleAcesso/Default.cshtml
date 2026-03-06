@@ -47,7 +47,11 @@
     AlimentarVariaveis();
     if (acao == "A")
     {
-        Consultar();
+        Util.ExceptionHandler(() =>
+        {
+            Consultar();
+
+        }, this.ModelState);
     }
 }
 
@@ -105,6 +109,7 @@ else
                                    placeholder="CPF"
                                    value="@cpf"
                                    autocomplete="username" />
+                            @PageHelper.MakeFeedBack("cpf")
                         </div>
 
                         <div class="input-group-custom">
@@ -113,6 +118,7 @@ else
                                    name="senha"
                                    placeholder="Senha"
                                    autocomplete="current-password" />
+                            @PageHelper.MakeFeedBack("senha")
                         </div>
 
                         <button class="btn-login" type="button" onclick="acessar()">

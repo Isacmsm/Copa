@@ -304,7 +304,7 @@
                             <col style="width: 18%" />
                             <col style="width: 18%" />
                             <col style="width: 18%" />
-                            <col style="width: 18%"  />
+                            <col style="width: 18%" />
                             <col style="width: 5%" />
                         </colgroup>
                         <thead>
@@ -328,7 +328,7 @@
                                     <td class="text-center align-middle">@item.NomeTime2</td>
                                     <td class="text-center align-middle">@Util.FormatarData(@item.DataInicio, 103) @Util.FormatarData(@item.HoraInicio, 200)</td>
                                     <td class="text-center align-middle">@Util.FormatarData(@item.DataFinal, 103) @Util.FormatarData(@item.HoraFinal, 200)</td>
-                                    
+
                                     <td>
                                         @if (botoes.Any(x => x.Codigo == "A" || x.Codigo == "E"))
                                         {
@@ -347,6 +347,7 @@
     </form>
     <script src="~/Scripts/Scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    
     <script>
 
         function editar(idJogo) { // recebe as informações do html, ao capturar o evento onclick, e altera o estado do html do forms para ser depois capturado pelo servidor
@@ -354,10 +355,14 @@
             document.form1.view.value = "@((int)View.Edit)";
             executarAcao("C")
         }
+
+        
         function novo() {
             document.form1.view.value = "@((int)View.New)";
             document.form1.submit();
         }
+
+        
 
     </script>
 
