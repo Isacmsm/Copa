@@ -13,7 +13,8 @@ public class Dao
         public string NomeProcedure { get; set; }
     }
 
-    private readonly string stringConexao = "Server=LOG-ISAC; Database=dbTreinamento; Trusted_Connection = True;"; 
+    //private readonly string stringConexao = "Server=LOG-ISAC; Database=dbTreinamento; Trusted_Connection = True;"; 
+    private readonly string stringConexao = "Server=ISACPC\\SQLEXPRESS; Database=dbTreinamento; Trusted_Connection = True;";
 
     public void ExecutarProcedure(string procedure, Dictionary<string, object> parametros)
     {

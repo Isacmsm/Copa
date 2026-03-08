@@ -23,6 +23,7 @@
 
     }
 
+    string senha = null;
     string acao = null;
     string idOperador = null;
     Operador operador = null;
@@ -49,6 +50,36 @@
         idOperador = null;
         operador = null;
 
+    }
+
+    private void GerarSenha()
+    {
+        string minusculas = "abcdefghijklmnopqrstuvwxyz";
+        string especiais = "!@#$%^&*()-_=+[{]};:'\",<.>/?\\|";
+        string maiusculas = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        string numeros = "0123456789";
+        string todosOsCaracteres = minusculas + maiusculas + especiais + numeros;
+        List<char> senhalist = new List<char>();
+        Random random = new Random();
+        senhalist.Add(minusculas[random.Next(0, minusculas.Length)]);
+        senhalist.Add(maiusculas[random.Next(0, maiusculas.Length)]);
+        senhalist.Add(numeros[random.Next(0, numeros.Length)]);
+        senhalist.Add(especiais[random.Next(0, especiais.Length)]);
+        do
+        {
+            senhalist.Add(todosOsCaracteres[random.Next(0, todosOsCaracteres.Length)]);
+        } while (senhalist.Count < 12);
+
+        for (int i = 0; i < senhalist.Count; i++)
+        {
+            char temp;
+            int j = random.Next(0, senhalist.Count);
+            temp = senhalist[j];
+            senhalist[j] = senhalist[i];
+            senhalist[i] = temp;
+        }
+
+        senha = new string(senhalist.ToArray());
     }
 
     private void Consultar()
@@ -113,6 +144,12 @@
         }, this.ModelState);
 
     }
+    else if (acao == "SENHA")
+    {
+        GerarSenha();
+        Response.Write(senha);
+        Response.End();
+    }
 
     Util.ExceptionHandler(() =>
     {
@@ -173,10 +210,13 @@
                     </div>
 
                     <div class="col-md-4">
-                        <input class="form-control @IsInvalid("senha")" placeholder="Senha" type="text" name="senha" id="senha" value="@operador.Senha" />
+                        <div class="d-flex gap-2">
+                            <input class="form-control flex-grow-1 @IsInvalid("senha")" placeholder="Senha" type="text" name="senha" id="senha" value="@operador.Senha" />
+                            <button class="btn btn-outline-primary" style="white-space: nowrap" type="button" onclick="gerarSenha()"> Gerar Senha</button>
+                        </div>
                         @PageHelper.MakeFeedBack("senha")
                     </div>
-
+                    
 
                     <div class="col-md-4">
                         <button class="btn btn-outline-primary" type="submit" onclick="estadoInicial()"><i class="bi bi-eraser-fill"></i> Limpar</button>
@@ -278,6 +318,16 @@
         function novo() {
             document.form1.view.value = "@((int)View.New)";
             document.form1.submit();
+        }
+
+        function gerarSenha() {
+            $.ajax({
+                method: "POST",
+                url: "/AreaRestrita/Admin/Seguranca/Operador.cshtml",
+                data: { acao: "SENHA"}
+            }).done(function (res) {
+                $("#senha").val(res)
+            })
         }
     </script>
 
