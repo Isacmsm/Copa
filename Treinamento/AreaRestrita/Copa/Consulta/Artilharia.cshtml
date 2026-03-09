@@ -6,9 +6,9 @@
 
 
 @functions {
-    private class Artilharia //Definindo a Classe Time
+    private class Artilharia 
     {
-        public string NomeTime { get; set; } // e suas propiedades (todo Objeto Time tem um IdTime e um Nome.
+        public string NomeTime { get; set; }
         public string NomeJogador { get; set; }
         public string GolsMarcados { get; set; }
 
@@ -22,8 +22,7 @@
     private void Consultar()
     {
 
-        artilheiros = new Dao().ExecutarAcaoList<Artilharia>("C", null); //Ta executando o metodo ExecutarProcedureList definindo a Classe Time no coringa do metodo
-                                                                         //e qual tipo de procedure, deixando os parametros nulos
+        artilheiros = new Dao().ExecutarAcaoList<Artilharia>("C", null); 
     }
 
 }

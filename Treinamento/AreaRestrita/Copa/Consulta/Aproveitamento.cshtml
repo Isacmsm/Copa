@@ -1,0 +1,182 @@
+@RenderPage("~/AreaRestrita/Seguranca.cshtml")
+@{
+    Page.Title = "Aproveitamento";
+    Layout = "~/AreaRestrita/_Layout.cshtml";
+}
+
+@using Newtonsoft.Json
+
+
+@functions {
+    private class Time
+    {
+        public string IdTime { get; set; }
+        public string Nome { get; set; }
+    }
+
+    public class Jogador
+    {
+        public string IdJogador { get; set; }
+        public string IdTime { get; set; }
+        public string Nome { get; set; }
+    }
+
+    public class JogadorJson
+    {
+        public string Id { get; set; }
+        public string Nome { get; set; }
+    }
+    public class TimeJson
+    {
+        public string Id { get; set; }
+        public string Nome { get; set; }
+        public List<JogadorJson> jogadores { get; set; }
+
+    }
+
+    public class Retorno
+    {
+        public string Json { get; set; }
+    }
+
+    public class JogadorRetorno
+    {
+        public string Id { get; set; }
+        public string Nome { get; set; }
+        public int Gols { get; set; }
+        public decimal Salario { get; set; }
+        public decimal Aproveitamento { get; set; }
+
+    }
+    public class TimeRetorno
+    {
+        public string Id { get; set; }
+        public string Nome { get; set; }
+        public decimal Aproveitamento { get; set; }
+        public decimal FolhaPagamento { get; set; }
+        public int Gols { get; set; }
+        public List<JogadorRetorno> jogadores { get; set; }
+
+    }
+
+    List<Time> times = null;
+    List<Jogador> jogadores = null;
+    List<TimeJson> timesJson = null;
+    string jsonEnvio = null;
+    Retorno retorno = null;
+    List<TimeRetorno> timesRetorno = null;
+
+
+
+
+
+    private void ConsultarTime()
+    {
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@Tipo", 1);
+
+        times = new Dao().ExecutarAcaoList<Time>("C", parametros);
+    }
+
+    private void ConsultarJogador()
+    {
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@Tipo", 2);
+
+        jogadores = new Dao().ExecutarAcaoList<Jogador>("C", parametros);
+    }
+
+}
+
+@{
+    ConsultarTime();
+    ConsultarJogador();
+    timesJson = new List<TimeJson>();
+    foreach (Time item in times)
+    {
+        TimeJson timeJson = new TimeJson()
+        {
+            Id = item.IdTime,
+            Nome = item.Nome,
+
+        };
+        List<JogadorJson> jogadoresJson = new List<JogadorJson>();
+
+        foreach (var Jogador in jogadores)
+        {
+            if (Jogador.IdTime == item.IdTime)
+            {
+                JogadorJson jogadorJson = new JogadorJson()
+                {
+                    Id = Jogador.IdJogador,
+                    Nome = Jogador.Nome
+                };
+
+                jogadoresJson.Add(jogadorJson);
+            }
+        }
+        timeJson.jogadores = jogadoresJson;
+        timesJson.Add(timeJson);
+    }
+    jsonEnvio = JsonConvert.SerializeObject(timesJson);
+}
+
+
+
+    @section head {
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    }
+
+    <body>
+        <div class="container">
+            <div class="row g-3">
+                <div class="col-12">
+                    @RenderPage("~/AreaRestrita/Menu.cshtml")
+                </div>
+
+                <div class="col-12 mb-5 text-center">
+                    <h1>Aproveitamento</h1>
+                </div>
+            </div>
+
+
+
+
+
+
+
+            @if (artilheiros != null) // se a lista de times não estiver vazia ele vai criar a tabela dos times no site
+            {
+                <div>
+                    <table class="table table-striped rounded mb-0">
+                        <colgroup>
+                            <col style="width: 10%" />
+                            <col style="width: 30%" />
+                            <col style="width: 10%" />
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th class="text-center align-middle">Time</th>
+                                <th class="text-center align-middle">Artilheiros</th>
+                                <th class="text-center align-middle">Gols</th>
+                            </tr>
+                        </thead>
+                        <tbody class="table-group-divider">
+                            @foreach (Artilharia item in artilheiros) //vai pecorrer todos os itens da lista times e vai criar uma coluna da tabela para cada Time com as suas propiedades
+                            {
+                                <tr>
+                                    <td class="text-center align-middle">@item.NomeTime</td>
+                                    <td class="text-center align-middle">@item.NomeJogador</td>
+                                    <td class="text-center align-middle">@item.GolsMarcados</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+            }
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    </body>
+
+
