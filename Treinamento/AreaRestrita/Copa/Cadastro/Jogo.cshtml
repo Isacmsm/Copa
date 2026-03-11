@@ -28,6 +28,7 @@
         public string HoraInicio { get; set; }
         public string DataFinal { get; set; }
         public string HoraFinal { get; set; }
+        public string CaminhoArq { get; set; }
 
     }
 
@@ -45,7 +46,11 @@
     List<Jogo> jogos = null;
     List<Time> times = null;
     View view = View.Index;
-
+    string extencoesValidas = ".pdf";
+    HttpPostedFileBase arquivo = null;
+    string caminhoArquivo = null;
+    string caminhoLogico = null;
+    int tipo;
     private void AlimentaVariaveis()
     {
         acao = Util.ChecaNulo(Request.Form["acao"]);
@@ -55,6 +60,15 @@
         if (!string.IsNullOrWhiteSpace(Request.Form["view"]))
         {
             view = (View)Enum.Parse(typeof(View), Request.Form["view"]);
+        }
+
+        if (Request.Files.Count > 0)
+        {
+            arquivo = Request.Files["arquivo"];
+        }
+        if (!string.IsNullOrWhiteSpace(Request.Form["tipo"]))
+        {
+            tipo = int.Parse(Request.Form["tipo"]);
         }
     }
 
@@ -99,9 +113,61 @@
         parametros.Add("@IdTime2", jogo.IdTime2);
         parametros.Add("@DataHoraInicio", DateTime.Parse($"{jogo.DataInicio} {jogo.HoraInicio}").ToString("yyyy-MM-dd HH:mm:ss"));
         parametros.Add("@DataHoraFinal", DateTime.Parse($"{jogo.DataFinal} {jogo.HoraFinal}").ToString("yyyy-MM-dd HH:mm:ss"));
+        parametros.Add("@Tipo", 1);
 
         new Dao().ExecutarAcao(acao, parametros);
 
+    }
+
+    private void ManutencaoArquivo()
+    {
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@IdJogo", idJogo);
+        parametros.Add("@CaminhoArq", jogo.CaminhoArq);
+        parametros.Add("@Tipo", tipo);
+
+        new Dao().ExecutarAcao(acao, parametros);
+
+    }
+
+    private void Excluir()
+    {
+        File.Delete(Server.MapPath($"arquivos/{idJogo}/sumula.pdf"));
+
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@IdJogo", idJogo);
+        parametros.Add("@Tipo", tipo);
+
+        new Dao().ExecutarAcao(acao, parametros);
+
+    }
+
+    private void SalvarArquivo()
+    {
+        if (arquivo == null)
+        {
+            throw new InvalidOperationException("Anexe o arquivo");
+        }
+        if (string.IsNullOrWhiteSpace(arquivo.FileName))
+        {
+            throw new InvalidOperationException("Não foi possivel identificar o nome do arquivo!");
+        }
+
+        if (arquivo.ContentLength > 512 * 1000)
+        {
+            ModelState.AddError("arquivo", "Arquivo deve ter o tamanho de até 512KB");
+            return;
+        }
+        if (!Directory.Exists(Server.MapPath($"arquivos/{idJogo}")))
+        {
+            Directory.CreateDirectory(Server.MapPath($"arquivos/{idJogo}"));
+        }
+
+        caminhoArquivo = Path.Combine(Server.MapPath($"arquivos/{idJogo}/sumula.pdf"));
+
+        arquivo.SaveAs(caminhoArquivo);
+
+        caminhoLogico = $"~/AreaRestrita/arquivos/{idJogo}/sumula.pdf";
     }
 
     private void CarregarDados()
@@ -121,7 +187,7 @@
 @{
     AlimentaVariaveis();
 
-    if (acao == "I" || acao == "A" || acao == "E")
+    if ((acao == "I" || acao == "A" || acao == "E") && !(Request.Files.Count > 0) && tipo != 3)
     {
         Util.ExceptionHandler(() =>
         {
@@ -134,7 +200,7 @@
                 HoraInicio = Util.ChecaNulo(Request.Form["horaInicio"]),
                 DataFinal = Util.ChecaNulo(Request.Form["dataFinal"]),
                 HoraFinal = Util.ChecaNulo(Request.Form["horaFinal"])
-                
+
 
             };
             Manutencao();
@@ -143,6 +209,30 @@
             view = View.Index;
         }, this.ModelState);
     }
+    else if (acao == "A" && Request.Files.Count > 0)
+    {
+        Util.ExceptionHandler(SalvarArquivo, this.ModelState);
+
+        Util.ExceptionHandler(() =>
+        {
+            jogo = new Jogo()
+            {
+                IdJogo = Util.ChecaNulo(Request.Form["idJogo"]),
+                CaminhoArq = Util.ChecaNulo(caminhoLogico)
+            };
+            tipo = 2;
+            ManutencaoArquivo();
+            ModelState.AddError("alert-success", "Operação realizada com sucesso");
+
+        }, this.ModelState);
+
+    }
+    else if (acao == "A" && tipo == 3)
+    {
+        Excluir();
+        
+    }
+
 
     Util.ExceptionHandler(() =>
     {
@@ -164,13 +254,15 @@
 }
 
 @section head {
+    <link rel="stylesheet" href="~/Scripts/Style.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
 }
 
 <body>
-    <form name="form1" method="post">
+    <form name="form1" method="post" enctype="multipart/form-data">
         <input type="hidden" name="acao" id="acao" />
         <input type="hidden" name="idJogo" id="idJogo" value="@idJogo" />
         <input type="hidden" name="view" id="view" value="@((int)view)" />
@@ -292,6 +384,81 @@
                     </div>
                 }
             </div>
+            <div class="modal fade" id="modalArq" tabindex="-1" aria-labelledby="modalArqLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h1 class="modal-title fs-5" id="modalArqLabel">Resumo/súmula do jogo</h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row justify-content-center">
+                                <div class="col-lg-12 mb-4">
+                                    <div class="card shadow-sm p-4 campo-card">
+                                        <div class="linha-meio-topo"></div>
+                                        <div class="linha-meio-baixo"></div>
+
+                                        <div class="row align-items-center justify-content-center">
+
+                                            <div class="col-md-4 text-end">
+                                                <h4 id="modalTime1" class="fw-bold mb-0"></h4>
+                                                <span id="modalPlacar1" class="display-4 fw-bold text-primary"></span>
+                                            </div>
+
+                                            <div class="col-md-2 text-center">
+                                                <span class="display-5 fw-bold">
+                                                    <i class="fa fa-futbol-o"></i>
+                                                </span>
+                                            </div>
+
+                                            <div class="col-md-4 text-start">
+                                                <span id="modalPlacar2" class="display-4 fw-bold text-primary"></span>
+                                                <h4 id="modalTime2" class="fw-bold mb-0"></h4>
+                                            </div>
+
+                                        </div>
+                                        <div class="gol-direito"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="modalAlerta"></div>
+                            @PageHelper.MakeAlert()
+                            <div class="nt-5">
+                                <div class="row">
+                                    <div class="col">
+                                        <input type="hidden" id="modalIdJogo" />
+                                        <input type="file" id="arquivo" name="arquivo" class="form-control @IsInvalid("arquivo")" onchange="checkFile(this)" />
+                                        @PageHelper.MakeFeedBack("arquivo")
+                                    </div>
+
+                                    <div class="col-auto">
+                                        <button type="button" class="btn btn-primary" id="botaoUpload">Enviar</button>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <div class="small text-muted">Extenções válidas: @extencoesValidas</div>
+                                    <div class="small text-muted">Tamanho do máximo do arquivo: 512kb</div>
+                                </div>
+                            </div>
+                            <div class="card mt-3" id="cardSumula">
+                                <div class="card-header">Súmula</div>
+                                <div class="card-body">
+                                    <div id="semSumula">
+                                        <span class="text-muted">Nenhuma súmula anexada</span>
+                                    </div>
+                                    <div id="comSumula" style="display:none">
+                                        <a id="linkDownload" target="_blank">Baixar súmula</a>
+                                        <a id="linkExcluir" href="javascript:void(0)" class="ms-3">Excluir</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             @if (view == View.Index)
             {
@@ -321,7 +488,7 @@
                         <tbody class="table-group-divider">
                             @foreach (Jogo item in jogos)
                             {
-                                <tr>
+                                <tr data-idjogo="@item.IdJogo" data-time1="@item.NomeTime1" data-time2="@item.NomeTime2" data-placar1="@item.Placar1" data-placar2="@item.Placar2" data-caminhoarq="@item.CaminhoArq">
                                     <td class="text-center align-middle">#@item.IdJogo</td>
                                     <td class="text-center align-middle">@item.NomeTime1</td>
                                     <td class="text-center align-middle">@item.Placar1 x @item.Placar2</td>
@@ -332,7 +499,7 @@
                                     <td>
                                         @if (botoes.Any(x => x.Codigo == "A" || x.Codigo == "E"))
                                         {
-                                            <button class="btn btn-outline-dark btn-sm" type="button" onclick="editar('@item.IdJogo')">Editar</button>
+                                            <button class="btn btn-outline-dark btn-sm" type="button" onclick="editar('@item.IdJogo', event)">Editar</button>
                                         }
                                     </td>
                                 </tr>
@@ -347,22 +514,117 @@
     </form>
     <script src="~/Scripts/Scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     <script>
 
-        function editar(idJogo) { // recebe as informações do html, ao capturar o evento onclick, e altera o estado do html do forms para ser depois capturado pelo servidor
+        function editar(idJogo, event) {
+            event.stopPropagation();
             document.form1.idJogo.value = idJogo;
             document.form1.view.value = "@((int)View.Edit)";
             executarAcao("C")
         }
 
-        
+
         function novo() {
             document.form1.view.value = "@((int)View.New)";
             document.form1.submit();
         }
 
-        
+        $(document).ready(function () {
+            $("tbody tr").click(function () {
+                var idJogo = $(this).data("idjogo");
+                var time1 = $(this).data("time1");
+                var time2 = $(this).data("time2");
+                var placar1 = $(this).data("placar1");
+                var placar2 = $(this).data("placar2");
+                var arqCaminho = "/AreaRestrita/arquivos/" + idJogo + "/sumula.pdf";
+                var caminhoArq = $(this).data("caminhoarq");
+
+                $("#modalTime1").text(time1);
+                $("#modalTime2").text(time2);
+                $("#modalPlacar1").text(placar1);
+                $("#modalPlacar2").text(placar2);
+                $("#modalIdJogo").val(idJogo);
+
+
+                $("#modalArq").modal("show");
+
+                if (caminhoArq) {
+                    $("#semSumula").hide();
+                    $("#comSumula").show();
+                    $("#linkDownload").attr("href", caminhoArq);
+                } else {
+                    $("#semSumula").show();
+                    $("#comSumula").hide();
+                }
+            });
+        });
+
+        function checkFile(input) {
+            const extencoesValidas = "@extencoesValidas".toLocaleUpperCase().split(",");
+            const extencaoArquivo = input.value.substring(input.value.lastIndexOf("."));
+
+            if (extencoesValidas.indexOf(extencaoArquivo.toLocaleUpperCase()) < 0) {
+                alert("Formato de arquivo invalido. Extenções aceitas: " + extencoesValidas);
+                input.value = "";
+                return false
+            }
+            return true
+        }
+
+        $('#botaoUpload').on('click', function () {
+            var formData = new FormData();
+            var arquivo = $('#arquivo')[0].files[0];
+            var idjogo = $("#modalIdJogo").val();
+            var acao = "A";
+
+            if (arquivo) {
+                formData.append('arquivo', arquivo);
+                formData.append('idJogo', idjogo);
+                formData.append('acao', acao);
+
+                $.ajax({
+                    type: "POST",
+                    url: '/AreaRestrita/Copa/Cadastro/Jogo.cshtml',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (response) {
+                        $("#modalAlerta").html('<div class="alert alert-success">Operação realizada com sucesso</div>');
+                        var novosCaminho = "/AreaRestrita/arquivos/" + idjogo + "/sumula.pdf";
+
+                        $("#semSumula").hide();
+                        $("#comSumula").show();
+                        $("#linkDownload").attr("href", novosCaminho);
+                    },
+                    error: function (xhr) {
+                        $("#modalAlerta").html('<div class="alert alert-danger">Upload falhou</div>');
+                    }
+
+                });
+            }
+        });
+
+        $('#linkExcluir').on('click', function () {
+            var idjogo = $("#modalIdJogo").val();
+
+            $.ajax({
+                type: "POST",
+                url: '/AreaRestrita/Copa/Cadastro/Jogo.cshtml',
+                data: { acao: "A", idJogo: idjogo, tipo: 3 },
+                success: function () {
+                    $('tr[data-idjogo="' + idjogo + '"]').data("caminhoarq", "");
+                    $("#modalAlerta").html('<div class="alert alert-success">Súmula excluída com sucesso</div>');
+                    $("#comSumula").hide();
+                    $("#semSumula").show();
+                },
+                error: function () {
+                    $("#modalAlerta").html('<div class="alert alert-danger">Erro ao excluir</div>');
+                }
+            });
+        });
+
+
 
     </script>
 

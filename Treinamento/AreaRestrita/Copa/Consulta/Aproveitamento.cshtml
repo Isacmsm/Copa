@@ -3,7 +3,7 @@
     Page.Title = "Aproveitamento";
     Layout = "~/AreaRestrita/_Layout.cshtml";
 }
-
+@using System.Globalization;
 @using Newtonsoft.Json
 
 
@@ -86,6 +86,16 @@
         jogadores = new Dao().ExecutarAcaoList<Jogador>("C", parametros);
     }
 
+    private void ConsultaAproveitamento()
+    {
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@Json", jsonEnvio);
+
+        retorno = new Dao().ExecutarProcedureList<Retorno>("stp_Ism_Aproveitamento_Upt", parametros).FirstOrDefault();
+
+
+    }
+
 }
 
 @{
@@ -119,64 +129,104 @@
         timesJson.Add(timeJson);
     }
     jsonEnvio = JsonConvert.SerializeObject(timesJson);
+    ConsultaAproveitamento();
+    timesRetorno = JsonConvert.DeserializeObject<List<TimeRetorno>>(retorno.Json);
+
 }
 
 
 
-    @section head {
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
-    }
+@section head {
 
-    <body>
-        <div class="container">
-            <div class="row g-3">
-                <div class="col-12">
-                    @RenderPage("~/AreaRestrita/Menu.cshtml")
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+}
+
+<body>
+    <div class="container">
+        <div class="row g-3">
+            <div class="col-12">
+                @RenderPage("~/AreaRestrita/Menu.cshtml")
+            </div>
+
+            <div class="col-12 mb-5 text-center">
+                <h1>Aproveitamento</h1>
+            </div>
+        </div>
+
+
+
+
+
+
+
+        @if (timesRetorno != null)
+        {
+
+            foreach (TimeRetorno item in timesRetorno)
+            {
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <strong>@item.Nome</strong>
+                        <span class="ms-3"><i class="fa fa-futbol-o"></i> Gols: @item.Gols</span>
+                        <span class="ms-3"><i class="bi bi-graph-up"></i> Aproveitamento: @item.Aproveitamento%</span>
+                        <span class="ms-3"><i class="bi bi-cash-coin"></i> Folha: R$ @item.FolhaPagamento.ToString("N2", new CultureInfo("pt-BR"))</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-striped rounded mb-0">
+                            <colgroup>
+                                <col style="width: 30%" />
+                                <col style="width: 10%" />
+                                <col style="width: 30%" />
+                                <col style="width: 30%" />
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th class="text-center align-middle">Nome</th>
+                                    <th class="text-center align-middle">Gols</th>
+                                    <th class="text-center align-middle">Salario</th>
+                                    <th class="text-center align-middle">Aproveitamento</th>
+                                </tr>
+                            </thead>
+                            <tbody class="table-group-divider">
+                                @foreach (JogadorRetorno jogadores in item.jogadores ?? new List<JogadorRetorno>())
+                                {
+                                    <tr>
+                                        <td class="text-center align-middle"><i class="fa fa-user" aria-hidden="true"></i> @jogadores.Nome</td>
+                                        <td class="text-center align-middle"><i class="fa fa-futbol-o"></i> @jogadores.Gols</td>
+                                        <td class="text-center align-middle"><i class="bi bi-cash-coin"></i> R$ @jogadores.Salario.ToString("N2", new CultureInfo("pt-BR"))</td>
+                                        <td class="text-center align-middle"><i class="bi bi-graph-up"></i> @jogadores.Aproveitamento gols/Qntjogos</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+
+                    </div>
                 </div>
-
-                <div class="col-12 mb-5 text-center">
-                    <h1>Aproveitamento</h1>
+            }
+            <div class="row mt-4">
+                <div class="col-6">
+                    <div class="card">
+                        <div class="card-header">JSON Enviado</div>
+                        <div class="card-body">
+                            <pre>@jsonEnvio</pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="card">
+                        <div class="card-header">JSON Retornado</div>
+                        <div class="card-body">
+                            <pre>@retorno.Json</pre>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-
-
-
-
-
-
-            @if (artilheiros != null) // se a lista de times não estiver vazia ele vai criar a tabela dos times no site
-            {
-                <div>
-                    <table class="table table-striped rounded mb-0">
-                        <colgroup>
-                            <col style="width: 10%" />
-                            <col style="width: 30%" />
-                            <col style="width: 10%" />
-                        </colgroup>
-                        <thead>
-                            <tr>
-                                <th class="text-center align-middle">Time</th>
-                                <th class="text-center align-middle">Artilheiros</th>
-                                <th class="text-center align-middle">Gols</th>
-                            </tr>
-                        </thead>
-                        <tbody class="table-group-divider">
-                            @foreach (Artilharia item in artilheiros) //vai pecorrer todos os itens da lista times e vai criar uma coluna da tabela para cada Time com as suas propiedades
-                            {
-                                <tr>
-                                    <td class="text-center align-middle">@item.NomeTime</td>
-                                    <td class="text-center align-middle">@item.NomeJogador</td>
-                                    <td class="text-center align-middle">@item.GolsMarcados</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-
-            }
-        </div>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-    </body>
+        }
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+</body>
 
 
