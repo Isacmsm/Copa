@@ -50,7 +50,8 @@
     HttpPostedFileBase arquivo = null;
     string caminhoArquivo = null;
     string caminhoLogico = null;
-    int tipo;
+
+
     private void AlimentaVariaveis()
     {
         acao = Util.ChecaNulo(Request.Form["acao"]);
@@ -66,10 +67,7 @@
         {
             arquivo = Request.Files["arquivo"];
         }
-        if (!string.IsNullOrWhiteSpace(Request.Form["tipo"]))
-        {
-            tipo = int.Parse(Request.Form["tipo"]);
-        }
+
     }
 
     private string IsInvalid(string key)
@@ -83,6 +81,10 @@
         acao = null;
         idJogo = null;
         jogo = null;
+        caminhoArquivo = null;
+        caminhoLogico = null;
+        arquivo = null;
+
     }
 
     private void Consultar()
@@ -124,25 +126,28 @@
         Dictionary<string, object> parametros = new Dictionary<string, object>();
         parametros.Add("@IdJogo", idJogo);
         parametros.Add("@CaminhoArq", jogo.CaminhoArq);
-        parametros.Add("@Tipo", tipo);
+        parametros.Add("@Tipo", 2);
 
-        new Dao().ExecutarAcao(acao, parametros);
+        new Dao().ExecutarAcao("A", parametros);
 
     }
 
-    private void Excluir()
+    private void ExcluirArquivo()
     {
         File.Delete(Server.MapPath($"arquivos/{idJogo}/sumula.pdf"));
+    }
 
+    private void ExcluirBanco() 
+    {
         Dictionary<string, object> parametros = new Dictionary<string, object>();
         parametros.Add("@IdJogo", idJogo);
-        parametros.Add("@Tipo", tipo);
+        parametros.Add("@Tipo", 3);
 
-        new Dao().ExecutarAcao(acao, parametros);
+        new Dao().ExecutarAcao("A", parametros);
 
     }
 
-    private void SalvarArquivo()
+    private void ValidarArquivo()
     {
         if (arquivo == null)
         {
@@ -158,16 +163,24 @@
             ModelState.AddError("arquivo", "Arquivo deve ter o tamanho de até 512KB");
             return;
         }
-        if (!Directory.Exists(Server.MapPath($"arquivos/{idJogo}")))
+    }
+
+    private void SalvarArquivo()
+    {
+
+
+        caminhoArquivo = Path.Combine(Server.MapPath($"arquivos/{idJogo}"));
+
+        if (!Directory.Exists(caminhoArquivo))
         {
-            Directory.CreateDirectory(Server.MapPath($"arquivos/{idJogo}"));
+            Directory.CreateDirectory(caminhoArquivo);
         }
 
         caminhoArquivo = Path.Combine(Server.MapPath($"arquivos/{idJogo}/sumula.pdf"));
 
         arquivo.SaveAs(caminhoArquivo);
 
-        caminhoLogico = $"~/AreaRestrita/arquivos/{idJogo}/sumula.pdf";
+        caminhoLogico = $"~/AreaRestrita/Copa/Cadastro/arquivos/{idJogo}/sumula.pdf";
     }
 
     private void CarregarDados()
@@ -187,7 +200,7 @@
 @{
     AlimentaVariaveis();
 
-    if ((acao == "I" || acao == "A" || acao == "E") && !(Request.Files.Count > 0) && tipo != 3)
+    if (acao == "I" || acao == "A" || acao == "E")
     {
         Util.ExceptionHandler(() =>
         {
@@ -209,9 +222,9 @@
             view = View.Index;
         }, this.ModelState);
     }
-    else if (acao == "A" && Request.Files.Count > 0)
+
+    if (acao == "IA")
     {
-        Util.ExceptionHandler(SalvarArquivo, this.ModelState);
 
         Util.ExceptionHandler(() =>
         {
@@ -220,17 +233,30 @@
                 IdJogo = Util.ChecaNulo(Request.Form["idJogo"]),
                 CaminhoArq = Util.ChecaNulo(caminhoLogico)
             };
-            tipo = 2;
+            ValidarArquivo();
+            SalvarArquivo();
             ManutencaoArquivo();
+            LimparVariaveis();
             ModelState.AddError("alert-success", "Operação realizada com sucesso");
 
         }, this.ModelState);
 
     }
-    else if (acao == "A" && tipo == 3)
+
+    if (acao == "EA")
     {
-        Excluir();
-        
+
+        Util.ExceptionHandler(() =>
+        {
+
+
+            ExcluirArquivo();
+            ExcluirBanco();
+            LimparVariaveis();
+            ModelState.AddError("alert-success", "Operação realizada com sucesso");
+
+        }, this.ModelState);
+
     }
 
 
@@ -469,10 +495,10 @@
                             <col style="width: 5%" />
                             <col style="width: 18%" />
                             <col style="width: 18%" />
+                            <col style="width: 15%" />
                             <col style="width: 18%" />
                             <col style="width: 18%" />
-                            <col style="width: 18%" />
-                            <col style="width: 5%" />
+                            <col style="width: 8%" />
                         </colgroup>
                         <thead>
                             <tr>
@@ -488,7 +514,7 @@
                         <tbody class="table-group-divider">
                             @foreach (Jogo item in jogos)
                             {
-                                <tr data-idjogo="@item.IdJogo" data-time1="@item.NomeTime1" data-time2="@item.NomeTime2" data-placar1="@item.Placar1" data-placar2="@item.Placar2" data-caminhoarq="@item.CaminhoArq">
+                                <tr data-idjogo="@item.IdJogo" data-time1="@item.NomeTime1" data-time2="@item.NomeTime2" data-placar1="@item.Placar1" data-placar2="@item.Placar2" data-caminhoarq="@item.CaminhoArq" data-datafinal="@item.DataFinal" data-horafinal="@item.HoraFinal">
                                     <td class="text-center align-middle">#@item.IdJogo</td>
                                     <td class="text-center align-middle">@item.NomeTime1</td>
                                     <td class="text-center align-middle">@item.Placar1 x @item.Placar2</td>
@@ -499,7 +525,7 @@
                                     <td>
                                         @if (botoes.Any(x => x.Codigo == "A" || x.Codigo == "E"))
                                         {
-                                            <button class="btn btn-outline-dark btn-sm" type="button" onclick="editar('@item.IdJogo', event)">Editar</button>
+                                            <button class="btn btn-warning btn-sm" type="button" onclick="editar('@item.IdJogo', event)"><i class="bi bi-pencil-square"></i> Editar</button>
                                         }
                                     </td>
                                 </tr>
@@ -537,8 +563,16 @@
                 var time2 = $(this).data("time2");
                 var placar1 = $(this).data("placar1");
                 var placar2 = $(this).data("placar2");
-                var arqCaminho = "/AreaRestrita/arquivos/" + idJogo + "/sumula.pdf";
-                var caminhoArq = $(this).data("caminhoarq");
+                var caminhoArq = $(this).data("caminhoarq").replace("~", "");
+                var dataFinal = $(this).data("datafinal");
+                var horaFinal = $(this).data("horafinal");
+                var fimJogo = new Date(dataFinal + " " + horaFinal)
+                var agora = new Date();
+
+                if (fimJogo > agora) {
+                    alert("O jogo ainda não terminou!");
+                    return;
+                }
 
                 $("#modalTime1").text(time1);
                 $("#modalTime2").text(time2);
@@ -576,7 +610,7 @@
             var formData = new FormData();
             var arquivo = $('#arquivo')[0].files[0];
             var idjogo = $("#modalIdJogo").val();
-            var acao = "A";
+            var acao = "IA";
 
             if (arquivo) {
                 formData.append('arquivo', arquivo);
@@ -591,11 +625,13 @@
                     contentType: false,
                     success: function (response) {
                         $("#modalAlerta").html('<div class="alert alert-success">Operação realizada com sucesso</div>');
-                        var novosCaminho = "/AreaRestrita/arquivos/" + idjogo + "/sumula.pdf";
+                        var novosCaminho = "/AreaRestrita/Copa/Cadastro/arquivos/" + idjogo + "/sumula.pdf";
 
                         $("#semSumula").hide();
                         $("#comSumula").show();
                         $("#linkDownload").attr("href", novosCaminho);
+                        $('tr[data-idjogo="' + idjogo + '"]').data("caminhoarq", novosCaminho);
+                        $('#arquivo').val('');
                     },
                     error: function (xhr) {
                         $("#modalAlerta").html('<div class="alert alert-danger">Upload falhou</div>');
@@ -611,7 +647,7 @@
             $.ajax({
                 type: "POST",
                 url: '/AreaRestrita/Copa/Cadastro/Jogo.cshtml',
-                data: { acao: "A", idJogo: idjogo, tipo: 3 },
+                data: { acao: "EA", idJogo: idjogo},
                 success: function () {
                     $('tr[data-idjogo="' + idjogo + '"]').data("caminhoarq", "");
                     $("#modalAlerta").html('<div class="alert alert-success">Súmula excluída com sucesso</div>');

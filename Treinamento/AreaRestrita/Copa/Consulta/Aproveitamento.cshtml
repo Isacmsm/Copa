@@ -88,10 +88,11 @@
 
     private void ConsultaAproveitamento()
     {
+
         Dictionary<string, object> parametros = new Dictionary<string, object>();
         parametros.Add("@Json", jsonEnvio);
 
-        retorno = new Dao().ExecutarProcedureList<Retorno>("stp_Ism_Aproveitamento_Upt", parametros).FirstOrDefault();
+        retorno = new Dao().ExecutarAcaoList<Retorno>("A", parametros).FirstOrDefault();
 
 
     }

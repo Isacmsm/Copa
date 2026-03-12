@@ -43,6 +43,9 @@
     View view = View.Index;
     List<Jogador> jogadores = null;
     List<Time> times = null;
+    string idCapitao = null;
+    string idTecnico = null;
+    string idsSuspenso = null;
 
     private void AlimentaVariaveis()
     {
@@ -50,6 +53,10 @@
         idJogador = Util.ChecaNulo(Request.Form["idJogador"]);
         idTime = Util.ChecaNulo(Request.Form["idTime0"]);
         botoes = new BotaoDao().GetAll();
+        idCapitao = Util.ChecaNulo(Request.Form["capitao"]);
+        idTecnico = Util.ChecaNulo(Request.Form["tecnico"]);
+        idsSuspenso = Util.ChecaNulo(Request.Form["idsSuspenso"]);
+        
 
         if (!string.IsNullOrWhiteSpace(Request.Form["view"]))
         {
@@ -108,16 +115,13 @@
 
     private void ManutencaoEditAll()
     {
-        string idCapitao = Util.ChecaNulo(Request.Form["capitao"]);
-        string idTecnico = Util.ChecaNulo(Request.Form["tecnico"]);
-        string[] suspensos = Request.Form.GetValues("idAcao") ?? new string[0];
-        string idsSuspensos = string.Join(",", suspensos);
+
 
         Dictionary<string, object> parametros = new Dictionary<string, object>();
         parametros.Add("@IdTime", idTime);
         parametros.Add("@IdCapitao", idCapitao);
         parametros.Add("@IdTecnico", idTecnico);
-        parametros.Add("@IdsSuspensos", idsSuspensos);
+        parametros.Add("@IdsSuspensos", idsSuspenso);
         parametros.Add("@Tipo", 2);
 
         new Dao().ExecutarAcao(acao, parametros);
@@ -378,7 +382,7 @@
                                         <td class="text-center align-middle">
                                             @if (botoes.Any(x => x.Codigo == "A" || x.Codigo == "E"))
                                             {
-                                                <button class="btn btn-outline-dark btn-sm" type="button" onclick="editar('@item.IdJogador')">Editar</button>
+                                                <button class="btn btn-warning btn-sm" type="button" onclick="editar('@item.IdJogador')"><i class="bi bi-pencil-square"></i> Editar</button>
                                             }
                                         </td>
                                     </tr>
@@ -420,7 +424,7 @@
                                         <td class="text-center align-middle">
 
                                             <div class="form-check form-switch d-flex justify-content-center">
-                                                <input class="form-check-input" type="checkbox" role="switch" name="idAcao" value="@item.IdJogador" @(item.Suspenso ? "checked" : "")>
+                                                <input class="form-check-input" type="checkbox" role="switch" name="idsSuspenso" value="@item.IdJogador" @(item.Suspenso ? "checked" : "")>
                                             </div>
                                         </td>
 
