@@ -103,8 +103,31 @@
                 </ul>
             </div>
         </div>
-        <a class="btn btn-outline-danger" href="~/ControleAcesso/Sair.cshtml">Sair</a>
+        <div class="d-flex flex-row gap-2">
+            <a class="btn btn-outline-danger" href="~/ControleAcesso/Sair.cshtml">Sair</a>
+            <button class="btn btn-sm btn-outline-primary" id="btnTema">
+                <i class="@(Session["Tema"] != null && (bool)Session["Tema"] ? "bi bi-sun" : "bi bi-moon")"></i>
+            </button>
+        </div>
+        
     </nav>
+    <script>
 
+        $("#btnTema").click(function () {
+            let temaAtual = $("html").attr("data-bs-theme");
+            let novoTema = temaAtual === "dark" ? true : false;
+
+            $.ajax({
+                url: "/AreaRestrita/auxTema.cshtml",
+                method: "POST",
+                data: { tema: novoTema },
+                success: function () {
+                    $("html").attr("data-bs-theme", novoTema ? "light" : "dark");
+                    $("#btnTema i").attr("class", novoTema ? "bi bi-sun" : "bi bi-moon");
+                }
+            });
+        });
+
+    </script>
 }
 

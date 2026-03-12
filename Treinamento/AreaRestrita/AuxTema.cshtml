@@ -1,0 +1,26 @@
+@functions{
+   
+    bool tema;
+
+    private void MudarTema()
+    {
+        Identificacao identificacao = new Identificacao();
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@IdOperador", identificacao.IdOperador);
+        parametros.Add("@Tema", tema);
+
+        new Dao().ExecutarProcedure("stp_Ism_AuxTema_Upt", parametros);
+        
+    }
+}
+
+@{
+    tema = Convert.ToBoolean(Request.Form["tema"]);
+    MudarTema();
+    Session["Tema"] = tema;
+}
+
+
+
+
+
