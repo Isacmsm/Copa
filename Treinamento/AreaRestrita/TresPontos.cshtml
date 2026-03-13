@@ -1,0 +1,153 @@
+﻿@{
+    Page.Title = "TresPontos";
+    Layout = "~/AreaRestrita/_Layout.cshtml";
+}
+
+@section head {
+    <link href="~/Scripts/Style.css" rel="stylesheet" />
+}
+
+<body>
+    <form>
+        <input type="hidden" name="acao" id="acao" />
+
+        <div class="container">
+            <h1>Modal e Três Pontos</h1>
+
+            @PageHelper.MakeAlert()
+
+            <div class="mt-5">
+                <label for="idTime">IdTime</label>
+                <div class="row">
+                    <div class="col">
+                        <input type="text" id="idTime" name="idTime" class="form-control" />
+                        @PageHelper.MakeFeedBack("idTime")
+                    </div>
+                    <div class="col-auto">
+                        <div class="search" data-group="group1" data-tipo-consulta="Time">
+                            <span class="btn btn-light" onclick="openSearch(this)">
+                                ...
+                            </span>
+                            <div class="search-card">
+                                <div class="search-head">
+                                    <div class="search-title">Consulta Time</div>
+                                    <div class="search-close" onclick="closeSearch(this)">x</div>
+                                </div>
+                                <div class="search-body">
+                                    <label for="chave">Informe o nome do time</label>
+                                    <div class="row">
+                                        <div class="col">
+                                            <input type="text" name="chave" id="chave" value="" class="form-control" />
+                                        </div>
+                                        <div class="col-auto">
+                                            <button class="btn btn-outline-primary" type="button" name="pesquisar" id="pesquisar" onclick="makeSearch(this)">Pesquisar</button>
+                                        </div>
+                                    </div>
+                                    <div class="resultado"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <input type="text" id="nome" name="nome" class="form-control" />
+                        @PageHelper.MakeFeedBack("nome")
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</body>
+<script>
+    function openSearch(obj) {
+        if (!obj) return;
+
+        var group = findGroup(obj);
+
+        if (!group) return;
+
+        var search = document.querySelector(`[data-group="${group}"][class="search"]`);
+
+        if (!search) return;
+
+        var card = search.querySelector(".search-card");
+
+        if (!card) return;
+
+        card.classList.add("show");
+    }
+
+    function closeSearch(obj) {
+        if (!obj) return;
+
+        var group = findGroup(obj);
+
+        if (!group) return;
+
+        var search = document.querySelector(`[data-group="${group}"][class="search"]`);
+
+        if (!search) return;
+
+        var card = search.querySelector(".search-card");
+
+        if (!card) return;
+
+        card.classList.remove("show");
+    }
+
+    function initSearch(search) {
+        var chave = search.querySelector('[name="chave"]')
+
+        if (!chave) return;
+
+        chave.value = "";
+
+        var resultado = search.querySelector('.resultado')
+
+        if (!resultado) return;
+
+        resultado.innerHTML = "";
+    }
+    
+
+    function makeSearch(obj) {
+        if (!obj) return;
+
+        var group = findGroup(obj);
+
+        if (!group) return;
+
+        var search = document.querySelector(`[data-group="${group}"][class="search"]`);
+
+        if (!search) return;
+
+        var chave = search.querySelector(`[name="chave"]`).value;
+        var tipoConsulta = search.getAttribute("data-tipo-consulta");
+        var resultado = search.querySelector(`.resultado`);
+
+        $.ajax({
+            method: "POST",
+            url: "/AreaRestrita/AuxConsulta.cshtml",
+            dataType: "json",
+            data: {
+                chave: chave,
+                tipoConsulta : tipoConsulta
+            }
+        }).done(function (res) {
+            if (res.length == 0) {
+                resultado.innerHTML = "<div>Nenhum registro encontrado</div>";
+            }
+            else {
+                resultado.innerHTML = res;
+            }
+
+        });
+    }
+
+    function findGroup(obj) {
+        if (obj.classList.contains("search")) {
+            return obj.getAttribute("data-group")
+        }
+        return findGroup(obj.parentElement)
+    }
+</script>
+

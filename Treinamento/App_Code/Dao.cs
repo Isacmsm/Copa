@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Reflection;
@@ -105,6 +106,37 @@ public class Dao
     {
         string procedure = GetNomeProcedure(acao);
         ExecutarProcedure(procedure, parametros);
+    }
+
+    public DataTable ExecutarProcedureDt(string procedure,Dictionary<string, object> parametros)
+    {
+        DataTable dt = new DataTable();
+
+        SqlConnection conn = new SqlConnection(stringConexao);
+
+        conn.Open();
+
+        SqlCommand cmmd = NovoCmmd(procedure, conn);
+
+        AdicionarParametros(cmmd, parametros);
+
+        SqlDataReader dr = cmmd.ExecuteReader();
+
+        dt.BeginLoadData();
+
+        dt.Load(dr);
+
+        dt.EndLoadData();
+
+        dr.Close();
+        dr.Dispose();
+
+        cmmd.Dispose();
+
+        conn.Close();
+        conn.Dispose();
+
+        return dt;
     }
 
     public List<T> ExecutarProcedureList<T>(string procedure, Dictionary<string, object> parametros)
