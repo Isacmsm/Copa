@@ -1,0 +1,34 @@
+﻿@using System.Data;
+
+@functions{
+    string chave = null;
+    string tipoConsulta = null;
+
+    private void AlimentarVariaveis()
+    {
+        chave = Util.ChecaNulo(Request.Form["chave"]);
+        tipoConsulta = Util.ChecaNulo(Request.Form["tipoConsulta"]);
+    }
+
+    private DataTable Consultar()
+    {
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@Tipo", tipoConsulta);
+        parametros.Add("@Chave", chave);
+
+        return new Dao().ExecutarProcedureDt("stp_Ism_EstruturaTabelas", parametros);
+    }
+
+}
+
+@{
+    try
+    {
+
+        AlimentarVariaveis();
+    }
+    catch (Exception ex)
+    {
+        Response.Write(ex.Message);
+    }
+}
