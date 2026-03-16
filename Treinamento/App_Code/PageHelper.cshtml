@@ -53,6 +53,33 @@
         }
 
 
+    }
 }
+
+@helper MakeTresPontos(string group, string title, string label, string tipoConsulta, string consultaComposta)
+{
+    <div class="search" data-group="@group" data-tipo-consulta="@tipoConsulta" data-consulta-composta="@consultaComposta">
+        <span class="btn btn-light" onclick="openSearch(this)">
+            ...
+        </span>
+        <div class="search-card">
+            <div class="search-head">
+                <div class="search-title">@title</div>
+                <div class="search-close" onclick="closeSearch(this)">x</div>
+            </div>
+            <div class="search-body">
+                <label for="chave">@label</label>
+                <div class="row">
+                    <div class="col">
+                        <input type="text" name="chave" id="chave" value="" class="form-control" />
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-outline-primary" type="button" name="pesquisar" id="pesquisar" onclick="makeSearch(this)">Pesquisar</button>
+                    </div>
+                </div>
+                <div class="resultado"></div>
+            </div>
+        </div>
+    </div>
 }
 

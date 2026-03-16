@@ -16,44 +16,37 @@
 
             @PageHelper.MakeAlert()
 
-            <div class="mt-5">
-                <label for="idTime">IdTime</label>
-                <div class="row">
-                    <div class="col">
-                        <input type="text" id="idTime" name="idTime" class="form-control" />
-                        @PageHelper.MakeFeedBack("idTime")
-                    </div>
-                    <div class="col-auto">
-                        <div class="search" data-group="group1" data-tipo-consulta="Time">
-                            <span class="btn btn-light" onclick="openSearch(this)">
-                                ...
-                            </span>
-                            <div class="search-card">
-                                <div class="search-head">
-                                    <div class="search-title">Consulta Time</div>
-                                    <div class="search-close" onclick="closeSearch(this)">x</div>
-                                </div>
-                                <div class="search-body">
-                                    <label for="chave">Informe o nome do time</label>
-                                    <div class="row">
-                                        <div class="col">
-                                            <input type="text" name="chave" id="chave" value="" class="form-control" />
-                                        </div>
-                                        <div class="col-auto">
-                                            <button class="btn btn-outline-primary" type="button" name="pesquisar" id="pesquisar" onclick="makeSearch(this)">Pesquisar</button>
-                                        </div>
-                                    </div>
-                                    <div class="resultado"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <input type="text" id="nome" name="nome" class="form-control" />
-                        @PageHelper.MakeFeedBack("nome")
-                    </div>
+        <div class="mt-5">
+            <label for="idTime">IdTime</label>
+            <div class="row">
+                <div class="col">
+                    <input type="text" id="idTime" name="idTime" class="form-control" data-group="group1" data-column="IdTime" />
+                    @PageHelper.MakeFeedBack("idTime")
+                </div>
+                <div class="col-auto">
+                    @PageHelper.MakeTresPontos("group1", "Consulta de times", "Informe o nome do time", "Time", null)
+                </div>
+                <div class="col">
+                    <input type="text" id="nome" name="nome" class="form-control" data-group="group1" data-column="Nome" />
+                    @PageHelper.MakeFeedBack("nome")
                 </div>
             </div>
+
+            <label for="idJogador">IdJogador</label>
+            <div class="row">
+                <div class="col">
+                    <input type="text" id="idJogador" name="idJogador" class="form-control" data-group="group2" data-column="IdJogador" />
+                    @PageHelper.MakeFeedBack("idJogador")
+                </div>
+                <div class="col-auto">
+                    @PageHelper.MakeTresPontos("group2", "Consulta de Jogadores", "Informe o nome do Jogador", "Jogador", "idTime")
+                </div>
+                <div class="col">
+                    <input type="text" id="nome" name="nome" class="form-control" data-group="group2" data-column="Nome" />
+                    @PageHelper.MakeFeedBack("nome")
+                </div>
+            </div>
+        </div>
         </div>
     </form>
 </body>
@@ -74,6 +67,8 @@
         if (!card) return;
 
         card.classList.add("show");
+
+        initSearch(search);
     }
 
     function closeSearch(obj) {
@@ -92,6 +87,8 @@
         if (!card) return;
 
         card.classList.remove("show");
+
+        initSearch(search);
     }
 
     function initSearch(search) {
@@ -122,6 +119,9 @@
 
         var chave = search.querySelector(`[name="chave"]`).value;
         var tipoConsulta = search.getAttribute("data-tipo-consulta");
+        if (search.getAttribute("data-consulta-composta")) {
+            var consultaComposta = document.getElementById(search.getAttribute("data-consulta-composta")).value;
+        }
         var resultado = search.querySelector(`.resultado`);
 
         $.ajax({
@@ -130,17 +130,65 @@
             dataType: "json",
             data: {
                 chave: chave,
-                tipoConsulta : tipoConsulta
+                tipoConsulta: tipoConsulta,
+                consultaComposta: consultaComposta
             }
         }).done(function (res) {
             if (res.length == 0) {
                 resultado.innerHTML = "<div>Nenhum registro encontrado</div>";
             }
             else {
-                resultado.innerHTML = res;
+                var table = populateTable(res);
+                resultado.innerHTML = table;
             }
 
         });
+    }
+
+    function populateTable(json) {
+        var tablei = '<table class="table table-striped table-sm table-bordered table-hover mt-3">';
+        var thead = populateTableHeader(json);
+        var tbody = populateTableBody(json);
+        var tablef = '</table>';
+
+        return tablei + thead + tbody + tablef;
+    }
+
+    function populateTableBody(json) {
+        var columns = Object.keys(json[0]);
+
+        var results = json.map((r, index) => {
+            var row = "<tr onclick='fecharSearch(this)'>";
+            columns.forEach(function (key) {
+                row += "<td data-column=" + key + ">" + r[key] + "</td>";
+            });
+            row += "</tr>";
+            return row;
+        });
+
+        return "<tbody>" + results.join('') + "</tbody>";
+    }
+
+    function populateTableHeader(json) {
+        var columns = Object.keys(json[0]);
+        var headerCells = columns.map(r => {
+            return "<th>" + r + "</th>";
+        });
+        return "<thead><tr>" + headerCells.join('') + "</thead></tr>";
+    }
+
+    function fecharSearch(obj) {
+        var group = findGroup(obj);
+
+        if (!group) return;
+
+        document.querySelectorAll('[data-group=' + group + ']').forEach((item) => {
+            if (item instanceof HTMLInputElement) {
+                item.value = obj.querySelector("[data-column=" + item.getAttribute("data-column") + "]").innerText;
+            }
+        });
+
+        closeSearch(obj);
     }
 
     function findGroup(obj) {

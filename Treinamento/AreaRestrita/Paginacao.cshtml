@@ -1,0 +1,103 @@
+﻿@{
+    Page.Title = "Paginação Dinâmica";
+    Layout = "~/AreaRestrita/_Layout.cshtml";
+}
+
+@section head{
+    <link href="~/Scripts/Style.css" rel="stylesheet" />
+}
+
+<body>
+    <form name="form1" id="form1" method="post">
+        <input type="hidden" name="acao" id="acao" />
+
+        <div class="container">
+            <h1 class="mb-4">Filtro, pesquisa e paginação</h1>
+
+            <div>
+                Exibindo
+                <span id="span-infoPaginacaoInicio" class="text-primary"></span>
+                <span id="span-infoPaginacaoFim" class="text-primary"></span>
+                de
+                <span id="span-totalRegistros"></span>
+                registros
+            </div>
+
+            <div class="card mt-2">
+                <div class="p-2">
+                    <div class="row mt-2">
+                        <div class="col">
+
+                        </div>
+                        <div class="col-auto">
+                            <select id="quantidadePorPagina" name="quantidadePorPagina" class="form-select">
+                                <option value="10">10 por página</option>
+                                <option value="20">20 por página</option>
+                                <option value="50">50 por página</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="resultado"></div>
+                <div class="card-footer">
+                    <div id="paginacao" class="row justify-content-center">
+                        <div class="col-auto">
+                            <button type="button" id="btn-paginacaoPrimeiro" class="btn btn-outline-secondary" tittle="Ir para o primeiro" disabled><<</button>
+                        </div>
+                        <div class="col-auto">
+                            <button type="button" id="btn-paginacaoAnterior" class="btn btn-outline-secondary" tittle="Anterior" disabled><</button>
+                        </div>
+                        <div class="col-auto">
+                            Pagina
+                        </div>
+                        <div class="col-auto">
+                            <select class="form-select" name="pagina" id="pagina"></select>
+                        </div>
+                        <div class="col-auto">
+                            de <span id="quandidadeDePaginas"></span>
+                        </div>
+                        <div class="col-auto">
+                            <button type="button" id="btn-paginacaoProximo" class="btn btn-outline-secondary" title="Próximo" disabled>></button>
+                        </div>
+                        <div class="col-auto">
+                            <button type="button" id="btn-paginacaoUltimo" class="btn btn-outline-secondary" title="Ir para o último" disabled>>></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+    <script>
+        function consultarItens() {
+            var resultado = document.querySelector('.resultado');
+
+            let quantidadePorPagina = document.form1.quantidadePorPagina.value;
+            let pagina = document.form1.pagina.value;
+
+            $.ajax({
+                type: "POST",
+                url: "AuxPaginacao.cshtml",
+                data: {
+                    quantidadePorPagina: quantidadePorPagina,
+                    pagina : pagina
+                },
+                success: function (res) {
+                    resultado.innerHTML = res;
+                },
+                error: function (xhr) {
+                    body.innerHTML = xhr.responseText;
+                },
+                finally: function () {
+                    body.remove(div);
+                }
+            });
+        }
+
+        function init() {
+            consultarItens();
+        }
+
+        init();
+    </script>
+</body>
+

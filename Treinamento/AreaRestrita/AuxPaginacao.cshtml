@@ -1,0 +1,75 @@
+﻿@functions{
+    private class Item
+    {
+        public string Codigo { get; set; }
+        public string Descricao { get; set; }
+        public decimal Valor { get; set; }
+        public DateTime DataInclusao { get; set; }
+    }
+
+    List<Item> itens = new List<Item>();
+    Exception exception = null;
+    string quantidadePorPagina = null;
+    string pagina = null;
+
+    private void AlimentarVariaveis()
+    {
+        quantidadePorPagina = Util.ChecaNulo(Request.Form["quantidadePorPagina"]);
+        pagina = Util.ChecaNulo(Request.Form["pagina"]);
+    }
+
+    private void Consulta()
+    {
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+
+        itens = new Dao().ExecutarProcedureList<Item>("stp_Paginacao_Sel", parametros);
+    }
+}
+
+@{
+    try
+    {
+        AlimentarVariaveis();
+        Consulta();
+    }
+    catch (Exception ex)
+    {
+        exception = ex;
+    }
+}
+
+@if (exception != null)
+{
+    <div class="alert alert-warning">@exception.Message</div>
+}
+else
+{
+    if (itens != null && itens.Count > 0)
+    {
+        <table class="table table-sm table-hover table-nowrap card-table">
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Descrição</th>
+                    <th>Valor</th>
+                    <th>Data</th>
+                </tr>
+            </thead>
+            <tbody class="list">
+                @foreach (Item item in itens)
+                {
+                    <tr>
+                        <td>@item.Codigo</td>
+                        <td>@item.Descricao</td>
+                        <td>@item.Valor.ToString("N2", new System.Globalization.CultureInfo("pt-br"))</td>
+                        <td>@item.DataInclusao.ToString("dd/MM/yyyy")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div class="alert alert-light">Nenhum registro encontrado</div>
+    }
+}
