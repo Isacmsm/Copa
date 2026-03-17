@@ -7,22 +7,62 @@
         public DateTime DataInclusao { get; set; }
     }
 
+    private class Quantidade
+    {
+        public string TotalRegistros { get; set; }
+    }
+
+
     List<Item> itens = new List<Item>();
     Exception exception = null;
+    Quantidade quantidade = null;
     string quantidadePorPagina = null;
     string pagina = null;
+    string pesquisa = null;
+    double valorInicio = 0;
+    double valorFim = 0;
 
     private void AlimentarVariaveis()
     {
         quantidadePorPagina = Util.ChecaNulo(Request.Form["quantidadePorPagina"]);
         pagina = Util.ChecaNulo(Request.Form["pagina"]);
+        pesquisa = Util.ChecaNulo(Request.Form["pesquisa"]);
+
+        if (!string.IsNullOrWhiteSpace(Request.Form["valorInicio"]))
+        {
+            valorInicio = Convert.ToDouble(Request.Form["valorInicio"]);
+        }
+
+        if (!string.IsNullOrWhiteSpace(Request.Form["valorFim"]))
+        {
+            valorFim = Convert.ToDouble(Request.Form["valorFim"]);
+        }
     }
 
     private void Consulta()
     {
         Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@QuantidadePorPagina", quantidadePorPagina);
+        parametros.Add("@Pagina", pagina);
+        parametros.Add("@Pesquisa", pesquisa);
+        parametros.Add("@ValorInicio", valorInicio);
+        parametros.Add("@ValorFim", valorFim);
+
 
         itens = new Dao().ExecutarProcedureList<Item>("stp_Paginacao_Sel", parametros);
+    }
+
+    private void ConsultaQuantidade()
+    {
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@TipoConsulta", 1);
+        parametros.Add("@Pesquisa", pesquisa);
+        parametros.Add("@ValorInicio", valorInicio);
+        parametros.Add("@ValorFim", valorFim);
+
+        List<Quantidade> quantidades = new Dao().ExecutarProcedureList<Quantidade>("stp_Paginacao_Sel", parametros);
+
+        quantidade = quantidades.FirstOrDefault();
     }
 }
 
@@ -31,6 +71,7 @@
     {
         AlimentarVariaveis();
         Consulta();
+        ConsultaQuantidade();
     }
     catch (Exception ex)
     {
@@ -46,6 +87,8 @@ else
 {
     if (itens != null && itens.Count > 0)
     {
+        <span style="display: none" id="totalRegistros">@quantidade.TotalRegistros</span>
+
         <table class="table table-sm table-hover table-nowrap card-table">
             <thead>
                 <tr>

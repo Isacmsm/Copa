@@ -25,9 +25,31 @@
 
             <div class="card mt-2">
                 <div class="p-2">
+                    <div class="row">
+                        <div class="col">
+                            <div class="dropdown">
+                                <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" id="dropdownMenuButton" data-toggle="dropdown">
+                                    Valor
+                                </button>
+                                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                    <div class="px-2">
+                                        <label for="valorInicio">De</label>
+                                        <input type="text" id="valorInicio" name="valorInicio" class="form-control form-control-sm" />
+
+                                        <label for="valorFim">Até</label>
+                                        <input type="text" id="valorFim" name="valorFim" class="form-control form-control-sm" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <button type="button" name="limpar" id="limpar" class="btn btn-sm btn-outline-secondary">Limpar</button>
+                            <button type="button" name="filtrar" id="filtrar" class="btn btn-sm btn-primary">Filtrar</button>
+                        </div>
+                    </div>
                     <div class="row mt-2">
                         <div class="col">
-
+                            <input type="text" name="pesquisa" id="pesquisa" class="form-control" placeholder="Buscar item por código ou nome" />
                         </div>
                         <div class="col-auto">
                             <select id="quantidadePorPagina" name="quantidadePorPagina" class="form-select">
@@ -42,47 +64,58 @@
                 <div class="card-footer">
                     <div id="paginacao" class="row justify-content-center">
                         <div class="col-auto">
-                            <button type="button" id="btn-paginacaoPrimeiro" class="btn btn-outline-secondary" tittle="Ir para o primeiro" disabled><<</button>
+                            <button type="button" id="btn-paginacaoPrimeiro" class="btn btn-outline-secondary js-mudarPagina" title="Ir para o primeiro" data-acao="PRIMEIRO" disabled><<</button>
                         </div>
                         <div class="col-auto">
-                            <button type="button" id="btn-paginacaoAnterior" class="btn btn-outline-secondary" tittle="Anterior" disabled><</button>
+                            <button type="button" id="btn-paginacaoAnterior" class="btn btn-outline-secondary js-mudarPagina" title="Anterior" data-acao="ANTERIOR" disabled><</button>
                         </div>
                         <div class="col-auto">
                             Pagina
                         </div>
                         <div class="col-auto">
-                            <select class="form-select" name="pagina" id="pagina"></select>
+                            <select class="form-select js-mudarPagina" name="pagina" id="pagina"></select>
                         </div>
                         <div class="col-auto">
-                            de <span id="quandidadeDePaginas"></span>
+                            de <span id="quantidadeDePaginas"></span>
                         </div>
                         <div class="col-auto">
-                            <button type="button" id="btn-paginacaoProximo" class="btn btn-outline-secondary" title="Próximo" disabled>></button>
+                            <button type="button" id="btn-paginacaoProximo" class="btn btn-outline-secondary js-mudarPagina" title="Próximo" data-acao="PROXIMO" disabled>></button>
                         </div>
                         <div class="col-auto">
-                            <button type="button" id="btn-paginacaoUltimo" class="btn btn-outline-secondary" title="Ir para o último" disabled>>></button>
+                            <button type="button" id="btn-paginacaoUltimo" class="btn btn-outline-secondary js-mudarPagina" title="Ir para o último" data-acao="ULTIMO" disabled>>></button>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </form>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         function consultarItens() {
             var resultado = document.querySelector('.resultado');
 
             let quantidadePorPagina = document.form1.quantidadePorPagina.value;
             let pagina = document.form1.pagina.value;
+            let pesquisa = document.form1.pesquisa.value;
+            let valorInicio = document.form1.valorInicio.value;
+            let valorFim = document.form1.valorFim.value;
 
             $.ajax({
                 type: "POST",
                 url: "AuxPaginacao.cshtml",
                 data: {
                     quantidadePorPagina: quantidadePorPagina,
-                    pagina : pagina
+                    pagina: pagina,
+                    pesquisa: pesquisa,
+                    valorInicio: valorInicio,
+                    valorFim: valorFim
                 },
                 success: function (res) {
                     resultado.innerHTML = res;
+
+                    const totalRegistros = parseInt(resultado.querySelector("#totalRegistros").innerText);
+
+                    atualizarPaginacao(pagina, totalRegistros);
                 },
                 error: function (xhr) {
                     body.innerHTML = xhr.responseText;
@@ -93,7 +126,168 @@
             });
         }
 
+        function atualizarPaginacao(pagina, totalRegistros) {
+            var infoPaginacaoInicio = document.querySelector("#span-infoPaginacaoInicio");
+            var infoPaginacaoFim = document.querySelector("#span-infoPaginacaoFim");
+            var infoTotalRegistros = document.querySelector("#span-totalRegistros");
+            var infoQuantidadeDePaginas = document.querySelector("#quantidadeDePaginas");
+            var quantidadePorPagina = parseInt(document.form1.quantidadePorPagina.value);
+            var selectPaginas = document.querySelector("#pagina");
+
+            let paginacaoInicio = 0;
+            let paginacaoFim = 0;
+            let quantidadeDePaginas = 0;
+
+            if (totalRegistros == 0) {
+                pagina = "";
+            }
+
+            if (totalRegistros > 0) {
+                if (pagina == "") {
+                    pagina = 1;
+                }
+
+                paginacaoInicio = ((pagina - 1) * quantidadePorPagina) + 1;
+
+                if (pagina * quantidadePorPagina <= totalRegistros) {
+                    paginacaoFim = pagina * quantidadePorPagina;
+                } else {
+                    paginacaoFim = totalRegistros;
+                }
+
+                if (totalRegistros % quantidadePorPagina == 0) {
+                    quantidadeDePaginas = parseInt(totalRegistros / quantidadePorPagina);
+                } else {
+                    quantidadeDePaginas = parseInt(totalRegistros / quantidadePorPagina + 1);
+                }
+
+            }
+
+            infoPaginacaoInicio.innerHTML = `<b>${paginacaoInicio}</b>`;
+            infoPaginacaoFim.innerHTML = `<b>- ${paginacaoFim}</b>`;
+            infoTotalRegistros.innerHTML = `<b>${totalRegistros}</b>`;
+            infoQuantidadeDePaginas.innerHTML = quantidadeDePaginas;
+
+            selectPaginas.innerHTML = "";
+
+            for (var i = 1; i <= quantidadeDePaginas; i++) {
+                var option = document.createElement("option");
+                option.value = i;
+                option.textContent = i;
+                selectPaginas.appendChild(option);
+            }
+
+            selectPaginas.value = pagina;
+
+            atualizarBotoes(pagina, quantidadeDePaginas);
+        }
+
+        function atualizarBotoes(pagina, quantidadeDePaginas) {
+            var btnPrimeiro = document.querySelector("#btn-paginacaoPrimeiro");
+            var btnAnterior = document.querySelector("#btn-paginacaoAnterior");
+            var btnProximo = document.querySelector("#btn-paginacaoProximo");
+            var btnUltimo = document.querySelector("#btn-paginacaoUltimo");
+
+            if (pagina == "") {
+                btnProximo.disabled = true;
+                btnUltimo.disabled = true;
+                btnAnterior.disabled = true;
+                btnPrimeiro.disabled = true;
+            } else if (pagina == 1) {
+                btnAnterior.disabled = true;
+                btnPrimeiro.disabled = true;
+
+                if (quantidadeDePaginas == 1) {
+                    btnProximo.disabled = true;
+                    btnUltimo.disabled = true;
+                } else {
+                    btnProximo.disabled = false;
+                    btnUltimo.disabled = false;
+                }
+            } else if (pagina == quantidadeDePaginas) {
+                btnProximo.disabled = true;
+                btnUltimo.disabled = true;
+                btnAnterior.disabled = false;
+                btnPrimeiro.disabled = false;
+            } else {
+                btnProximo.disabled = false;
+                btnUltimo.disabled = false;
+                btnAnterior.disabled = false;
+                btnPrimeiro.disabled = false;
+            }
+        }
+
+        function mudarPagina(acao = null) {
+            var pagina = parseInt(document.form1.pagina.value);
+
+            if (acao) {
+                switch (acao) {
+                    case "PROXIMO":
+                        pagina++;
+                        break;
+                    case "ANTERIOR":
+                        pagina--;
+                        break;
+                    case "PRIMEIRO":
+                        pagina = 1;
+                        break;
+                    case "ULTIMO":
+                        pagina = parseInt(document.querySelector("#quantidadeDePaginas").innerText);
+                        break;
+                }
+
+                document.form1.pagina.value = pagina;
+            }
+
+            consultarItens();
+        }
+
+        function adicionarEventos() {
+            Array.from(form1.querySelectorAll(".js-mudarPagina")).forEach(function (item) {
+                if (item.tagName.toLowerCase() == "select") {
+                    item.addEventListener("change", () => mudarPagina());
+                } else if (item.tagName.toLowerCase() == "button") {
+                    item.addEventListener("click", () => {
+                        mudarPagina(item.getAttribute("data-acao"));
+                    });
+                }
+            });
+
+            document.form1.querySelector("#quantidadePorPagina").addEventListener("change", () => {
+                document.form1.pagina.value = 1;
+                consultarItens();
+            });
+
+            document.form1.pesquisa.addEventListener('keyup', debounce(() => {
+                document.form1.pagina.value = 1
+                consultarItens();
+            }, 300));
+
+            document.getElementById("filtrar").addEventListener("click", () => {
+                document.form1.pagina.value = 1;
+                consultarItens();
+            });
+
+            document.getElementById("limpar").addEventListener("click", () => {
+                document.form1.pagina.value = 1;
+                document.form1.valorInicio.value = "";
+                document.form1.valorFim.value = "";
+                document.form1.pesquisa.value = "";
+
+                consultarItens();
+            })
+        }
+
+        function debounce(callback, delay) {
+            let timeout;
+            return function () {
+                clearTimeout(timeout);
+                timeout = setTimeout(callback, delay);
+            }
+        }
+
         function init() {
+            adicionarEventos();
             consultarItens();
         }
 
