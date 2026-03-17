@@ -5,6 +5,11 @@
 
 @functions
 {
+    public class Sessao
+    {
+        public string IdSessao { get; set; }
+    }
+
     public class Operador
     {
         public string IdOperador { get; set; }
@@ -22,6 +27,27 @@
         acao = Util.ChecaNulo(Request.Form["acao"]);
         cpf = Util.ChecaNulo(Request.Form["cpf"]);
         senha = Util.ChecaNulo(Request.Form["senha"]);
+
+    }
+
+    private void AbreSessao()
+    {
+        string origem = Request.ServerVariables["HTTP_X_FORWARDED_FOR"];
+
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("Cpf", cpf);
+        parametros.Add("@Senha", senha);
+        parametros.Add("@Tipo", 0);
+        parametros.Add("@ViaIp", origem);
+
+        Sessao sessao = new Dao().ExecutarProcedureList<Sessao>("stp_Ism_AbreSessao", parametros).FirstOrDefault();
+
+        if (sessao == null)
+        {
+            throw new Exception("Não foi possível abrir a sessão");
+        }
+
+        Session["idSessao"] = sessao.IdSessao;
     }
 
     private void Consultar()
@@ -29,6 +55,7 @@
         Dictionary<string, object> parametros = new Dictionary<string, object>();
         parametros.Add("@Cpf", cpf);
         parametros.Add("@Senha", senha);
+        parametros.Add("@Tipo", 1);
 
         List<Operador> operadores = new Dao().ExecutarProcedureList<Operador>("stp_Ism_AbreSessao", parametros);
 
@@ -51,6 +78,7 @@
     {
         Util.ExceptionHandler(() =>
         {
+            AbreSessao();
             Consultar();
 
         }, this.ModelState);
