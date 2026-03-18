@@ -34,6 +34,11 @@
     {
         string origem = Request.ServerVariables["HTTP_X_FORWARDED_FOR"];
 
+        if (string.IsNullOrWhiteSpace(origem))
+        {
+            origem = Request.ServerVariables["REMOTE_ADDR"];
+        }
+
         Dictionary<string, object> parametros = new Dictionary<string, object>();
         parametros.Add("Cpf", cpf);
         parametros.Add("@Senha", senha);

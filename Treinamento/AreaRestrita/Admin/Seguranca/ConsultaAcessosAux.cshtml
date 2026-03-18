@@ -1,0 +1,141 @@
+﻿@RenderPage("~/AreaRestrita/Seguranca.cshtml")
+@{
+    Page.Title = "Consulta Acessos";
+    Layout = "~/AreaRestrita/_Layout.cshtml";
+}
+
+
+
+@functions {
+    private class Sessao
+    {
+        public string IdSessao { get; set; }
+        public string Operador { get; set; }
+        public string DataInicio { get; set; }
+        public string HoraInicio { get; set; }
+        public string DataFim { get; set; }
+        public string HoraFim { get; set; }
+        public string ViaIp { get; set; }
+    }
+
+    private class Quantidade
+    {
+        public string TotalRegistros { get; set; }
+    }
+
+
+
+    List<Sessao> sessoes = new List<Sessao>();
+    string dataInicio = null;
+    string dataFim = null;
+    Exception exception = null;
+    Quantidade quantidade = null;
+    string quantidadePorPagina = null;
+    string pagina = null;
+    string idOperador = null;
+
+    private void AlimentarVariaveis()
+    {
+        quantidadePorPagina = Util.ChecaNulo(Request.Form["quantidadePorPagina"]);
+        pagina = Util.ChecaNulo(Request.Form["pagina"]);
+        dataInicio = Util.ChecaNulo(Request.Form["dataInicio"]);
+        dataFim = Util.ChecaNulo(Request.Form["dataFim"]);
+        idOperador = Util.ChecaNulo(Request.Form["idOperador"]);
+    }
+
+    private void Consulta()
+    {
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@QuantidadePorPagina", quantidadePorPagina);
+        parametros.Add("@Pagina", pagina);
+        parametros.Add("@DataInicio", string.IsNullOrWhiteSpace(dataInicio) ? (object)DBNull.Value : dataInicio);
+        parametros.Add("@DataFim", string.IsNullOrWhiteSpace(dataFim) ? (object)DBNull.Value : dataFim);
+        parametros.Add("@IdOperador", idOperador);
+
+
+        sessoes = new Dao().ExecutarProcedureList<Sessao>("stp_ConsultaAcessos_Sel", parametros);
+    }
+
+    private void ConsultaQuantidade()
+    {
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@TipoConsulta", 1);
+        parametros.Add("@DataInicio", string.IsNullOrWhiteSpace(dataInicio) ? (object)DBNull.Value : dataInicio);
+        parametros.Add("@DataFim", string.IsNullOrWhiteSpace(dataFim) ? (object)DBNull.Value : dataFim);
+        parametros.Add("@IdOperador", idOperador);
+
+
+        List<Quantidade> quantidades = new Dao().ExecutarProcedureList<Quantidade>("stp_ConsultaAcessos_Sel", parametros);
+
+        quantidade = quantidades.FirstOrDefault();
+    }
+
+
+
+
+
+
+
+
+
+
+
+}
+
+@{
+    try
+    {
+        AlimentarVariaveis();
+        Consulta();
+        ConsultaQuantidade();
+    }
+    catch (Exception ex)
+    {
+        exception = ex;
+    }
+
+}
+
+@if (exception != null)
+{
+    <div class="alert alert-warning">@exception.Message</div>
+}
+else
+{
+    if (sessoes != null && sessoes.Count > 0)
+    {
+        <span style="display: none" id="totalRegistros">@quantidade.TotalRegistros</span>
+
+        <table class="table table-hover table-nowrap card-table">
+            <thead>
+                <tr>
+                    <th>Sessão</th>
+                    <th>Operador</th>
+                    <th>Data Início</th>
+                    <th>Hora Início</th>
+                    <th>Data Fim</th>
+                    <th>Hora Fim</th>
+                    <th>IP</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (Sessao s in sessoes)
+                {
+                    <tr>
+                        <td>@s.IdSessao</td>
+                        <td>@s.Operador</td>
+                        <td>@s.DataInicio</td>
+                        <td>@s.HoraInicio</td>
+                        <td>@s.DataFim</td>
+                        <td>@s.HoraFim</td>
+                        <td>@s.ViaIp</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div class="alert alert-light">Nenhum registro encontrado</div>
+    }
+}

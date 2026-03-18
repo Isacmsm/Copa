@@ -5,12 +5,34 @@
 
 }
 
-@{
-    if (Session["IdOperador"] != null)
+@functions {
+    string idSessao = null;
+
+    private void AlimentarVariavies()
     {
-        Session["IdOperador"] = null;
-        Response.Redirect("~/");
+        idSessao = Convert.ToString(Session["idSessao"]);
     }
+
+    private void EncerrarSessao()
+    {
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@idSessao", idSessao);
+
+
+        new Dao().ExecutarProcedure("stp_Sys_FechaSessao", parametros);
+    }
+}
+
+@{
+    Util.ExceptionHandler(() =>
+    {
+        AlimentarVariavies();
+        EncerrarSessao();
+        Session["idSessao"] = null;
+        Session["IdOperador"] = null;
+    }, this.ModelState);
+
+    Response.Redirect("~/");
 }
 
 <body>

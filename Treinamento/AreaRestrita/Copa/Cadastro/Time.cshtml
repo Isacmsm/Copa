@@ -31,6 +31,7 @@
     Time time = null;
     View view = View.Index;
     List<Time> times = null;
+    string idSessao = null;
 
     // vai capturar os valores das variaveis submetida no forms e alimentar suas respectivas variaveis
     private void AlimentaVariaveis()
@@ -38,6 +39,7 @@
         acao = Util.ChecaNulo(Request.Form["acao"]);
         idTime = Util.ChecaNulo(Request.Form["idTime"]);
         botoes = new BotaoDao().GetAll();
+        idSessao = Convert.ToString(Session["idSessao"]);
 
         if (!string.IsNullOrWhiteSpace(Request.Form["view"]))
         {
@@ -76,6 +78,7 @@
         Dictionary<string, object> parametros = new Dictionary<string, object>();
         parametros.Add("@IdTime", idTime);
         parametros.Add("@Nome", time.Nome);
+        parametros.Add("@IdSessao", idSessao);
 
         new Dao().ExecutarAcao(acao, parametros);
 

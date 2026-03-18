@@ -1,7 +1,7 @@
 ﻿@functions{
     private void VerificaSessao()
     {
-        if (Session["idOperador"] == null)
+        if (Session["idSessao"] == null)
         {
             Response.Redirect("/");
         }
