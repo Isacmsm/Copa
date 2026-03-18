@@ -3,7 +3,10 @@
 Projeto desenvolvido durante o programa de treinamento na Log Tecnologia.
 
 ## Stack
-- C# / ASP.NET Razor Pages
-- SQL Server
-- Bootstrap
-- jQuery
+<div align="center">
+  <img src="https://skillicons.dev/icons?i=cs,dotnet,html,css,js,bootstrap,jquery" />
+</div>
+<div align="center">
+  <img src="https://img.shields.io/badge/SQL%20Server-CC2927?style=for-the-badge&logo=microsoft-sql-server&logoColor=white" />
+  <img src="https://img.shields.io/badge/Razor%20Pages-512BD4?style=for-the-badge&logo=dotnet&logoColor=white" />
+</div>
