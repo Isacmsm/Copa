@@ -1,0 +1,98 @@
+﻿@functions{
+    private class Historico
+    {
+
+        public string Pagina { get; set; }
+        public string TipoOperacao { get; set; }
+        public string UsuarioOperacao { get; set; }
+        public string DataOperacao { get; set; }
+    }
+
+    private class Operador
+    {
+        public string Cpf { get; set; }
+        public string Nome { get; set; }
+    }
+
+    List<Historico> historicos = new List<Historico>();
+    string idSessao = null;
+    string idOperador = null;
+    Operador operador = new Operador();
+    Exception exception = null;
+
+
+    private void AlimentarVariveis()
+    {
+        idSessao = Util.ChecaNulo(Request.Form["idSessao"]);
+        idOperador = Util.ChecaNulo(Request.Form["idOperador"]);
+    }
+
+    private void ConsultarHistorico()
+    {
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@TipoConsulta", "Historico");
+        parametros.Add("@idSessao", idSessao);
+
+        historicos = new Dao().ExecutarProcedureList<Historico>("stp_ConsultaAcoes_Sel", parametros);
+    }
+
+    private void ConsultarOperador()
+    {
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@TipoConsulta", "Operador");
+        parametros.Add("@idOperador", idOperador);
+
+        operador = new Dao().ExecutarProcedureList<Operador>("stp_ConsultaAcoes_Sel", parametros).FirstOrDefault();
+    }
+}
+
+@{
+    try
+    {
+        AlimentarVariveis();
+        ConsultarHistorico();
+        ConsultarOperador();
+    }
+    catch (Exception ex)
+    {
+        exception = ex;
+    }
+}
+@if (exception != null)
+{
+    <div class="alert alert-warning">@exception.Message</div>
+}
+else
+{
+    <span style="display: none" id="operadorCpf">@operador.Cpf</span>
+    <span style="display: none" id="operadorNome">@operador.Nome</span>
+
+    if (historicos != null && historicos.Count > 0)
+    {
+        <table class="table table-hover table-nowrap card-table">
+            <thead>
+                <tr>
+                    <th>Pagina</th>
+                    <th>Tipo</th>
+                    <th>Usuario</th>
+                    <th>Data Operação</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (Historico h in historicos)
+                {
+                    <tr>
+                        <td>@h.Pagina</td>
+                        <td>@h.TipoOperacao</td>
+                        <td>@h.UsuarioOperacao</td>
+                        <td>@h.DataOperacao</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div class="alert alert-light">Nenhum registro encontrado</div>
+    }
+}

@@ -48,7 +48,7 @@
                         <div class="row">
                             <div class="col">
                                 <div class="dropdown">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" id="dropdownMenuButton" data-toggle="dropdown">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" id="dropdownMenuButton" data-bs-toggle="dropdown">
                                         Data
                                     </button>
                                     <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
@@ -108,7 +108,27 @@
         </div>
     </form>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"></script>
+    <div class="modal fade" id="modalAcoes" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Ações da Sessão</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <p class="mb-1"><strong>Nome:</strong> <span id="modalOperadorNome"></span></p>
+                            <p class="mb-0"><strong>CPF:</strong> <span id="modalOperadorCpf"></span></p>
+                        </div>
+                    </div>
+                    <div class="resultado-acoes"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // ===================== TRÊS PONTOS =====================
         function openSearch(obj) {
@@ -349,6 +369,45 @@
                 document.form1.dataInicio.value = "";
                 document.form1.dataFim.value = "";
                 consultarItens();
+            });
+
+            document.querySelector(".resultado-tabela").addEventListener("click", function (e) {
+                var tr = e.target.closest("tbody tr");
+                if (!tr) return;
+
+                var idSessao = tr.querySelector("td:first-child").innerText;
+                var idOperador = tr.getAttribute("data-idOperador");
+
+                consultarAcoes(idSessao, idOperador);
+            });
+
+        }
+        // ===================== CONSULTA MODAL =====================
+        var modal = new bootstrap.Modal(document.getElementById('modalAcoes'));
+        function consultarAcoes(idSessao, idOperador) {
+            var resultadoAcoes = document.querySelector(".resultado-acoes");
+
+            $.ajax({
+                type: "POST",
+                url: "ConsultaAcoesAux.cshtml",
+                data: {
+                    idSessao: idSessao,
+                    idOperador: idOperador
+                },
+                success: function (res) {
+                    resultadoAcoes.innerHTML = res;
+
+                    var cpf = resultadoAcoes.querySelector("#operadorCpf");
+                    var nome = resultadoAcoes.querySelector("#operadorNome");
+
+                    document.getElementById("modalOperadorCpf").innerText = cpf ? cpf.innerText : "";
+                    document.getElementById("modalOperadorNome").innerText = nome ? nome.innerText : "";
+
+                    modal.show();
+                },
+                error: function (xhr) {
+                    resultadoAcoes.innerHTML = xhr.responseText;
+                }
             });
         }
 
