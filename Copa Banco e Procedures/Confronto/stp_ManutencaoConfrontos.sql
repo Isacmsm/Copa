@@ -71,39 +71,35 @@ BEGIN
 
         IF @Tipo = 'E'
         BEGIN
-            SELECT TOP 1 @IdJogoErro = IJ.idJogo
+            DECLARE @IdJogoAtual INT
+
+            SELECT TOP 1 @IdJogoAtual = IJ.idJogo
             FROM OPENJSON(@JogosJson) j
-            INNER JOIN Ism_Jogo IJ
-                ON (IJ.idTime1 = JSON_VALUE(j.value, '$.idTime1') AND IJ.idTime2 = JSON_VALUE(j.value, '$.idTime2'))
-                OR (IJ.idTime1 = JSON_VALUE(j.value, '$.idTime2') AND IJ.idTime2 = JSON_VALUE(j.value, '$.idTime1'))
+            INNER JOIN Ism_Jogo IJ ON IJ.idJogo = j.value
             WHERE IJ.Placar1 != 0 AND IJ.Placar2 != 0
 
-            IF @IdJogoErro IS NOT NULL
+            IF @IdJogoAtual IS NOT NULL
             BEGIN
-                RAISERROR('Operação cancelada. O jogo referente ao ID %d já possui placar.', 16, 1, @IdJogoErro)
+                RAISERROR('Operação cancelada. O jogo referente ao ID %d já possui placar.', 16, 1, @IdJogoAtual)
                 RETURN 1
             END
 
-            SET @IdJogoErro = NULL
+            SET @IdJogoAtual = NULL
 
-            SELECT TOP 1 @IdJogoErro = IJ.idJogo
+            SELECT TOP 1 @IdJogoAtual = IJ.idJogo
             FROM OPENJSON(@JogosJson) j
-            INNER JOIN Ism_Jogo IJ
-                ON (IJ.idTime1 = JSON_VALUE(j.value, '$.idTime1') AND IJ.idTime2 = JSON_VALUE(j.value, '$.idTime2'))
-                OR (IJ.idTime1 = JSON_VALUE(j.value, '$.idTime2') AND IJ.idTime2 = JSON_VALUE(j.value, '$.idTime1'))
+            INNER JOIN Ism_Jogo IJ ON IJ.idJogo = j.value
             WHERE IJ.DataInicio <= GETDATE()
 
-            IF @IdJogoErro IS NOT NULL
+            IF @IdJogoAtual IS NOT NULL
             BEGIN
-                RAISERROR('Operação cancelada. O jogo referente ao ID %d já foi iniciado.', 16, 1, @IdJogoErro)
+                RAISERROR('Operação cancelada. O jogo referente ao ID %d já foi iniciado.', 16, 1, @IdJogoAtual)
                 RETURN 1
             END
 
             DELETE IJ
             FROM Ism_Jogo IJ
-            INNER JOIN OPENJSON(@JogosJson) j
-                ON (IJ.idTime1 = JSON_VALUE(j.value, '$.idTime1') AND IJ.idTime2 = JSON_VALUE(j.value, '$.idTime2'))
-                OR (IJ.idTime1 = JSON_VALUE(j.value, '$.idTime2') AND IJ.idTime2 = JSON_VALUE(j.value, '$.idTime1'))
+            INNER JOIN OPENJSON(@JogosJson) j ON IJ.idJogo = j.value
         END
 
         RETURN 0
