@@ -36,12 +36,14 @@
     List<TimeConfronto> confrontos = new List<TimeConfronto>();
     string idTime1 = null;
     string idTime2 = null;
+    string jogosJson = null;
 
     private void AlimentaVariaveis()
     {
         acao = Util.ChecaNulo(Request.Form["acao"]);
         idTime1 = Util.ChecaNulo(Request.Form["idTime1"]);
         idTime2 = Util.ChecaNulo(Request.Form["idTime2"]);
+        jogosJson = Util.ChecaNulo(Request.Form["jogosJson"]);
     }
 
     private void ConsultarConfrontos()
@@ -88,23 +90,26 @@
 @{
     AlimentaVariaveis();
 
-    if (acao == "I")
+    if (acao == "T")
     {
         Util.ExceptionHandler(() =>
         {
-            string jogosJson = Util.ChecaNulo(Request.Form["jogosJson"]);
-            CriarJogos(jogosJson);
-            ModelState.AddError("alert-success", "Jogos criados com sucesso");
-        }, this.ModelState);
-    }
+            
+            var dados = new System.Web.Script.Serialization.JavaScriptSerializer().Deserialize<Dictionary<string, object>>(jogosJson);
 
-    if (acao == "E")
-    {
-        Util.ExceptionHandler(() =>
-        {
-            string jogosJson = Util.ChecaNulo(Request.Form["jogosJson"]);
-            ExcluirJogos(jogosJson);
-            ModelState.AddError("alert-success", "Jogos excluídos com sucesso");
+            if (dados.ContainsKey("criar"))
+            {
+                var criarJson = new System.Web.Script.Serialization.JavaScriptSerializer().Serialize(dados["criar"]);
+                CriarJogos(criarJson);
+            }
+
+            if (dados.ContainsKey("excluir"))
+            {
+                var excluirJson = new System.Web.Script.Serialization.JavaScriptSerializer().Serialize(dados["excluir"]);
+                ExcluirJogos(excluirJson);
+            }
+
+            ModelState.AddError("alert-success", "Operação realizada com sucesso");
         }, this.ModelState);
     }
 
@@ -219,38 +224,27 @@
 </div>
 
 
-<div class="modal fade" id="modalCriar" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalConfirmar" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Confirmar Criação de Jogos</h5>
+                <h5 class="modal-title">Confirmar Alterações</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div id="listaCriar"></div>
+                <div id="secaoCriar" style="display:none;">
+                    <h6 class="text-success">Jogos a Criar</h6>
+                    <div id="listaCriar"></div>
+                    <hr />
+                </div>
+                <div id="secaoExcluir" style="display:none;">
+                    <h6 class="text-danger">Jogos a Excluir</h6>
+                    <div id="listaExcluir"></div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="gravarCriacao()">Gravar</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-
-<div class="modal fade" id="modalExcluir" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirmar Exclusão de Jogos</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div id="listaExcluir"></div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-danger" onclick="gravarExclusao()">Excluir</button>
+                <button type="button" class="btn btn-primary" onclick="gravarTudo()">Gravar</button>
             </div>
         </div>
     </div>
@@ -265,12 +259,10 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 
-    var modalCriar;
-    var modalExcluir;
+    var modalConfirmar;
 
     $(document).ready(function () {
-        modalCriar = new bootstrap.Modal(document.getElementById("modalCriar"));
-        modalExcluir = new bootstrap.Modal(document.getElementById("modalExcluir"));
+        modalConfirmar = new bootstrap.Modal(document.getElementById("modalConfirmar"));
     });
 
     function toggleCelula(celula) {
@@ -332,6 +324,9 @@
             return;
         }
 
+        $("#secaoCriar").hide();
+        $("#secaoExcluir").hide();
+
         if (alteracoes.criar.length > 0) {
             var html = '<table class="table table-bordered">';
             html += '<thead><tr><th>Confronto</th><th>Data Início</th><th>Hora Início</th><th>Data Final</th><th>Hora Final</th></tr></thead><tbody>';
@@ -349,11 +344,13 @@
             html += '</tbody></table>';
 
             $("#listaCriar").html(html);
-            modalCriar.show();
+            $("#secaoCriar").show();
         }
 
         if (alteracoes.excluir.length > 0) {
             buscarJogosParaExcluir(alteracoes.excluir);
+        } else {
+            modalConfirmar.show();
         }
     }
 
@@ -385,11 +382,12 @@
                 }
             }
 
-            montarModalExclusao(todosJogos);
+            montarSecaoExclusao(todosJogos);
+            modalConfirmar.show();
         });
     }
 
-    function montarModalExclusao(jogos) {
+    function montarSecaoExclusao(jogos) {
         var html = '<table class="table table-bordered">';
         html += '<thead><tr>';
         html += '<th><input type="checkbox" id="checkTodos" checked /></th>';
@@ -424,55 +422,53 @@
         html += '</tbody></table>';
 
         $("#listaExcluir").html(html);
+        $("#secaoExcluir").show();
 
         $("#checkTodos").on("change", function () {
             $(".checkJogo:not(:disabled)").prop("checked", $(this).prop("checked"));
         });
-
-        modalExcluir.show();
     }
 
-    function gravarCriacao() {
+    function gravarTudo() {
         var alteracoes = coletarAlteracoes();
-        var jogos = [];
+        var dados = {};
 
-        for (var i = 0; i < alteracoes.criar.length; i++) {
-            var c = alteracoes.criar[i];
-            jogos.push({
-                idTime1: c.idTime1,
-                idTime2: c.idTime2,
-                dataInicio: $('input[name="dataInicio_' + i + '"]').val(),
-                horaInicio: $('input[name="horaInicio_' + i + '"]').val(),
-                dataFinal: $('input[name="dataFinal_' + i + '"]').val(),
-                horaFinal: $('input[name="horaFinal_' + i + '"]').val()
-            });
-        }
+        if (alteracoes.criar.length > 0) {
+            var jogosCriar = [];
+            for (var i = 0; i < alteracoes.criar.length; i++) {
+                var c = alteracoes.criar[i];
+                var dataInicio = $('input[name="dataInicio_' + i + '"]').val();
+                var horaInicio = $('input[name="horaInicio_' + i + '"]').val();
+                var dataFinal = $('input[name="dataFinal_' + i + '"]').val();
+                var horaFinal = $('input[name="horaFinal_' + i + '"]').val();
 
-        for (var i = 0; i < jogos.length; i++) {
-            if (!jogos[i].dataInicio || !jogos[i].horaInicio || !jogos[i].dataFinal || !jogos[i].horaFinal) {
-                alert("Preencha todos os campos de data e hora.");
-                return;
+                if (!dataInicio || !horaInicio || !dataFinal || !horaFinal) {
+                    alert("Preencha todos os campos de data e hora.");
+                    return;
+                }
+
+                jogosCriar.push({
+                    idTime1: c.idTime1,
+                    idTime2: c.idTime2,
+                    dataInicio: dataInicio,
+                    horaInicio: horaInicio,
+                    dataFinal: dataFinal,
+                    horaFinal: horaFinal
+                });
             }
+            dados.criar = jogosCriar;
         }
 
-        $("#acao").val("I");
-        $("#jogosJson").val(JSON.stringify(jogos));
-        $("#formAcao").submit();
-    }
-
-    function gravarExclusao() {
-        var ids = [];
-        $(".checkJogo:checked").each(function () {
-            ids.push($(this).val());
-        });
-
-        if (ids.length === 0) {
-            alert("Selecione pelo menos um jogo para excluir.");
-            return;
+        if (alteracoes.excluir.length > 0) {
+            var idsExcluir = [];
+            $(".checkJogo:checked").each(function () {
+                idsExcluir.push($(this).val());
+            });
+            dados.excluir = idsExcluir;
         }
 
-        $("#acao").val("E");
-        $("#jogosJson").val(JSON.stringify(ids));
+        $("#acao").val("T");
+        $("#jogosJson").val(JSON.stringify(dados));
         $("#formAcao").submit();
     }
 </script>
