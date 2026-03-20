@@ -83,7 +83,20 @@ else
                 {
                     <tr>
                         <td>@h.Pagina</td>
-                        <td>@h.TipoOperacao</td>
+                        <td>
+                            @if (@h.TipoOperacao == "I")
+                            {
+                                <span class="badge bg-success ">INSERT</span>
+                            }
+                            @if (@h.TipoOperacao == "E")
+                            {
+                                <span class="badge bg-danger">DELETE</span>
+                            }
+                            @if (@h.TipoOperacao == "U")
+                            {
+                                <span class="badge bg-warning text-dark">UPDATE</span>
+                            }
+                        </td>
                         <td>@h.UsuarioOperacao</td>
                         <td>@h.DataOperacao</td>
                     </tr>
