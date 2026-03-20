@@ -247,25 +247,34 @@
         modalCriar = new bootstrap.Modal(document.getElementById("modalCriar"));
         modalExcluir = new bootstrap.Modal(document.getElementById("modalExcluir"));
     });
-    
+
     function toggleCelula(celula) {
+        var time1 = $(celula).data("time1");
+        var time2 = $(celula).data("time2");
+        var espelho = $('td[data-time1="' + time2 + '"][data-time2="' + time1 + '"]');
 
         if ($(celula).hasClass("celula-verde")) {
             $(celula).removeClass("celula-verde").addClass("celula-vermelha");
+            espelho.removeClass("celula-verde").addClass("celula-vermelha");
         } else {
             $(celula).removeClass("celula-vermelha").addClass("celula-verde");
+            espelho.removeClass("celula-vermelha").addClass("celula-verde");
         }
     }
 
-    
     function coletarAlteracoes() {
         var criar = [];
         var excluir = [];
+        var processados = [];
 
         $("td[data-time1]").each(function () {
             var time1 = $(this).data("time1").toString();
             var time2 = $(this).data("time2").toString();
             var original = $(this).data("original").toString();
+            var parChave = [time1, time2].sort().join("-");
+
+            if (processados.indexOf(parChave) >= 0) return;
+            processados.push(parChave);
 
             var estaVerde = $(this).hasClass("celula-verde");
             var eraVerde = original === "1";
@@ -290,7 +299,6 @@
         return { criar: criar, excluir: excluir };
     }
 
-    
     function abrirConfirmacao() {
         var alteracoes = coletarAlteracoes();
 
@@ -299,7 +307,6 @@
             return;
         }
 
-        
         if (alteracoes.criar.length > 0) {
             var html = '<table class="table table-bordered">';
             html += '<thead><tr><th>Confronto</th><th>Data Início</th><th>Hora Início</th><th>Data Final</th><th>Hora Final</th></tr></thead><tbody>';
@@ -320,7 +327,6 @@
             modalCriar.show();
         }
 
-        
         if (alteracoes.excluir.length > 0) {
             var html = '<p>Os seguintes confrontos serão excluídos:</p>';
             html += '<ul class="list-group">';
@@ -332,14 +338,12 @@
 
             $("#listaExcluir").html(html);
 
-            
             if (alteracoes.criar.length === 0) {
                 modalExcluir.show();
             }
         }
     }
 
-    
     function gravarCriacao() {
         var alteracoes = coletarAlteracoes();
         var jogos = [];
@@ -356,7 +360,6 @@
             });
         }
 
-        
         for (var i = 0; i < jogos.length; i++) {
             if (!jogos[i].dataInicio || !jogos[i].horaInicio || !jogos[i].dataFinal || !jogos[i].horaFinal) {
                 alert("Preencha todos os campos de data e hora.");
@@ -369,7 +372,6 @@
         $("#formAcao").submit();
     }
 
-    
     function gravarExclusao() {
         var alteracoes = coletarAlteracoes();
         var jogos = [];
@@ -385,4 +387,5 @@
         $("#acao").val("E");
         $("#jogosJson").val(JSON.stringify(jogos));
         $("#formAcao").submit();
-    }</script>
+    }
+    </script>
