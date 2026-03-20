@@ -361,7 +361,7 @@
             var p = pares[i];
             promises.push(
                 $.ajax({
-                    type: "POST",
+                    type: "POST",g
                     url: "JogoConfronto.cshtml",
                     data: { acao: "CJ", idTime1: p.idTime1, idTime2: p.idTime2 }
                 })
