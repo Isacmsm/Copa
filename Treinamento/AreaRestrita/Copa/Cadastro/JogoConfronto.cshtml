@@ -400,13 +400,19 @@
             var temPlacar = j.TemPlacar === "1";
             var status = "";
 
+            let a = '', b = '', c = '';
+
             if (temPlacar) {
-                status = '<span class="badge bg-danger">Possui placar</span>';
-            } else if (jaIniciou) {
-                status = '<span class="badge bg-warning text-dark">Já iniciou</span>';
-            } else {
-                status = '<span class="badge bg-success">Pode excluir</span>';
+                a = '<span class="badge bg-danger">Possui placar</span> ';
             }
+            if (jaIniciou) {
+                b = '<span class="badge bg-warning text-dark">Já iniciou</span> ';
+            }
+            if (!temPlacar && !jaIniciou) {
+                c = '<span class="badge bg-success">Pode excluir</span>';
+            }
+
+            status = a + b + c;
 
             var disabled = (jaIniciou || temPlacar) ? 'disabled' : '';
 
