@@ -1,4 +1,4 @@
-# Treinamento C# - Log Tecnologia
+# Copa — Projeto de Treinamento | Log Tecnologia
 
 Projeto desenvolvido durante o programa de treinamento na Log Tecnologia.
 
