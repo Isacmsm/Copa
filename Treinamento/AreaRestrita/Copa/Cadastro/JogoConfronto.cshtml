@@ -34,16 +34,15 @@
 
     string acao = null;
     List<TimeConfronto> confrontos = new List<TimeConfronto>();
-    string idTime1 = null;
-    string idTime2 = null;
+    
     string jogosJson = null;
+    string paresJson = null;
 
     private void AlimentaVariaveis()
     {
         acao = Util.ChecaNulo(Request.Form["acao"]);
-        idTime1 = Util.ChecaNulo(Request.Form["idTime1"]);
-        idTime2 = Util.ChecaNulo(Request.Form["idTime2"]);
         jogosJson = Util.ChecaNulo(Request.Form["jogosJson"]);
+        paresJson = Util.ChecaNulo(Request.Form["paresJson"]);
     }
 
     private void ConsultarConfrontos()
@@ -75,9 +74,8 @@
     private void ConsultarJogos()
     {
         Dictionary<string, object> parametros = new Dictionary<string, object>();
-        parametros.Add("@TipoConsulta", "Jogos");
-        parametros.Add("@idTime1", idTime1);
-        parametros.Add("@idTime2", idTime2);
+        parametros.Add("@TipoConsulta", "JogosLote");
+        parametros.Add("@ParesJson", paresJson);
 
         var jogos = new Dao().ExecutarProcedureList<Jogo>("stp_ConsultaConfrontos_Sel", parametros);
 
@@ -94,7 +92,7 @@
     {
         Util.ExceptionHandler(() =>
         {
-            
+
             var dados = new System.Web.Script.Serialization.JavaScriptSerializer().Deserialize<Dictionary<string, object>>(jogosJson);
 
             if (dados.ContainsKey("criar"))
@@ -355,35 +353,15 @@
     }
 
     function buscarJogosParaExcluir(pares) {
-        var promises = [];
-
-        for (var i = 0; i < pares.length; i++) {
-            var p = pares[i];
-            promises.push(
-                $.ajax({
-                    type: "POST",
-                    url: "JogoConfronto.cshtml",
-                    data: { acao: "CJ", idTime1: p.idTime1, idTime2: p.idTime2 }
-                })
-            );
-        }
-
-        $.when.apply($, promises).done(function () {
-            var todosJogos = [];
-            var resultados = promises.length === 1 ? [arguments] : arguments;
-
-            for (var i = 0; i < resultados.length; i++) {
-                var jogos = typeof resultados[i][0] === "string"
-                    ? JSON.parse(resultados[i][0])
-                    : resultados[i][0];
-
-                for (var j = 0; j < jogos.length; j++) {
-                    todosJogos.push(jogos[j]);
-                }
+        $.ajax({
+            type: "POST",
+            url: "JogoConfronto.cshtml",
+            data: { acao: "CJ", paresJson: JSON.stringify(pares) },
+            success: function (resultado) {
+                var jogos = typeof resultado === "string" ? JSON.parse(resultado) : resultado;
+                montarSecaoExclusao(jogos);
+                modalConfirmar.show();
             }
-
-            montarSecaoExclusao(todosJogos);
-            modalConfirmar.show();
         });
     }
 
