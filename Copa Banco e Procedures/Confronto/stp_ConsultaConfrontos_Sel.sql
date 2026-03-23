@@ -1,8 +1,7 @@
 CREATE OR ALTER PROCEDURE [dbo].[stp_ConsultaConfrontos_Sel](
     @TipoConsulta VARCHAR(50) = NULL,
     @idJogo INT = NULL,
-    @idTime1 INT = NULL,
-    @idTime2 INT = NULL
+    @ParesJson NVARCHAR(MAX) = NULL
 )
 AS
 BEGIN
@@ -31,7 +30,7 @@ BEGIN
             WHERE T1.idTime <> T2.idTime
         END
 
-        IF @TipoConsulta = 'Jogos'
+        IF @TipoConsulta = 'JogosLote'
         BEGIN
             SELECT 
                 IJ.idJogo,
@@ -50,8 +49,11 @@ BEGIN
             FROM Ism_Jogo IJ
             INNER JOIN Ism_Time IT1 ON IT1.idTime = IJ.idTime1
             INNER JOIN Ism_Time IT2 ON IT2.idTime = IJ.idTime2
-            WHERE (IJ.idTime1 = @idTime1 AND IJ.idTime2 = @idTime2)
-                OR (IJ.idTime1 = @idTime2 AND IJ.idTime2 = @idTime1)
+            INNER JOIN OPENJSON(@ParesJson) WITH (
+                idTime1 INT,
+                idTime2 INT
+            ) P ON (IJ.idTime1 = P.idTime1 AND IJ.idTime2 = P.idTime2)
+                 OR (IJ.idTime1 = P.idTime2 AND IJ.idTime2 = P.idTime1)
         END
 
 
