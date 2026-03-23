@@ -302,7 +302,7 @@
                                 <col style="width: 10%" />
                                 <col style="width: 10%" />
                             </colgroup>
-                            <thead >
+                            <thead>
                                 <tr>
                                     <th class="text-center align-middle" scope="col">Id</th>
                                     <th scope="col">CPF</th>
@@ -315,7 +315,7 @@
 
                                 @foreach (Operador item in operadores)
                                 {
-                                    <tr>
+                                    <tr data-idOperador="@item.IdOperador">
                                         <td class="text-center align-middle">#@item.IdOperador</td>
                                         <td>@item.Cpf</td>
                                         <td>@item.Nome</td>
@@ -339,10 +339,119 @@
         </div>
     </form>
 
+    <div class="modal fade" id="acoesOperador" tabindex="-1" aria-labelledby="acoesOperadorLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="acoesOperadorLabel">Historico de ações do Operador</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form name="form2" id="form2" method="post">
+                        <input type="hidden" name="acao" id="acao" />
+
+                        <div class="container">
+
+
+                            <div>
+                                Exibindo
+                                <span id="span-infoPaginacaoInicio" class="text-primary"></span>
+                                <span id="span-infoPaginacaoFim" class="text-primary"></span>
+                                de
+                                <span id="span-totalRegistros"></span>
+                                registros
+                            </div>
+
+                            <div class="card mt-2">
+                                <div class="p-2">
+                                    <div class="row">
+                                        <div class="col">
+                                            <div class="dropdown">
+                                                <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" id="dropdownMenuButton" data-bs-toggle="dropdown">
+                                                    Datas
+                                                </button>
+                                                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                                    <div class="px-2">
+                                                        <label for="dataInicio">De</label>
+                                                        <input type="date" id="dataInicio" name="dataInicio" class="form-control form-control-sm" />
+
+                                                        <label for="dataFim">Até</label>
+                                                        <input type="date" id="dataFim" name="dataFim" class="form-control form-control-sm" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <button type="button" name="limpar" id="limpar" class="btn btn-sm btn-outline-secondary">Limpar</button>
+                                            <button type="button" name="filtrar" id="filtrar" class="btn btn-sm btn-primary">Filtrar</button>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-2">
+                                        <div class="col">
+                                            <div class="btn-group" role="group" aria-label="Basic checkbox toggle button group">
+                                                <input type="checkbox" class="btn-check" id="btncheck1" autocomplete="off">
+                                                <label class="btn btn-sm btn-outline-success" for="btncheck1">INSERT</label>
+
+                                                <input type="checkbox" class="btn-check" id="btncheck2" autocomplete="off">
+                                                <label class="btn btn-sm btn-outline-warning" for="btncheck2">UPDATE</label>
+
+                                                <input type="checkbox" class="btn-check" id="btncheck3" autocomplete="off">
+                                                <label class="btn btn-sm btn-outline-danger" for="btncheck3">DELETE</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <select id="quantidadePorPagina" name="quantidadePorPagina" class="form-select form-select-sm">
+                                                <option value="10">10 por página</option>
+                                                <option value="20">20 por página</option>
+                                                <option value="50">50 por página</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="resultado"></div>
+                                <div class="card-footer">
+                                    <div id="paginacao" class="row justify-content-center">
+                                        <div class="col-auto">
+                                            <button type="button" id="btn-paginacaoPrimeiro" class="btn btn-outline-secondary js-mudarPagina" title="Ir para o primeiro" data-acao="PRIMEIRO" disabled><<</button>
+                                        </div>
+                                        <div class="col-auto">
+                                            <button type="button" id="btn-paginacaoAnterior" class="btn btn-outline-secondary js-mudarPagina" title="Anterior" data-acao="ANTERIOR" disabled><</button>
+                                        </div>
+                                        <div class="col-auto">
+                                            Pagina
+                                        </div>
+                                        <div class="col-auto">
+                                            <select class="form-select js-mudarPagina" name="pagina" id="pagina"></select>
+                                        </div>
+                                        <div class="col-auto">
+                                            de <span id="quantidadeDePaginas"></span>
+                                        </div>
+                                        <div class="col-auto">
+                                            <button type="button" id="btn-paginacaoProximo" class="btn btn-outline-secondary js-mudarPagina" title="Próximo" data-acao="PROXIMO" disabled>></button>
+                                        </div>
+                                        <div class="col-auto">
+                                            <button type="button" id="btn-paginacaoUltimo" class="btn btn-outline-secondary js-mudarPagina" title="Ir para o último" data-acao="ULTIMO" disabled>>></button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary">Imprimir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="~/Scripts/Scripts.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
+
+        var idOperadorModal = null;
 
         function editar(idOperador) {
             document.form1.view.value = "@((int)View.Edit)";
@@ -378,6 +487,207 @@
                 $("#inputEndereco").val(res.logradouro)
             })
         }
+
+        function consultarItens() {
+            var resultado = document.querySelector('.resultado');
+
+            let quantidadePorPagina = document.form2.quantidadePorPagina.value;
+            let pagina = document.form2.pagina.value;
+            let dataInicio = document.form2.dataInicio.value;
+            let dataFim = document.form2.dataFim.value;
+
+            var tipos = [];
+            if (document.getElementById("btncheck1").checked) tipos.push("I");
+            if (document.getElementById("btncheck2").checked) tipos.push("U");
+            if (document.getElementById("btncheck3").checked) tipos.push("D");
+            var tipoOperacao = tipos.join(",");
+
+            $.ajax({
+                type: "POST",
+                url: "ConsultaAuxAcoesOperador.cshtml",
+                data: {
+                    quantidadePorPagina: quantidadePorPagina,
+                    pagina: pagina,
+                    tipoOperacao: tipoOperacao,
+                    dataInicio: dataInicio,
+                    dataFim: dataFim,
+                    idOperador: idOperadorModal
+                },
+                success: function (res) {
+                    resultado.innerHTML = res;
+
+                    const totalRegistros = parseInt(resultado.querySelector("#totalRegistros").innerText);
+                    atualizarPaginacao(pagina, totalRegistros);
+                },
+                error: function (xhr) {
+                    resultado.innerHTML = xhr.responseText;
+                }
+            });
+        }
+
+        function atualizarPaginacao(pagina, totalRegistros) {
+            var infoPaginacaoInicio = document.querySelector("#span-infoPaginacaoInicio");
+            var infoPaginacaoFim = document.querySelector("#span-infoPaginacaoFim");
+            var infoTotalRegistros = document.querySelector("#span-totalRegistros");
+            var infoQuantidadeDePaginas = document.querySelector("#quantidadeDePaginas");
+            var quantidadePorPagina = parseInt(document.form2.quantidadePorPagina.value);
+            var selectPaginas = document.querySelector("#pagina");
+
+            let paginacaoInicio = 0;
+            let paginacaoFim = 0;
+            let quantidadeDePaginas = 0;
+
+            if (totalRegistros == 0) {
+                pagina = "";
+            }
+
+            if (totalRegistros > 0) {
+                if (pagina == "") {
+                    pagina = 1;
+                }
+
+                paginacaoInicio = ((pagina - 1) * quantidadePorPagina) + 1;
+
+                if (pagina * quantidadePorPagina <= totalRegistros) {
+                    paginacaoFim = pagina * quantidadePorPagina;
+                } else {
+                    paginacaoFim = totalRegistros;
+                }
+
+                if (totalRegistros % quantidadePorPagina == 0) {
+                    quantidadeDePaginas = parseInt(totalRegistros / quantidadePorPagina);
+                } else {
+                    quantidadeDePaginas = parseInt(totalRegistros / quantidadePorPagina + 1);
+                }
+            }
+
+            infoPaginacaoInicio.innerHTML = `<b>${paginacaoInicio}</b>`;
+            infoPaginacaoFim.innerHTML = `<b>- ${paginacaoFim}</b>`;
+            infoTotalRegistros.innerHTML = `<b>${totalRegistros}</b>`;
+            infoQuantidadeDePaginas.innerHTML = quantidadeDePaginas;
+
+            selectPaginas.innerHTML = "";
+
+            for (var i = 1; i <= quantidadeDePaginas; i++) {
+                var option = document.createElement("option");
+                option.value = i;
+                option.textContent = i;
+                selectPaginas.appendChild(option);
+            }
+
+            selectPaginas.value = pagina;
+            atualizarBotoes(pagina, quantidadeDePaginas);
+        }
+
+        function atualizarBotoes(pagina, quantidadeDePaginas) {
+            var btnPrimeiro = document.querySelector("#btn-paginacaoPrimeiro");
+            var btnAnterior = document.querySelector("#btn-paginacaoAnterior");
+            var btnProximo = document.querySelector("#btn-paginacaoProximo");
+            var btnUltimo = document.querySelector("#btn-paginacaoUltimo");
+
+            if (pagina == "") {
+                btnProximo.disabled = true;
+                btnUltimo.disabled = true;
+                btnAnterior.disabled = true;
+                btnPrimeiro.disabled = true;
+            } else if (pagina == 1) {
+                btnAnterior.disabled = true;
+                btnPrimeiro.disabled = true;
+
+                if (quantidadeDePaginas == 1) {
+                    btnProximo.disabled = true;
+                    btnUltimo.disabled = true;
+                } else {
+                    btnProximo.disabled = false;
+                    btnUltimo.disabled = false;
+                }
+            } else if (pagina == quantidadeDePaginas) {
+                btnProximo.disabled = true;
+                btnUltimo.disabled = true;
+                btnAnterior.disabled = false;
+                btnPrimeiro.disabled = false;
+            } else {
+                btnProximo.disabled = false;
+                btnUltimo.disabled = false;
+                btnAnterior.disabled = false;
+                btnPrimeiro.disabled = false;
+            }
+        }
+
+        function mudarPagina(acao = null) {
+            var pagina = parseInt(document.form2.pagina.value);
+
+            if (acao) {
+                switch (acao) {
+                    case "PROXIMO":
+                        pagina++;
+                        break;
+                    case "ANTERIOR":
+                        pagina--;
+                        break;
+                    case "PRIMEIRO":
+                        pagina = 1;
+                        break;
+                    case "ULTIMO":
+                        pagina = parseInt(document.querySelector("#quantidadeDePaginas").innerText);
+                        break;
+                }
+
+                document.form2.pagina.value = pagina;
+            }
+
+            consultarItens();
+        }
+
+        
+
+        function adicionarEventos() {
+            Array.from(form2.querySelectorAll(".js-mudarPagina")).forEach(function (item) {
+                if (item.tagName.toLowerCase() == "select") {
+                    item.addEventListener("change", () => mudarPagina());
+                } else if (item.tagName.toLowerCase() == "button") {
+                    item.addEventListener("click", () => {
+                        mudarPagina(item.getAttribute("data-acao"));
+                    });
+                }
+            });
+
+            document.form2.querySelector("#quantidadePorPagina").addEventListener("change", () => {
+                document.form2.pagina.value = 1;
+                consultarItens();
+            });
+
+            document.getElementById("filtrar").addEventListener("click", () => {
+                document.form2.pagina.value = 1;
+                consultarItens();
+            });
+
+            document.getElementById("limpar").addEventListener("click", () => {
+                document.form2.pagina.value = 1;
+                document.form2.dataInicio.value = "";
+                document.form2.dataFim.value = "";
+                document.getElementById("btncheck1").checked = false;
+                document.getElementById("btncheck2").checked = false;
+                document.getElementById("btncheck3").checked = false;
+                consultarItens();
+            });
+        }
+
+        var eventosAdicionados = false;
+
+        $(document).ready(function () {
+            $("tbody tr").click(function () {
+                idOperadorModal = $(this).data("idoperador");
+
+                if (!eventosAdicionados) {
+                    adicionarEventos();
+                    eventosAdicionados = true;
+                }
+
+                consultarItens();
+                new bootstrap.Modal(document.getElementById('acoesOperador')).show();
+            });
+        });
     </script>
 
 

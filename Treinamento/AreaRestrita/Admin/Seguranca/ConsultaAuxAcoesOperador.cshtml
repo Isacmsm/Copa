@@ -1,0 +1,139 @@
+﻿@RenderPage("~/AreaRestrita/Seguranca.cshtml")
+@{
+    Page.Title = "AcoesOperador";
+    Layout = "~/AreaRestrita/_Layout.cshtml";
+}
+
+@functions{
+
+    private class Historico
+    {
+
+        public string Pagina { get; set; }
+        public string TipoOperacao { get; set; }
+        public string UsuarioOperacao { get; set; }
+        public string DataOperacao { get; set; }
+    }
+
+    private class Quantidade
+    {
+        public string TotalRegistros { get; set; }
+    }
+
+    List<Historico> historicos = new List<Historico>();
+    string dataInicio = null;
+    string dataFim = null;
+    Exception exception = null;
+    Quantidade quantidade = null;
+    string quantidadePorPagina = null;
+    string pagina = null;
+    string idOperador = null;
+    string tipoOperacao = null;
+
+    private void AlimentarVariaveis()
+    {
+        quantidadePorPagina = Util.ChecaNulo(Request.Form["quantidadePorPagina"]);
+        pagina = Util.ChecaNulo(Request.Form["pagina"]);
+        dataInicio = Util.ChecaNulo(Request.Form["dataInicio"]);
+        dataFim = Util.ChecaNulo(Request.Form["dataFim"]);
+        idOperador = Util.ChecaNulo(Request.Form["idOperador"]);
+        tipoOperacao = Util.ChecaNulo(Request.Form["tipoOperacao"]);
+    }
+
+    private void Consulta()
+    {
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@TipoConsulta", "Principal");
+        parametros.Add("@QuantidadePorPagina", quantidadePorPagina);
+        parametros.Add("@Pagina", pagina);
+        parametros.Add("@DataInicio", string.IsNullOrWhiteSpace(dataInicio) ? (object)DBNull.Value : dataInicio);
+        parametros.Add("@DataFim", string.IsNullOrWhiteSpace(dataFim) ? (object)DBNull.Value : dataFim);
+        parametros.Add("@IdOperador", idOperador);
+        parametros.Add("@TipoOperacao", tipoOperacao);
+
+
+        historicos = new Dao().ExecutarProcedureList<Historico>("stp_AcoesOperador_Sel", parametros);
+    }
+
+    private void ConsultaQuantidade()
+    {
+        Dictionary<string, object> parametros = new Dictionary<string, object>();
+        parametros.Add("@TipoConsulta", "Contagem");
+        parametros.Add("@DataInicio", string.IsNullOrWhiteSpace(dataInicio) ? (object)DBNull.Value : dataInicio);
+        parametros.Add("@DataFim", string.IsNullOrWhiteSpace(dataFim) ? (object)DBNull.Value : dataFim);
+        parametros.Add("@IdOperador", idOperador);
+        parametros.Add("@TipoOperacao", tipoOperacao);
+
+
+        List<Quantidade> quantidades = new Dao().ExecutarProcedureList<Quantidade>("stp_AcoesOperador_Sel", parametros);
+
+        quantidade = quantidades.FirstOrDefault();
+    }
+
+}
+
+@{
+    try
+    {
+        AlimentarVariaveis();
+        Consulta();
+        ConsultaQuantidade();
+    }
+    catch (Exception ex)
+    {
+        exception = ex;
+    }
+
+}
+
+@if (exception != null)
+{
+    <div class="alert alert-warning">@exception.Message</div>
+}
+else
+{
+
+    if (historicos != null && historicos.Count > 0)
+    {
+        <table class="table table-hover table-nowrap card-table">
+            <thead>
+                <tr>
+                    <th>Pagina</th>
+                    <th>Tipo</th>
+                    <th>Usuario</th>
+                    <th>Data Operação</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (Historico h in historicos)
+                {
+                    <tr>
+                        <td>@h.Pagina</td>
+                        <td>
+                            @if (@h.TipoOperacao == "I")
+                            {
+                                <span class="badge bg-success ">INSERT</span>
+                            }
+                            @if (@h.TipoOperacao == "D")
+                            {
+                                <span class="badge bg-danger">DELETE</span>
+                            }
+                            @if (@h.TipoOperacao == "U")
+                            {
+                                <span class="badge bg-warning text-dark">UPDATE</span>
+                            }
+                        </td>
+                        <td>@h.UsuarioOperacao</td>
+                        <td>@h.DataOperacao</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div class="alert alert-light">Nenhum registro encontrado</div>
+    }
+    <span id="totalRegistros" style="display:none">@(quantidade != null ? quantidade.TotalRegistros : "0")</span>
+
+}

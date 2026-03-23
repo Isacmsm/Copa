@@ -18,7 +18,7 @@ BEGIN
 	            UsuarioOperacao,
 	             DataOperacao 
             FROM Ism_TimeHistorico
-            WHERE idSessaoOperacao = 16
+            WHERE idSessaoOperacao = @IdSessao
         END
 
 
