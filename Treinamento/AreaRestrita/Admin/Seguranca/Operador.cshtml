@@ -440,7 +440,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary">Imprimir</button>
+                    <button type="button" class="btn btn-primary" onclick="emitirRelatorio()">Imprimir</button>
                 </div>
             </div>
         </div>
@@ -688,6 +688,38 @@
                 new bootstrap.Modal(document.getElementById('acoesOperador')).show();
             });
         });
+
+        function emitirRelatorio() {
+            if (!idOperadorModal) {
+                alert("Selecione um operador!");
+                return;
+            }
+
+            var dataInicio = document.form2.dataInicio.value;
+            var dataFim = document.form2.dataFim.value;
+
+            var tipos = [];
+            if (document.getElementById("btncheck1").checked) tipos.push("I");
+            if (document.getElementById("btncheck2").checked) tipos.push("U");
+            if (document.getElementById("btncheck3").checked) tipos.push("D");
+            var tipoOperacao = tipos.join(",");
+
+            const url = `RelatorioAcoesOperador.cshtml?idOperador=${idOperadorModal}&dataInicio=${dataInicio}&dataFim=${dataFim}&tipoOperacao=${tipoOperacao}`;
+
+            const iframe = document.createElement("iframe");
+            iframe.src = url;
+            iframe.style.width = "100%";
+            iframe.style.display = "none";
+            document.body.appendChild(iframe);
+
+            iframe.onload = function () {
+                iframe.contentWindow.print();
+            };
+
+            iframe.contentWindow.onafterprint = function () {
+                iframe.remove();
+            };
+        }
     </script>
 
 
