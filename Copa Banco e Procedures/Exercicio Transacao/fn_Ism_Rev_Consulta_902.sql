@@ -5,14 +5,14 @@ RETURNS TABLE
 AS
 RETURN (
     SELECT
-        -- Envio (sem dados internos da parte fixa)
+        
         SUBSTRING(MensagemEnvio, 1, 37)   AS inParteFixa,
         SUBSTRING(MensagemEnvio, 38, 7)   AS inPlaca,
 
-        -- Retorno - parte fixa
+       
         SUBSTRING(MensagemRetorno, 1, 37)  AS outParteFixa,
 
-        -- Retorno - código e erro
+        
         SUBSTRING(MensagemRetorno, 38, 3)  AS outCodigoRetorno,
         CASE SUBSTRING(MensagemRetorno, 38, 3)
             WHEN '000' THEN NULL
