@@ -12,7 +12,7 @@ public class ErroExecucaoException : Exception
         Erros = new List<dynamic>();
         foreach (SqlError item in erros)
         {
-            if (item.Number == 3600) return;
+            if (item.Number == 3609) return;
 
             if (item.Number == 50001)
             {
@@ -20,7 +20,7 @@ public class ErroExecucaoException : Exception
                  * decodifica de json para objeto
                  * Formato do objeto
                  * {
-                 *     NomeInput: <Nome do input, ou null em caso de mensagem de validação>
+                 *     NomeInput: <Nome do input, ou null em caso de mensagem de validaÃ§Ã£o>
                  *     Mensagem: <Mensagem>
                  * }
                  */
